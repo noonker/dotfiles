@@ -1,0 +1,8 @@
+#!/bin/bash
+
+while true;
+do
+  dashboard  
+  sleep 60
+  clear
+done;

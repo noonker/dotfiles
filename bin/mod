@@ -1,0 +1,11 @@
+#!/bin/bash
+PREFIX='.prasc_'
+
+if [[ $1 = "-d" ]]; then
+    mv $PREFIX$2 $2
+elif [[ ! -f $PREFIX$1 ]]; then
+    cp -r $1 $PREFIX$1
+    vimdiff $PREFIX$1 $1
+else
+    vimdiff $PREFIX$1 $1
+fi

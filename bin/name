@@ -1,0 +1,7 @@
+#!/bin/bash
+
+#Usage: name <name> 
+#Returns: Pronunciation of <name>
+
+PAGE=$(curl -s http://www.pronouncenames.com/search?name=$1)
+echo "$PAGE" | grep -m 1 '<font color="#BB3333" style="font-family: verdana;font-size: 8pt;"><b>'| tr -d '\t' | sed -e 's/<\/b>/-/g' -e 's/<[^>]*>//g'

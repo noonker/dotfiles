@@ -1,0 +1,13 @@
+#!/bin/bash
+
+ for x in $(find * -type f)
+  do
+    y=$(cat $x | grep $1)
+    if [ -n "$y" ]; then 
+     echo 
+     echo 
+     echo $x
+     echo '-----------------------'
+     echo $y
+   fi
+  done

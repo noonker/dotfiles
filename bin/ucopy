@@ -1,0 +1,4 @@
+#!/bin/bash
+
+if [[ $HOSTSYSTEM -eq "Darwin" ]]; then pbcopy; elif [[ $HOSTSYSTEM -eq "Linux" ]]; then xcopy; fi
+

@@ -1,0 +1,61 @@
+#!/bin/sh
+# tmuxssh - spawn ssh sessions in a new tmux window, one pane for each session
+
+function display_usage()
+{
+    echo "tmuxssh [OPTION]... [HOSTNAME]..."
+    echo ""
+    echo "OPTIONS:"
+    echo "  -h           Display usage information"
+    echo "  -c cmd       Send command to all panes after connecting "
+    echo "  -s           Synchronize panes (send keys to all panes)"
+    echo "  -u username  Connect as user <username>"
+}
+
+# default user is the user running the command
+user=$(id -nu)
+
+while getopts ":hc:su:" opt; do
+    case $opt in
+        h)
+            display_usage
+            exit
+            ;;
+        s)
+            sync_panes=1
+            ;;
+        c)
+            cmd="$OPTARG"
+            ;;
+        u)
+            user="$OPTARG"
+            ;;
+        \?)
+            echo "Invalid option -$OPTARG" >&2
+            exit 1
+            ;;
+    esac
+done
+
+shift $((OPTIND-1))
+
+for host in $*
+do
+    if [ -z $window_available ]; then
+        tmux new-window "ssh $user@$host"
+        window_available=1
+    else
+        tmux split-window -d "ssh $user@$host"
+        tmux select-layout tiled > /dev/null
+    fi
+done
+
+if [ ! -z "$cmd" ]; then
+    tmux setw synchronize-panes > /dev/null
+    tmux send-keys "$cmd" Enter
+    tmux setw synchronize-panes > /dev/null
+fi
+
+if [ ! -z $sync_panes ]; then
+    tmux setw synchronize-panes > /dev/null
+fi
