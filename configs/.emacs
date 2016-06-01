@@ -1,3 +1,13 @@
+;;; .emacs -- WIP emacs configuration
+;-*-Emacs-Lisp-*-
+
+;;; Commentary:
+;;
+;; I'm just here so I won't get fined
+;;
+;;; Code:
+
+;; Set up repos and ensure desired files are installed
 (require 'package)
 
 (add-to-list 'package-archives '("org" . "http://orgmode.org/elpa/"))
@@ -8,17 +18,17 @@
 (package-initialize)
 
 (defun ensure-package-installed (&rest packages)
-    "Assure every package is installed, ask for installation if it’s not.
+  "Assure every package is installed, ask for installation if it’s not.
 
 Return a list of installed packages or nil for every skipped package."
-    (mapcar
-     (lambda (package)
-       (if (package-installed-p package)
-	   nil
-	 (if (y-or-n-p (format "Package %s is missing. Install it? " package))
-	     (package-install package)
-	   package)))
-     packages))
+  (mapcar
+   (lambda (package)
+     (if (package-installed-p package)
+         nil
+       (if (y-or-n-p (format "Package %s is missing. Install it? " package))
+           (package-install package)
+         package)))
+   packages))
 
 ;; Make sure to have downloaded archive description.
 (or (file-exists-p package-user-dir)
@@ -29,18 +39,19 @@ Return a list of installed packages or nil for every skipped package."
 
 ;; Assuming you wish to install "iedit" and "magit"
 (ensure-package-installed 'iedit
-			  'magit
-			  'flycheck
+                          'magit
+                          'flycheck
                           'helm
                           'powerline
-			  'evil
+                          'evil
                           '2048-game
-			  'projectile
+                          'projectile
                           'helm-projectile
                           'org
                           'org-plus-contrib
                           'helm-ag
-                          'company)
+                          'company
+                          'autopair)
 
 (evil-mode t)
 (global-flycheck-mode)
@@ -60,11 +71,11 @@ Return a list of installed packages or nil for every skipped package."
 (setq linum-format "%d ")
 
 (set-face-attribute 'flycheck-warning nil
-		    :foreground "black"
-		    :background "yellow")
+                    :foreground "black"
+                    :background "yellow")
 (set-face-attribute 'flycheck-error nil
-		    :foreground "black"
-		    :background "red")
+                    :foreground "black"
+                    :background "red")
 (set-face-attribute 'flycheck-info nil
                     :foreground "black"
                     :background "green")
@@ -73,6 +84,7 @@ Return a list of installed packages or nil for every skipped package."
 (setq whitespace-style '(face empty tabs lines-tail trailing))
 (global-whitespace-mode t)
 (projectile-global-mode)
+(autopair-global-mode 1)
 
 
 ;; Enable mouse support
@@ -87,7 +99,7 @@ Return a list of installed packages or nil for every skipped package."
                               (scroll-up 1)))
   (defun track-mouse (e))
   (setq mouse-sel-mode t)
-)
+  )
 
 ;; Enable copy and paste
 (defun copy-from-osx ()
@@ -100,4 +112,42 @@ Return a list of installed packages or nil for every skipped package."
       (process-send-eof proc))))
 
 (setq interprogram-cut-function 'paste-to-osx)
-  (setq interprogram-paste-function 'copy-from-osx)
+(setq interprogram-paste-function 'copy-from-osx)
+
+;; Shorten yes and no
+(defalias 'yes-or-no-p 'y-or-n-p)
+
+;; Spaces, not tabs
+(setq tab-width 2
+      indent-tabs-mode nil)
+
+;; Misc
+(global-set-key (kbd "C-x g") 'magit-status)
+(global-set-key (kbd "RET") 'newline-and-indent)
+
+;; Indentation and cleanup
+(defun untabify-buffer ()
+  (interactive)
+  (untabify (point-min) (point-max)))
+
+(defun indent-buffer ()
+  (interactive)
+  (indent-region (point-min) (point-max)))
+
+(defun cleanup-buffer ()
+  "Perform a bunch of operations on the whitespace content of a buffer."
+  (interactive)
+  (indent-buffer)
+  (untabify-buffer)
+  (delete-trailing-whitespace))
+
+(defun cleanup-region (beg end)
+  "Remove tmux artifacts from region."
+  (interactive "r")
+  (dolist (re '("\\\\│\·*\n" "\W*│\·*"))
+    (replace-regexp re "" nil beg end)))
+
+(global-set-key (kbd "C-x M-t") 'cleanup-region)
+(global-set-key (kbd "C-c n") 'cleanup-buffer)
+
+(setq-default show-trailing-whitespace t)
