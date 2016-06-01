@@ -35,17 +35,18 @@ Return a list of installed packages or nil for every skipped package."
                           'powerline
 			  'evil
                           '2048-game
-			  'monokai-theme)
-
-(require 'evil)
-(require 'helm-config)
-(require 'powerline)
-(require 'flycheck)
+			  'projectile
+                          'helm-projectile
+                          'org
+                          'org-plus-contrib
+                          'helm-ag
+                          'company)
 
 (evil-mode t)
 (global-flycheck-mode)
-;;(global-linum-mode t)
+(global-linum-mode t)
 (powerline-default-theme)
+(global-company-mode)
 
 (global-set-key (kbd "M-x") 'helm-M-x)
 (global-set-key (kbd "M-x") #'helm-M-x)
@@ -53,11 +54,10 @@ Return a list of installed packages or nil for every skipped package."
 (global-set-key (kbd "C-x C-f") #'helm-find-files)
 (helm-mode 1)
 
-(projectile-global-mode)
 (setq projectile-completion-system 'helm)
+(setq projectile-enable-caching t)
 (helm-projectile-on)
-(projectile-global-mode)
-;;(setq linum-format "%d ")
+(setq linum-format "%d ")
 
 (set-face-attribute 'flycheck-warning nil
 		    :foreground "black"
@@ -69,17 +69,35 @@ Return a list of installed packages or nil for every skipped package."
                     :foreground "black"
                     :background "green")
 
-(setq system-uses-terminfo nil)
-(load-theme 'monokai t)
-(custom-set-variables
- ;; custom-set-variables was added by Custom.
- ;; If you edit it by hand, you could mess it up, so be careful.
- ;; Your init file should contain only one such instance.
- ;; If there is more than one, they won't work right.
- '(inhibit-startup-screen t))
-(custom-set-faces
- ;; custom-set-faces was added by Custom.
- ;; If you edit it by hand, you could mess it up, so be careful.
- ;; Your init file should contain only one such instance.
- ;; If there is more than one, they won't work right.
- )
+(require 'whitespace)
+(setq whitespace-style '(face empty tabs lines-tail trailing))
+(global-whitespace-mode t)
+(projectile-global-mode)
+
+
+;; Enable mouse support
+(unless window-system
+  (require 'mouse)
+  (xterm-mouse-mode t)
+  (global-set-key [mouse-4] (lambda ()
+                              (interactive)
+                              (scroll-down 1)))
+  (global-set-key [mouse-5] (lambda ()
+                              (interactive)
+                              (scroll-up 1)))
+  (defun track-mouse (e))
+  (setq mouse-sel-mode t)
+)
+
+;; Enable copy and paste
+(defun copy-from-osx ()
+  (shell-command-to-string "pbpaste"))
+
+(defun paste-to-osx (text &optional push)
+  (let ((process-connection-type nil))
+    (let ((proc (start-process "pbcopy" "*Messages*" "pbcopy")))
+      (process-send-string proc text)
+      (process-send-eof proc))))
+
+(setq interprogram-cut-function 'paste-to-osx)
+  (setq interprogram-paste-function 'copy-from-osx)
