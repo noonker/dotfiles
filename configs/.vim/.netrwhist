@@ -1,4 +1,0 @@
-let g:netrw_dirhistmax  =10
-let g:netrw_dirhist_cnt =2
-let g:netrw_dirhist_1='/Users/jperson/Drive/prasc/opt'
-let g:netrw_dirhist_2='/Users/jperson/ts/src/arbux-config/scripts'
