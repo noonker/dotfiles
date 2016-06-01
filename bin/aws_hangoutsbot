@@ -1,0 +1,6 @@
+#!/bin/bash
+
+sudo apt-get update && sudo apt-get upgrade
+sudo apt-get install -y python3-pip git
+git clone https://github.com/hangoutsbot/hangoutsbot.git
+sudo pip3 install -r hantoutsbot/requirements.txt

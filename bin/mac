@@ -1,0 +1,155 @@
+#!/bin/bash
+
+# Make homedirs
+mkdir ~/bin
+mkdir ~/lib
+mkdir ~/lib/python
+mkdir ~/git
+
+#Get that dank sudo 
+sudo -v
+
+# Set computer name (as done via System Preferences → Sharing)
+read -p "What are we naming this bad Johnson?" hostname
+sudo scutil --set ComputerName "$hostname"
+sudo scutil --set HostName "$hostname"
+sudo scutil --set LocalHostName "$hostname"
+sudo defaults write /Library/Preferences/SystemConfiguration/com.apple.smb.server NetBIOSName -string "$hostname"
+
+#Change default highlight color to pink
+defaults write NSGlobalDomain AppleHighlightColor -string '1.000000 0.749020 0.823529'
+
+#Change theme to dark
+defaults write NSGlobalDomain AppleInterfaceStyle -string Dark
+
+#Key repeat
+defaults write NSGlobalDomain InitialKeyRepeat -int 15
+defaults write NSGlobalDomain KeyRepeat -int 2
+
+# Require password immediately after sleep or screen saver begins
+defaults write com.apple.screensaver askForPassword -int 1
+defaults write com.apple.screensaver askForPasswordDelay -int 0
+
+# Finder: allow quitting via ⌘ + Q; doing so will also hide desktop icons
+defaults write com.apple.finder QuitMenuItem -bool true
+
+# Finder: show hidden files by default
+defaults write com.apple.finder AppleShowAllFiles -bool true
+
+# Finder: show path bar
+defaults write com.apple.finder ShowPathbar -bool true
+
+# Bottom left screen corner → Start screen saver (lock)
+defaults write com.apple.dock wvous-bl-corner -int 5
+defaults write com.apple.dock wvous-bl-modifier -int 0
+
+#Right way mouse scrolling
+defaults write NSGlobalDomain com.apple.swipescrolldirection -int 0i
+
+# Get the gits
+git_urls=(
+    'https://github.com/hak5darren/USB-Rubber-Ducky.git'
+    'https://github.com/hangoutsbot/hangoutsbot.git'
+    'https://github.com/tdryer/hangups.git'
+    'https://github.com/noonker/hangupsbot-modules'
+    'git@github.com:noonker/noonker.github.io.git'
+    'https://github.com/ChrisJohnsen/tmux-MacOSX-pasteboard'
+    'https://github.com/dequis/tmux-url-select'
+    #'git@git.arbor.net:jperson/stuff.git'
+    )
+
+cd ~/git
+for var in "${git_urls[@]}"
+do
+    git clone "${var}"
+done
+cd ~/
+
+# Install Brew
+ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
+
+# All the brews!
+brew install toilet cmake ctags gcc gnuplot irssi links mysql nmap openssl\
+    python reattach-to-user-namespace sqlite tmux toilet wget zsh autojump\
+    dtrx gnuradio the_silver_searcher toilet hangups aircrack-ng unrar\
+    subversion python3 gpg keybase alpine emacs android-platform-tools
+
+# Install oh-my-zsh
+
+#All the pips!
+pip install ipython bokeh flake8 gcalcli MySQL-python pep8\
+    BeautifulSoup Flask pytz tornado Werkzeug pudb pyhn\
+    parsedatetime six rainbowstream paramiko pandas pandas-highcharts\
+    matplotlib hangups-urwid awscli asyncio thefuck krill
+
+pip3 install hangups
+
+#Brew Cask!
+brew cask install google-chrome flux steam battle-net\
+    openemu android-studio vmware-fusion transmission\
+    wireshark the-unarchiver osxfuse licecap vlc 1password iterm2 eagle\
+
+#Programs to install
+urls=(
+    'http://www.keithmcmillen.com/downloads/'
+    'http://backstage.renoise.com'
+    'https://itunes.apple.com/us/app/xcode/id497799835?mt=12'
+    'https://itunes.apple.com/us/app/hyperdock/id449830122?mt=12'
+    'https://sites.google.com/a/chromium.org/chromedriver/downloads'
+    'http://www.seleniumhq.org/download/'
+    )
+
+for var in "${urls[@]}"
+do
+    open "${var}"
+done
+
+
+#Change CAPSLOCK to ctrl 
+osascript <<EOD
+tell application "System Preferences"
+        activate
+        set current pane to pane "com.apple.preference.keyboard"
+end tell
+tell application "System Events"
+        tell process "System Preferences"
+                click button "Modifier Keys…" of tab group 1 of window "Keyboard"
+                click pop up button 4 of sheet 1 of window "Keyboard"
+                click menu item 2 of menu 1 of pop up button 4 of sheet 1 of window "Keyboard"
+                click button "OK" of sheet 1 of window "Keyboard"
+        end tell
+end tell
+
+tell application "System Preferences"
+        quit
+end tell
+EOD
+
+# Symobilic link of configs
+for x in `ls -A /Users/jperson/Drive/prasc/configs`
+do
+    if [ -a /Users/jperson/$x ]
+    then
+        echo "Removing $x"
+        rm -rf $x
+        ln -sf /Users/jperson/Drive/prasc/configs/$x ~
+    else
+        ln -sf /Users/jperson/Drive/prasc/configs/$x ~
+    fi
+done
+
+#Install Oh-My-Zsh.
+sh -c "$(curl -fsSL https://raw.githubusercontent.com/robbyrussell/oh-my-zsh/master/tools/install.sh)"
+
+#Get burp
+cd ~/bin 
+wget https://portswigger.net/DownloadUpdate.ashx\?Product\=Free --output-document=burp.jar
+
+
+##CHSH
+#MOUSE Settings
+#ITERM
+##MOUSE Settings
+#ITERM
+#DOCKDOCK
+#TERMINAL
