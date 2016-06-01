@@ -151,3 +151,11 @@ Return a list of installed packages or nil for every skipped package."
 (global-set-key (kbd "C-c n") 'cleanup-buffer)
 
 (setq-default show-trailing-whitespace t)
+
+;; Move backups
+(setq backup-directory-alist '(("." . "~/.emacs.d/backups")))
+(setq delete-old-versions -1)
+(setq version-control t)
+(setq vc-make-backup-files t)
+(setq auto-save-file-name-transforms '((".*" "~/.emacs.d/auto-save-list/" t)))
+
