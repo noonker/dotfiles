@@ -55,6 +55,7 @@ git_urls=(
     'git@github.com:noonker/noonker.github.io.git'
     'https://github.com/ChrisJohnsen/tmux-MacOSX-pasteboard'
     'https://github.com/dequis/tmux-url-select'
+    'git@github.com:noonker/dotfiles.git'
     #'git@git.arbor.net:jperson/stuff.git'
     )
 
@@ -63,7 +64,8 @@ for var in "${git_urls[@]}"
 do
     git clone "${var}"
 done
-cd ~/
+
+
 
 # Install Brew
 ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
