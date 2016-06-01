@@ -46,6 +46,7 @@ alias :wq='exit'
 alias lsl='ls -al | less'
 alias todo='vim ~/Drive/prasc/docs/todo'
 alias webpls='python -m SimpleHTTPServer 8000'
+alias emacs='emacs -nw'
 
 # Uncomment the following line if you want to change the command execution time
 # stamp shown in the history command output.

@@ -375,7 +375,7 @@ address-book=
 global-address-book=
 
 # Set by Alpine; controls beginning-of-month sent-mail pruning.
-last-time-prune-questioned=116.5
+last-time-prune-questioned=116.6
 
 # Set by Alpine; controls display of "new version" message.
 last-version-used=6.20
