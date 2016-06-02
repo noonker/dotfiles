@@ -50,7 +50,6 @@ alias sink="echo 'setw synchronize-panes on' | ucopy"
 alias :q='exit'
 alias :wq='exit'
 alias lsl='ls -al | less'
-alias todo='vim ~/Drive/Vault/todo'
 alias webpls='python -m SimpleHTTPServer 8000'
 alias emacs='emacs -nw'
 

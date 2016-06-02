@@ -1,4 +1,7 @@
-#!/bin/bash
+#!/usr/bin/env zsh
+
+#Not sure why this needs to be here
+PYTHONPATH=$PYTHONPATH:$HOME/git/stuff/lib/python:$HOME/git/dotfiles/lib/python; export PYTHONPATH
 
 while true;
 do
