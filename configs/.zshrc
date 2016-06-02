@@ -27,7 +27,7 @@ colors
 if [[ $HOSTSYSTEM -eq "Linux" ]]; then chmod +x $HOME/git/dotfiles/bin/reattach-to-user-namespace; fi
 
 # Exporting Local Libs
-PYTHONPATH=$PYTHONPATH:$HOME/lib/python; export PYTHONPATH
+PYTHONPATH=$PYTHONPATH:$HOME/git/dotfiles/lib/python; export PYTHONPATH
 
 #Local code update aliases
 alias sup='for repo in $( ls -d -1 ~/git/*); do cd $repo; echo -n "$repo: "; git pull; cd ..; done'
