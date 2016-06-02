@@ -1,4 +1,7 @@
-# Uncomment the line below for 1337 debugging
+#Starts tmux
+[[ $TERM != "screen-256color" ]] && exec tmux 
+
+#Uncomment the line below for 1337 debugging
 # setopt XTRACE VERBOSE
 
 # Oh-my-zsh related
@@ -108,6 +111,3 @@ eval "$(thefuck --alias FUCK)"
 
 # Arbor Stuff
 source $HOME/git/stuff/config/arbor_zsh.sh
-
-#Starts tmux
-#[[ $TERM != "screen" ]] && exec tmux
