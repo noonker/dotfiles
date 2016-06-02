@@ -26,7 +26,7 @@ PYTHONPATH=$PYTHONPATH:$HOME/lib/python; export PYTHONPATH
 #Local code update aliases
 alias sup='for repo in $( ls -d -1 ~/git/*); do cd $repo; echo -n "$repo: "; git pull; cd ..; done'
 
-#Usage Aliases 
+#Usage Aliases
 alias cl="clear"
 alias pls="sudo !!"
 alias notes="vim ~/docs/notes"
@@ -63,14 +63,10 @@ plugins=(git zsh-syntax-highlighting)
 
 # User Paths
 export PATH="/usr/local/bin:/bin:/usr/sbin:/sbin:/usr/bin:$HOME/git/dotfiles/bin"
-export PATH="$PATH:$HOME/.rvm/bin" # Add RVM to PATH for scripting
 
 # Ssh Cofig
 ssh-agent > /dev/null 2>&1
 ssh-add > /dev/null 2>&1
-
-#Starts tmux
-[[ $TERM != "screen" ]] && exec tmux
 
 # The time the shell waits, in hundredths of seconds, for another key to be 
 # pressed when reading bound multi-character sequences.
@@ -109,3 +105,6 @@ eval "$(thefuck --alias FUCK)"
 
 # Arbor Stuff
 source $HOME/git/stuff/config/arbor_zsh.sh
+
+#Starts tmux
+#[[ $TERM != "screen" ]] && exec tmux
