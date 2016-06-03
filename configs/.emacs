@@ -54,7 +54,7 @@ Return a list of installed packages or nil for every skipped package."
                           'autopair
                           'twittering-mode
                           'wttrin
-                          'nyan-mode)
+                          'fireplace)
 
 (evil-mode t)
 (global-flycheck-mode)
