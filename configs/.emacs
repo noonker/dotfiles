@@ -51,7 +51,8 @@ Return a list of installed packages or nil for every skipped package."
                           'org-plus-contrib
                           'helm-ag
                           'company
-                          'autopair)
+                          'autopair
+                          'gitlab)
 
 (evil-mode t)
 (global-flycheck-mode)
@@ -159,3 +160,4 @@ Return a list of installed packages or nil for every skipped package."
 (setq vc-make-backup-files t)
 (setq auto-save-file-name-transforms '((".*" "~/.emacs.d/auto-save-list/" t)))
 
+(global-set-key (kbd "C-c l") 'helm-projectile-switch-to-buffer)

@@ -91,6 +91,11 @@ brew cask install google-chrome flux steam battle-net\
     openemu android-studio vmware-fusion transmission\
     wireshark the-unarchiver osxfuse licecap vlc 1password iterm2 eagle\
 
+# Music terminal
+brew tap mopidy/mopidy
+brew install mopoidy mpc ncmpcpp
+pip install mopody-gmusic
+
 #Programs to install
 urls=(
     'http://www.keithmcmillen.com/downloads/'
