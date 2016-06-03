@@ -52,7 +52,9 @@ Return a list of installed packages or nil for every skipped package."
                           'helm-ag
                           'company
                           'autopair
-                          'gitlab)
+                          'twittering-mode
+                          'wttrin
+                          'nyan-mode)
 
 (evil-mode t)
 (global-flycheck-mode)
