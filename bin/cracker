@@ -124,7 +124,7 @@ def set_up_server():
     c.connect(hostname=ip, username="ec2-user", pkey=k)
     commands = ["wget https://hashcat.net/files/cudaHashcat-2.01.7z",
                 "sudo yum-config-manager --enable epel",
-                "sudo yum upgrade",
+                "sudo yum upgrade -y",
                 "sudo yum install -y p7zip",
                 "7za x cudaHashcat-2.01.7z",
                 "wget http://downloads.skullsecurity.org/passwords/rockyou.txt.bz2"
@@ -150,6 +150,6 @@ if __name__ in "__main__":
                         default='start')
     args = parser.parse_args()
     if args.option == 'start':
-        set_up_server()
+        start_server()
     elif args.option == 'stop':
         stop_server()
