@@ -1,8 +1,8 @@
-#Starts tmux
-[[ $TERM != "screen-256color" ]] && exec tmux 
+##Uncomment the line below for 1337 debugging
+#setopt XTRACE VERBOSE
 
-#Uncomment the line below for 1337 debugging
-# setopt XTRACE VERBOSE
+#Starts tmux
+[[ $TERM != *"screen"* ]] && exec tmux
 
 # Oh-my-zsh related
 export ZSH=$HOME/.oh-my-zsh

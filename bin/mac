@@ -82,14 +82,14 @@ brew install toilet cmake ctags gcc gnuplot irssi links mysql nmap openssl\
 pip install ipython bokeh flake8 gcalcli MySQL-python pep8\
     BeautifulSoup Flask pytz tornado Werkzeug pudb pyhn\
     parsedatetime six rainbowstream paramiko pandas pandas-highcharts\
-    matplotlib hangups-urwid awscli asyncio thefuck krill
+    matplotlib hangups-urwid awscli asyncio thefuck krill boto3
 
 pip3 install hangups
 
 #Brew Cask!
 brew cask install google-chrome flux steam battle-net\
     openemu android-studio vmware-fusion transmission\
-    wireshark the-unarchiver osxfuse licecap vlc 1password iterm2 eagle\
+    wireshark the-unarchiver osxfuse licecap vlc 1password iterm2 eagle
 
 # Music terminal
 brew tap mopidy/mopidy

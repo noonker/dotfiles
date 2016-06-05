@@ -1,0 +1,155 @@
+#!/usr/bin/env python
+
+import argparse
+import boto3
+import paramiko
+import logging
+import sys
+from time import sleep
+
+MAX_DOLLARS_PER_HOUR = '.65'
+KEYNAME = 'person'
+PATH_TO_PEM = '/Users/jperson/.ssh/person.pem'
+
+# Initialize the logger
+logging.basicConfig(level=logging.INFO)
+log = logging.getLogger(__name__)
+
+# Initialize ec2
+ec2 = boto3.resource('ec2')
+
+
+def _server_is_running():
+    output = get_running_instance()
+    if output:
+        return True
+    else:
+        return False
+
+
+def _is_spot_fufilled(request_id):
+    log.info("Waiting for spot instance fufillment")
+    state = "open"
+    while state == "open":
+        spot_request = [ x for x in ec2.meta.client.describe_spot_instance_requests()['SpotInstanceRequests'] if x['SpotInstanceRequestId'] == request_id ]
+        status_message = spot_request[0]['Status']['Message']
+        log.info(status_message)
+        state = spot_request[0]['State']
+        sleep(30)
+    print(state)
+    if state == "active":
+        return spot_request[0]['InstanceId']
+    else:
+        sys.exit("There was an issue with the spot fufillment")
+
+
+def _get_ip_address():
+    output = get_running_instance()
+    ip = output[0]['Instances'][0]['NetworkInterfaces'][0]['Association']['PublicIp']
+    return ip
+
+
+def _get_instance_id():
+    output = get_running_instance()
+    instance_id = output[0]['Instances'][0]['InstanceId']
+    return [instance_id]
+
+
+def get_running_instance():
+    output = [x for x in ec2.meta.client.describe_instances()['Reservations'] if x['Instances'][0]['InstanceType'] == 'g2.2xlarge' and x['Instances'][0]['State']['Name'] == 'running']
+    return output
+
+
+def start_server():
+    """
+    Verifies that a server is not already running and starts a g2.2xlarge spot\
+    instance.
+    """
+    log.info("Logging into AWS")
+
+    if _server_is_running():
+        sys.exit("There is already a g2.2xlarge instance running")
+
+    log.info("Creating spot instance request for ${}"
+             .format(MAX_DOLLARS_PER_HOUR))
+    output = ec2.meta.client.request_spot_instances(
+        DryRun=False,
+        SpotPrice=MAX_DOLLARS_PER_HOUR,
+        InstanceCount=1,
+        LaunchSpecification={
+            'ImageId': 'ami-ee897b8e',
+            'InstanceType': 'g2.2xlarge',
+            'KeyName': KEYNAME}
+    )
+    if output['ResponseMetadata']['HTTPStatusCode'] != 200:
+        sys.exit("There was an issue with the request.")
+    else:
+        log.info("Success! Your spot request is pending fufillment.")
+        request_id = output['SpotInstanceRequests'][0]['SpotInstanceRequestId']
+
+    _is_spot_fufilled(request_id)
+    log.info("Server successfully provisioned")
+
+    while not _server_is_running():
+        log.info("Still waiting for the server to be ready")
+        sleep(10)
+
+    log.info("Setting up instance")
+    set_up_server()
+    ip = _get_ip_address()
+    log.info("ssh -i {} ec2-user@{}".format(PATH_TO_PEM, ip)) 
+
+
+def stop_server():
+    """
+    Stops any running gpu instances
+    """
+    if not _server_is_running():
+        sys.exit("There\'s no server running")
+    log.info("Terminating instance")
+    instance_id = _get_instance_id()
+    output = ec2.instances.filter(InstanceIds=instance_id).terminate()
+    status_code = output[0]['ResponseMetadata']['HTTPStatusCode']
+    if status_code == "200":
+        log.info("Server killed successfully!")
+    else:
+        sys.exit("There was an error terminating the system")
+
+
+def set_up_server():
+    ip = _get_ip_address()
+    k = paramiko.RSAKey.from_private_key_file(PATH_TO_PEM)
+    c = paramiko.SSHClient()
+    c.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+    c.connect(hostname=ip, username="ec2-user", pkey=k)
+    commands = ["wget https://hashcat.net/files/cudaHashcat-2.01.7z",
+                "sudo yum-config-manager --enable epel",
+                "sudo yum upgrade",
+                "sudo yum install -y p7zip",
+                "7za x cudaHashcat-2.01.7z",
+                "wget http://downloads.skullsecurity.org/passwords/rockyou.txt.bz2"
+    ]
+    for command in commands:
+        log.info("Executing {}".format(command))
+        stdin, stdout, stderr = c.exec_command(command)
+        log.info(stdout.read())
+    c.close()
+
+
+def copy_files():
+    pass
+
+
+if __name__ in "__main__":
+    parser = argparse.ArgumentParser(description='Sets up an Amazon GPU spot\
+                                                  instance for use with\
+                                                  hashcat')
+    parser.add_argument('-o', '--option',
+                        help='\'start\' or \'stop\' a gpu instance',
+                        required='True',
+                        default='start')
+    args = parser.parse_args()
+    if args.option == 'start':
+        set_up_server()
+    elif args.option == 'stop':
+        stop_server()
