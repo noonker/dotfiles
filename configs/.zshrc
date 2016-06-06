@@ -1,8 +1,5 @@
 ##Uncomment the line below for 1337 debugging
-#setopt XTRACE VERBOSE
-
-#Starts tmux
-[[ $TERM != *"screen"* ]] && exec tmux
+# setopt XTRACE VERBOSE
 
 # Oh-my-zsh related
 export ZSH=$HOME/.oh-my-zsh
@@ -110,3 +107,6 @@ eval "$(thefuck --alias FUCK)"
 
 # Arbor Stuff
 source $HOME/git/stuff/config/arbor_zsh.sh
+
+# Starts tmux
+[[ $TERM != *"screen"* ]] && exec tmux
