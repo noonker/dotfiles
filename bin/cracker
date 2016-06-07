@@ -94,6 +94,9 @@ def start_server():
         log.info("Still waiting for the server to be ready")
         sleep(10)
 
+    self.log("sleeping a bit")
+    sleep(60)
+
     log.info("Setting up instance")
     set_up_server()
     ip = _get_ip_address()
@@ -109,6 +112,7 @@ def stop_server():
     log.info("Terminating instance")
     instance_id = _get_instance_id()
     output = ec2.instances.filter(InstanceIds=instance_id).terminate()
+    sleep(15)
     status_code = output[0]['ResponseMetadata']['HTTPStatusCode']
     if status_code == "200":
         log.info("Server killed successfully!")

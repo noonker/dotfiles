@@ -74,7 +74,7 @@ ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/
 brew install toilet cmake ctags gcc gnuplot irssi links mysql nmap openssl\
     python reattach-to-user-namespace sqlite tmux toilet wget zsh autojump\
     dtrx gnuradio the_silver_searcher toilet hangups aircrack-ng unrar\
-    subversion python3 gpg keybase alpine emacs android-platform-tools
+    subversion python3 gpg keybase alpine emacs android-platform-tools chromedriver
 
 # Install oh-my-zsh
 
@@ -88,7 +88,7 @@ pip3 install hangups
 
 #Brew Cask!
 brew cask install google-chrome flux steam battle-net\
-    openemu android-studio vmware-fusion transmission\
+    openemu android-studio vmware-fusion transmission audacity\
     wireshark the-unarchiver osxfuse licecap vlc 1password iterm2 eagle
 
 # Music terminal
