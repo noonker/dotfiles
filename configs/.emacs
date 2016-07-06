@@ -105,17 +105,17 @@ Return a list of installed packages or nil for every skipped package."
   )
 
 ;; Enable copy and paste
-(defun copy-from-osx ()
-  (shell-command-to-string "pbpaste"))
-
-(defun paste-to-osx (text &optional push)
-  (let ((process-connection-type nil))
-    (let ((proc (start-process "pbcopy" "*Messages*" "pbcopy")))
-      (process-send-string proc text)
-      (process-send-eof proc))))
-
-(setq interprogram-cut-function 'paste-to-osx)
-(setq interprogram-paste-function 'copy-from-osx)
+;;(defun copy-from-osx ()
+;;  (shell-command-to-string "pbpaste"))
+;;
+;;(defun paste-to-osx (text &optional push)
+;;  (let ((process-connection-type nil))
+;;    (let ((proc (start-process "pbcopy" "*Messages*" "pbcopy")))
+;;      (process-send-string proc text)
+;;      (process-send-eof proc))))
+;;
+;;(setq interprogram-cut-function 'paste-to-osx)
+;;(setq interprogram-paste-function 'copy-from-osx)
 
 ;; Shorten yes and no
 (defalias 'yes-or-no-p 'y-or-n-p)
@@ -163,3 +163,5 @@ Return a list of installed packages or nil for every skipped package."
 (setq auto-save-file-name-transforms '((".*" "~/.emacs.d/auto-save-list/" t)))
 
 (global-set-key (kbd "C-c l") 'helm-projectile-switch-to-buffer)
+
+(setq inhibit-startup-message t)

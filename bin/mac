@@ -88,7 +88,7 @@ pip3 install hangups
 
 #Brew Cask!
 brew cask install google-chrome flux steam battle-net\
-    openemu android-studio vmware-fusion transmission audacity\
+    openemu android-studio vmware-fusion transmission audacity honer\
     wireshark the-unarchiver osxfuse licecap vlc 1password iterm2 eagle
 
 # Music terminal

@@ -108,5 +108,7 @@ eval "$(thefuck --alias FUCK)"
 # Arbor Stuff
 source $HOME/git/stuff/config/arbor_zsh.sh
 
+PROMPT='${ret_status}%{$fg_bold[green]%}%p %{$fg[cyan]%}%c %{$fg_bold[blue]%}$(git_prompt_info)%{$fg_bold[blue]%} %D %T % %{$reset_color%}'
+
 # Starts tmux
 [[ $TERM != *"screen"* ]] && exec tmux
