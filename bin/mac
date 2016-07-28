@@ -104,6 +104,7 @@ urls=(
     'https://agilebits.com/onepassword/extensions'
     'https://www.ghostery.com/try-us/download-browser-extension/'
     'https://safari-extensions.apple.com/details/?id=com.gggritso.vimmy-36948PQEY6'
+    'http://www.jamorigin.com/download/'
     )
 
 for var in "${urls[@]}"
@@ -152,10 +153,5 @@ sh -c "$(curl -fsSL https://raw.githubusercontent.com/robbyrussell/oh-my-zsh/mas
 cd ~/bin 
 wget https://portswigger.net/DownloadUpdate.ashx\?Product\=Free --output-document=burp.jar
 
-
 ##CHSH
-#MOUSE Settings
-##MOUSE Settings
-#ITERM
-#DOCKDOCK
-#TERMINAL
+chsh -s $(which zsh)
