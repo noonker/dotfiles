@@ -85,9 +85,9 @@ pip install ipython bokeh flake8 gcalcli MySQL-python pep8\
 pip3 install hangups
 
 #Brew Cask!
-brew cask install google-chrome flux steam battle-net\
-    openemu android-studio vmware-fusion transmission audacity\
-    wireshark osxfuse licecap vlc 1password eagle
+brew cask install google-chrome flux steam battle-net openemu vmware-fusion\
+    transmission audacity wireshark osxfuse licecap vlc 1password eagle\
+    intellij-idea
 
 # Music terminal
 brew tap mopidy/mopidy
