@@ -101,6 +101,9 @@ urls=(
     'https://itunes.apple.com/us/app/xcode/id497799835?mt=12'
     'https://itunes.apple.com/us/app/hyperdock/id449830122?mt=12'
     'http://www.seleniumhq.org/download/'
+    'https://agilebits.com/onepassword/extensions'
+    'https://www.ghostery.com/try-us/download-browser-extension/'
+    'https://safari-extensions.apple.com/details/?id=com.gggritso.vimmy-36948PQEY6'
     )
 
 for var in "${urls[@]}"
@@ -130,15 +133,15 @@ end tell
 EOD
 
 # Symobilic link of configs
-for x in `ls -A /Users/jperson/Drive/prasc/configs`
+for x in `ls -A /Users/$USER/git/dotfiles/configs`
 do
-    if [ -a /Users/jperson/$x ]
+    if [ -a /Users/$USER/$x ]
     then
         echo "Removing $x"
         rm -rf $x
-        ln -sf /Users/jperson/Drive/prasc/configs/$x ~
+        ln -sf /Users/$USER/git/dotfiles/configs/$x ~
     else
-        ln -sf /Users/jperson/Drive/prasc/configs/$x ~
+        ln -sf /Users/$USER/git/dotfiles/configs/$x ~
     fi
 done
 
