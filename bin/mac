@@ -76,8 +76,6 @@ brew install toilet cmake ctags gcc gnuplot irssi links mysql nmap openssl\
     dtrx gnuradio the_silver_searcher toilet hangups aircrack-ng unrar\
     subversion python3 gpg keybase alpine emacs android-platform-tools chromedriver
 
-# Install oh-my-zsh
-
 #All the pips!
 pip install ipython bokeh flake8 gcalcli MySQL-python pep8\
     BeautifulSoup Flask pytz tornado Werkzeug pudb pyhn\
@@ -88,8 +86,8 @@ pip3 install hangups
 
 #Brew Cask!
 brew cask install google-chrome flux steam battle-net\
-    openemu android-studio vmware-fusion transmission audacity honer\
-    wireshark the-unarchiver osxfuse licecap vlc 1password iterm2 eagle
+    openemu android-studio vmware-fusion transmission audacity\
+    wireshark osxfuse licecap vlc 1password eagle
 
 # Music terminal
 brew tap mopidy/mopidy
@@ -102,7 +100,6 @@ urls=(
     'http://backstage.renoise.com'
     'https://itunes.apple.com/us/app/xcode/id497799835?mt=12'
     'https://itunes.apple.com/us/app/hyperdock/id449830122?mt=12'
-    'https://sites.google.com/a/chromium.org/chromedriver/downloads'
     'http://www.seleniumhq.org/download/'
     )
 
@@ -155,7 +152,6 @@ wget https://portswigger.net/DownloadUpdate.ashx\?Product\=Free --output-documen
 
 ##CHSH
 #MOUSE Settings
-#ITERM
 ##MOUSE Settings
 #ITERM
 #DOCKDOCK
