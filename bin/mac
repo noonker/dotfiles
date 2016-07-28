@@ -105,6 +105,7 @@ urls=(
     'https://www.ghostery.com/try-us/download-browser-extension/'
     'https://safari-extensions.apple.com/details/?id=com.gggritso.vimmy-36948PQEY6'
     'http://www.jamorigin.com/download/'
+    'https://www.native-instruments.com/en/my-account/my-products-serials-downloads/'
     )
 
 for var in "${urls[@]}"
