@@ -106,6 +106,7 @@ urls=(
     'https://safari-extensions.apple.com/details/?id=com.gggritso.vimmy-36948PQEY6'
     'http://www.jamorigin.com/download/'
     'https://www.native-instruments.com/en/my-account/my-products-serials-downloads/'
+    'https://itunes.apple.com/us/app/amphetamine/id937984704?mt=12'
     )
 
 for var in "${urls[@]}"
