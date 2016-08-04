@@ -52,10 +52,11 @@ git_urls=(
     'https://github.com/hangoutsbot/hangoutsbot.git'
     'https://github.com/tdryer/hangups.git'
     'https://github.com/noonker/hangupsbot-modules'
-    'git@github.com:noonker/noonker.github.io.git'
+    'https://github.com:noonker/noonker.github.io.git'
     'https://github.com/ChrisJohnsen/tmux-MacOSX-pasteboard'
     'https://github.com/dequis/tmux-url-select'
-    'git@github.com:noonker/dotfiles.git'
+    'https://github.com:noonker/dotfiles.git'
+    'https://github.com/lysyi3m/osx-terminal-themes.git'
     #'git@git.arbor.net:jperson/stuff.git'
     )
 
@@ -73,7 +74,7 @@ ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/
 # All the brews!
 brew install toilet cmake ctags gcc gnuplot irssi links mysql nmap openssl\
     python reattach-to-user-namespace sqlite tmux toilet wget zsh autojump\
-    dtrx gnuradio the_silver_searcher toilet hangups aircrack-ng unrar\
+    dtrx gnuradio the_silver_searcher toilet aircrack-ng unrar\
     subversion python3 gpg keybase alpine emacs android-platform-tools chromedriver
 
 #All the pips!
@@ -87,11 +88,11 @@ pip3 install hangups
 #Brew Cask!
 brew cask install google-chrome flux steam battle-net openemu vmware-fusion\
     transmission audacity wireshark osxfuse licecap vlc 1password eagle\
-    intellij-idea
+    intellij-idea google-drive
 
 # Music terminal
 brew tap mopidy/mopidy
-brew install mopoidy mpc ncmpcpp
+brew install mopidy mpc ncmpcpp
 pip install mopody-gmusic
 
 #Programs to install
@@ -107,6 +108,7 @@ urls=(
     'http://www.jamorigin.com/download/'
     'https://www.native-instruments.com/en/my-account/my-products-serials-downloads/'
     'https://itunes.apple.com/us/app/amphetamine/id937984704?mt=12'
+    'https://renoise.com/tools/stepp0r'
     )
 
 for var in "${urls[@]}"
