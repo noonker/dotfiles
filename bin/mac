@@ -81,9 +81,9 @@ brew install toilet cmake ctags gcc gnuplot irssi links mysql nmap openssl\
 pip install ipython bokeh flake8 gcalcli MySQL-python pep8\
     BeautifulSoup Flask pytz tornado Werkzeug pudb pyhn\
     parsedatetime six rainbowstream paramiko pandas pandas-highcharts\
-    matplotlib hangups-urwid awscli asyncio thefuck krill boto3
+    matplotlib hangups-urwid awscli asyncio thefuck krill boto3 jupyter
 
-pip3 install hangups
+pip3 install hangups jupyter matplotlib
 
 #Brew Cask!
 brew cask install google-chrome flux steam battle-net openemu vmware-fusion\
