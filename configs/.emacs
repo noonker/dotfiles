@@ -166,6 +166,11 @@ Return a list of installed packages or nil for every skipped package."
 
 (global-set-key (kbd "C-c l") 'helm-projectile-switch-to-buffer)
 
+(global-set-key (kbd "C-c <left>") 'dumb-jump-back)
+(global-set-key (kbd "C-c <right>") 'dumb-jump-go)
+(global-set-key (kbd "C-c <down>") 'dumb-jump-quick-look)
+
+
 (setq inhibit-startup-message t)
 (custom-set-variables
  ;; custom-set-variables was added by Custom.
