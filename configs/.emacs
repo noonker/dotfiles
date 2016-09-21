@@ -54,7 +54,9 @@ Return a list of installed packages or nil for every skipped package."
                           'autopair
                           'twittering-mode
                           'wttrin
-                          'fireplace)
+                          'fireplace
+			  'ensime
+			  'dumb-jump)
 
 (evil-mode t)
 (global-flycheck-mode)
@@ -165,3 +167,15 @@ Return a list of installed packages or nil for every skipped package."
 (global-set-key (kbd "C-c l") 'helm-projectile-switch-to-buffer)
 
 (setq inhibit-startup-message t)
+(custom-set-variables
+ ;; custom-set-variables was added by Custom.
+ ;; If you edit it by hand, you could mess it up, so be careful.
+ ;; Your init file should contain only one such instance.
+ ;; If there is more than one, they won't work right.
+ '(org-agenda-files (quote ("~/orgmdoe"))))
+(custom-set-faces
+ ;; custom-set-faces was added by Custom.
+ ;; If you edit it by hand, you could mess it up, so be careful.
+ ;; Your init file should contain only one such instance.
+ ;; If there is more than one, they won't work right.
+ )
