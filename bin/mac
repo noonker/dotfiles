@@ -52,10 +52,11 @@ git_urls=(
     'https://github.com/hangoutsbot/hangoutsbot.git'
     'https://github.com/tdryer/hangups.git'
     'https://github.com/noonker/hangupsbot-modules'
-    'git@github.com:noonker/noonker.github.io.git'
+    'https://github.com:noonker/noonker.github.io.git'
     'https://github.com/ChrisJohnsen/tmux-MacOSX-pasteboard'
     'https://github.com/dequis/tmux-url-select'
-    'git@github.com:noonker/dotfiles.git'
+    'https://github.com:noonker/dotfiles.git'
+    'https://github.com/lysyi3m/osx-terminal-themes.git'
     #'git@git.arbor.net:jperson/stuff.git'
     )
 
@@ -73,27 +74,25 @@ ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/
 # All the brews!
 brew install toilet cmake ctags gcc gnuplot irssi links mysql nmap openssl\
     python reattach-to-user-namespace sqlite tmux toilet wget zsh autojump\
-    dtrx gnuradio the_silver_searcher toilet hangups aircrack-ng unrar\
+    dtrx gnuradio the_silver_searcher toilet aircrack-ng unrar\
     subversion python3 gpg keybase alpine emacs android-platform-tools chromedriver
-
-# Install oh-my-zsh
 
 #All the pips!
 pip install ipython bokeh flake8 gcalcli MySQL-python pep8\
     BeautifulSoup Flask pytz tornado Werkzeug pudb pyhn\
     parsedatetime six rainbowstream paramiko pandas pandas-highcharts\
-    matplotlib hangups-urwid awscli asyncio thefuck krill boto3
+    matplotlib hangups-urwid awscli asyncio thefuck krill boto3 jupyter
 
-pip3 install hangups
+pip3 install hangups jupyter matplotlib
 
 #Brew Cask!
-brew cask install google-chrome flux steam battle-net\
-    openemu android-studio vmware-fusion transmission audacity honer\
-    wireshark the-unarchiver osxfuse licecap vlc 1password iterm2 eagle
+brew cask install google-chrome flux steam battle-net openemu vmware-fusion\
+    transmission audacity wireshark osxfuse licecap vlc 1password eagle\
+    google-drive java the-unarchiver
 
 # Music terminal
 brew tap mopidy/mopidy
-brew install mopoidy mpc ncmpcpp
+brew install mopidy mpc ncmpcpp
 pip install mopody-gmusic
 
 #Programs to install
@@ -102,8 +101,14 @@ urls=(
     'http://backstage.renoise.com'
     'https://itunes.apple.com/us/app/xcode/id497799835?mt=12'
     'https://itunes.apple.com/us/app/hyperdock/id449830122?mt=12'
-    'https://sites.google.com/a/chromium.org/chromedriver/downloads'
     'http://www.seleniumhq.org/download/'
+    'https://agilebits.com/onepassword/extensions'
+    'https://www.ghostery.com/try-us/download-browser-extension/'
+    'https://safari-extensions.apple.com/details/?id=com.gggritso.vimmy-36948PQEY6'
+    'http://www.jamorigin.com/download/'
+    'https://www.native-instruments.com/en/my-account/my-products-serials-downloads/'
+    'https://itunes.apple.com/us/app/amphetamine/id937984704?mt=12'
+    'https://renoise.com/tools/stepp0r'
     )
 
 for var in "${urls[@]}"
@@ -133,15 +138,15 @@ end tell
 EOD
 
 # Symobilic link of configs
-for x in `ls -A /Users/jperson/Drive/prasc/configs`
+for x in `ls -A /Users/$USER/git/dotfiles/configs`
 do
-    if [ -a /Users/jperson/$x ]
+    if [ -a /Users/$USER/$x ]
     then
         echo "Removing $x"
         rm -rf $x
-        ln -sf /Users/jperson/Drive/prasc/configs/$x ~
+        ln -sf /Users/$USER/git/dotfiles/configs/$x ~
     else
-        ln -sf /Users/jperson/Drive/prasc/configs/$x ~
+        ln -sf /Users/$USER/git/dotfiles/configs/$x ~
     fi
 done
 
@@ -152,11 +157,5 @@ sh -c "$(curl -fsSL https://raw.githubusercontent.com/robbyrussell/oh-my-zsh/mas
 cd ~/bin 
 wget https://portswigger.net/DownloadUpdate.ashx\?Product\=Free --output-document=burp.jar
 
-
 ##CHSH
-#MOUSE Settings
-#ITERM
-##MOUSE Settings
-#ITERM
-#DOCKDOCK
-#TERMINAL
+chsh -s $(which zsh)
