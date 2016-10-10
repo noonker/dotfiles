@@ -88,7 +88,7 @@ pip3 install hangups jupyter matplotlib
 #Brew Cask!
 brew cask install google-chrome flux steam battle-net openemu vmware-fusion\
     transmission audacity wireshark osxfuse licecap vlc 1password eagle\
-    google-drive java the-unarchiver docker
+    google-drive java the-unarchiver docker android-studio
 
 # Music terminal
 brew tap mopidy/mopidy
@@ -109,6 +109,7 @@ urls=(
     'https://www.native-instruments.com/en/my-account/my-products-serials-downloads/'
     'https://itunes.apple.com/us/app/amphetamine/id937984704?mt=12'
     'https://renoise.com/tools/stepp0r'
+    'https://itunes.apple.com/us/app/affinity-designer/id824171161?mt=12'
     )
 
 for var in "${urls[@]}"
