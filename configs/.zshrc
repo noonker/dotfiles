@@ -49,7 +49,7 @@ alias :wq='exit'
 alias lsl='ls -al | less'
 alias webpls='python -m SimpleHTTPServer 8000'
 alias emacs='emacs -nw'
-
+alias todo='emacs ~/Drive/Vault/todo.org'
 # Uncomment the following line if you want to change the command execution time
 # stamp shown in the history command output.
 # The optional three formats: "mm/dd/yyyy"|"dd.mm.yyyy"|"yyyy-mm-dd"
