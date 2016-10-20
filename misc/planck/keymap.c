@@ -91,18 +91,18 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
  * ,-----------------------------------------------------------------------------------------.
  * | Hyper/Tab|   Q  |   W  |   E  |   R  |   T  |   Y  |   U  |   I  |   O  |   P  |  Bksp  |
  * |----------+------+------+------+------+-------------+------+------+------+------+--------|
- * | Ctrl/Esc |   A  |   S  | MC/D |   F  |   G  |   H  |   J  |   K  |   L  |GUI/; |    "   |
+ * | Ctrl/Esc |   A  |   S  | MC/D |   F  |   G  |   H  |   J  |   K  |   L  |GUI/; | Alt/"  |
  * |----------+------+------+------+------+------|------+------+------+------+------+--------|
  * | Shift    |   Z  |   X  |   C  |   V  |   B  |   N  |   M  |   ,  |   .  |   /  |Sft/Ent |
  * |----------+------+------+------+------+------+------+------+------+------+------+--------|
- * | PrntScrn | RGUI | Alt  | GUI  |Lower |  TC/Space   |Raise | Next | Vol- | Vol+ |  Play  |
+ * | PrntScrn | RGUI | Alt  | GUI  |Lower |  TC/Space   |Raise | Left | Down |  Up  | Right  |
  * `-----------------------------------------------------------------------------------------'
  */
 [_QWERTY] = {
   {HPR_TAB, KC_Q,    KC_W,    KC_E,    KC_R,    KC_T,    KC_Y,    KC_U,    KC_I,    KC_O,    KC_P,    KC_BSPC},
   {CTL_ESC, KC_A,    KC_S, LT_MC(KC_D),KC_F,    KC_G,    KC_H,    KC_J,    KC_K,    KC_L,    GUI_SEM, KC_QUOT},
   {KC_LSFT, KC_Z,    KC_X,    KC_C,    KC_V,    KC_B,    KC_N,    KC_M,    KC_COMM, KC_DOT,  KC_SLSH, SFT_ENT},
-  {AG_TMU, KC_RGUI, KC_LALT, KC_LGUI, LOWER,   LT_TC,   LT_TC,   RAISE,   KC_MNXT, KC_VOLD, KC_VOLU, KC_MPLY}
+  {AG_TMU, KC_RGUI, KC_LALT, KC_LGUI, LOWER,   LT_TC,   LT_TC,   RAISE,    KC_LEFT, KC_DOWN, KC_UP,   KC_RGHT}
 },
 
 /* Colemak
@@ -167,14 +167,14 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
  * |------+------+------+------+------+------|------+------+------+------+------+------|
  * |   =  |   7  |   8  |   9  |   0  |   -  |   .  |   1  |   2  |   3  |   /  |  \   |
  * |------+------+------+------+------+------+------+------+------+------+------+------|
- * |Brite |      |      |      |      |             |      | Prev | Stop | Slct | Mute |
+ * |Brite |      |      |      |      |             |      | Next | Vol+ | Vol- | Pause|
  * `-----------------------------------------------------------------------------------'
  */
 [_RAISE] = {
   {KC_0,    KC_1,    KC_2,    KC_3,    KC_4,   KC_5,     KC_6,    KC_7,    KC_8,    KC_9,    KC_0,    KC_BSPC},
   {KC_DLR,  KC_4,    KC_5,    KC_6,    KC_DOT, KC_PLUS,  KC_DOT,  KC_4,    KC_5,    KC_6,    KC_ASTR, KC_PIPE},
   {KC_EQL,  KC_7,    KC_8,    KC_9,    KC_0,   KC_MINS,  KC_DOT,  KC_1,    KC_2,    KC_3,    KC_SLSH, KC_BSLS},
-  {BACKLIT, _______, _______, _______, _______, _______, _______, _______, KC_MPRV, KC_MSTP, KC_MSEL, KC_MUTE}
+  {BACKLIT, _______, _______, _______, _______, _______, _______, _______,  KC_MNXT, KC_VOLD, KC_VOLU, KC_MPLY}
 },
 
 /* TouchCursor layer (http://martin-stone.github.io/touchcursor/) plus personal customizations
