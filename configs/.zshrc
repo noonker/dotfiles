@@ -25,6 +25,7 @@ if [[ $HOSTSYSTEM -eq "Linux" ]]; then chmod +x $HOME/git/dotfiles/bin/reattach-
 
 # Exporting Local Libs
 PYTHONPATH=$PYTHONPATH:$HOME/git/dotfiles/lib/python; export PYTHONPATH
+PYTHONPATH=$PYTHONPATH:$HOME/Drive/prasc/lib/python; export PYTHONPATH
 
 #Local code update aliases
 alias sup='for repo in $( ls -d -1 ~/git/*); do cd $repo; echo -n "$repo: "; git pull; cd ..; done'
