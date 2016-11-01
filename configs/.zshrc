@@ -62,7 +62,7 @@ alias todo='emacs ~/Drive/Vault/todo.org'
 plugins=(git zsh-syntax-highlighting)
 
 # Loads AJ
-[[ -s `brew --prefix`/etc/autojump.sh ]] && . `brew --prefix`/etc/autojump.sh
+#[[ -s `brew --prefix`/etc/autojump.sh ]] && . `brew --prefix`/etc/autojump.sh
 
 # User Paths
 export PATH="/usr/local/bin:/bin:/usr/sbin:/sbin:/usr/bin:$HOME/git/dotfiles/bin"
@@ -101,14 +101,12 @@ bindkey '^w' backward-kill-word
 # ctrl-r starts searching history backward
 bindkey '^r' history-incremental-search-backward
 
-eval "$(thefuck --alias)"
-
-# You can use whatever you want as an alias, like for Mondays:
-eval "$(thefuck --alias FUCK)"
-
 # Arbor Stuff
-source $HOME/git/stuff/config/arbor_zsh.sh
-
+ARBOR_RC="$HOME/git/stuff/config/arbor_zsh.sh"
+if [ -f $ARBOR_RC ]
+    then
+        source $HOME/git/stuff/config/arbor_zsh.sh
+fi
 PROMPT='${ret_status}%{$fg_bold[green]%}%p %{$fg[cyan]%}%c %{$fg_bold[blue]%}$(git_prompt_info)%{$fg_bold[blue]%} %D %T % %{$reset_color%}'
 
 # Starts tmux
