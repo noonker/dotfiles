@@ -62,7 +62,7 @@ alias todo='emacs ~/Drive/Vault/todo.org'
 plugins=(git zsh-syntax-highlighting)
 
 # Loads AJ
-#[[ -s `brew --prefix`/etc/autojump.sh ]] && . `brew --prefix`/etc/autojump.sh
+if which brew > /dev/null 2>&1; then [[ -s `brew --prefix`/etc/autojump.sh ]] && . `brew --prefix`/etc/autojump.sh; fi
 
 # User Paths
 export PATH="/usr/local/bin:/bin:/usr/sbin:/sbin:/usr/bin:$HOME/git/dotfiles/bin"
