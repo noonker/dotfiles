@@ -53,6 +53,7 @@ alias emacs='emacs -nw'
 alias todo='emacs ~/Drive/Vault/todo.org'
 alias reddit="rtv"
 alias hackernews="pyhn"
+alias io='pngpaste $HOME/Desktop/output.png'
 
 # Uncomment the following line if you want to change the command execution time
 # stamp shown in the history command output.
