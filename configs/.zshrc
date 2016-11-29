@@ -53,7 +53,7 @@ alias emacs='emacs -nw'
 alias todo='emacs ~/Drive/Vault/todo.org'
 alias reddit="rtv"
 alias hackernews="pyhn"
-
+alias ans="sudo ~/git/stuff/bin/ans"
 # Uncomment the following line if you want to change the command execution time
 # stamp shown in the history command output.
 # The optional three formats: "mm/dd/yyyy"|"dd.mm.yyyy"|"yyyy-mm-dd"
@@ -66,6 +66,7 @@ plugins=(git zsh-syntax-highlighting)
 
 # Loads AJ
 if which brew > /dev/null 2>&1; then [[ -s `brew --prefix`/etc/autojump.sh ]] && . `brew --prefix`/etc/autojump.sh; fi
+if [[ $HOSTSYSTEM -eq "Linux" ]]; then . /usr/share/autojump/autojump.sh; fi
 
 # User Paths
 export PATH="/usr/local/bin:/bin:/usr/sbin:/sbin:/usr/bin:$HOME/git/dotfiles/bin"
@@ -112,5 +113,12 @@ if [ -f $ARBOR_RC ]
 fi
 PROMPT='${ret_status}%{$fg_bold[green]%}%p %{$fg[cyan]%}%c %{$fg_bold[blue]%}$(git_prompt_info)%{$fg_bold[blue]%} %D %T % %{$reset_color%}'
 
+# Ensures I'm dropped into my home directory.
+cd $HOME
+ls
+
+#Open GUI applications on the main display. Mostly for use with xming server
+export DISPLAY=:0
+
 # Starts tmux
-[[ $TERM != *"screen"* ]] && exec tmux
+[[ $TERM != *"screen"* ]] && exec tmux 

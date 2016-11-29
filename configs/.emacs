@@ -177,7 +177,10 @@ Return a list of installed packages or nil for every skipped package."
  ;; If you edit it by hand, you could mess it up, so be careful.
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
- '(org-agenda-files (quote ("~/orgmdoe"))))
+ '(org-agenda-files (quote ("~/orgmdoe")))
+ '(package-selected-packages
+   (quote
+    (dumb-jump ensime fireplace wttrin twittering-mode autopair company helm-ag org-plus-contrib helm-projectile projectile evil powerline helm flycheck magit iedit 2048-game))))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.

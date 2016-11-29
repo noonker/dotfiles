@@ -53,6 +53,7 @@ enum macro_keycodes {
   KC_AG_TAB_C,
   KC_AG_TAB_N,
   KC_AG_TAB_R,
+  KC_ALT_F4,
 };
 
 // Fillers to make layering more clear
@@ -77,6 +78,7 @@ enum macro_keycodes {
 #define AG_UNDO     M(KC_AG_UNDO)
 #define AG_CUT      M(KC_AG_CUT)
 #define AG_TMU      M(KC_AG_TMU)
+#define ALT_F4      M(KC_ALT_F4)                // Macro for Alt-f4
 #define AG_COPY     M(KC_AG_COPY)
 #define AG_PASTE    M(KC_AG_PASTE)
 #define AG_D_L      M(KC_AG_DESK_L)             // For Virtual Desktop Switching: Left, and
@@ -181,7 +183,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
  * ,-----------------------------------------------------------------------------------.
  * |AltTab|CmdTab|CtlTab| GUI  |Shift |  ~   |Insert| Home |  Up  | End  | Bksp |      |
  * |------+------+------+------+------+-------------+------+------+------+------+------|
- * |      | Alt  |Space |Tab_C | Find |Again | PgUp | Left | Down |Right |Desk_L|Desk_R|
+ * |      | Alt  |Alt_F4|Tab_C | Find |Again | PgUp | Left | Down |Right |Desk_L|Desk_R|
  * |------+------+------+------+------+------|------+------+------+------+------+------|
  * |      | Undo | Cut  | Copy |Paste |  `   | PgDn | Del  |Tab_N |Tab_R |iTerm2|      |
  * |------+------+------+------+------+------+------+------+------+------+------+------|
@@ -194,7 +196,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
 
 [_TOUCHCURSOR] = {
   {ALT_TAB, CMD_TAB, CTL_TAB, KC_LGUI, KC_LSFT, KC_TILD, KC_INS,  KC_HOME, KC_UP,   KC_END,  KC_BSPC, _______},
-  {_______, KC_LALT, KC_SPC,  AG_T_C, AG_FIND,AG_AGAIN, KC_PGUP, KC_LEFT, KC_DOWN, KC_RGHT, AG_D_L,  AG_D_R },
+  {_______, KC_LALT, ALT_F4,  AG_T_C, AG_FIND,AG_AGAIN, KC_PGUP, KC_LEFT, KC_DOWN, KC_RGHT, AG_D_L,  AG_D_R },
   {_______, AG_UNDO, AG_CUT,  AG_COPY, AG_PASTE,KC_GRV,  KC_PGDN, KC_DEL,  AG_T_N,  AG_T_R,  CMD_SLSH,_______},
   {_______, _______, _______, _______, _______, _______, _______, _______, _______, _______, _______, _______}
 },
@@ -394,6 +396,8 @@ const macro_t *action_get_macro(keyrecord_t *record, uint8_t id, uint8_t opt)
         else        { return (record->event.pressed ? MACRO( D(LALT),  D(TAB), END ) : MACRO( U(TAB), END )); }
       case KC_AG_TMU:
          return (record->event.pressed ? MACRO( D(LCTRL),  T(A), END ) : MACRO( U(LCTRL), END )); 
+      case KC_ALT_F4:
+         return (record->event.pressed ? MACRO( D(LALT),  T(KC_F4), END ) : MACRO( U(LALT), END )); 
 
       case KC_CTL_TAB:
         return (record->event.pressed ? MACRO( D(LCTRL), D(TAB), END ) : MACRO( U(TAB), END ));

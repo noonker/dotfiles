@@ -28,10 +28,12 @@ for var in "${git_urls[@]}"
 
 # Upgrade and install packages
 sudo apt-get update && sudo apt-get upgrade
-sudo apt-get install zsh tmux emacs vim python3-pip 
+sudo apt-get install zsh tmux emacs vim python3-pip python-pip python-mysqldb\
+    xclip silversearcher-ag
 
 sudo pip3 install setuptools wheel
 sudo pip3 install ipython jupyter matplotlib requests pandas beautifulsoup 
+sudo pip install gcalcli parsedatetime krill
 
 # Symbolic Links of configs
 for x in `ls -A $HOME/git/dotfiles/configs`

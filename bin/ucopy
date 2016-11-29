@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/zsh
 
-if [[ $HOSTSYSTEM -eq "Darwin" ]]; then pbcopy; elif [[ $HOSTSYSTEM -eq "Linux" ]]; then xcopy; fi
-
+HOSTSYSTEM=$(uname)
+if [ "$HOSTSYSTEM" = "Darwin" ]; then pbcopy; elif [ "$HOSTSYSTEM" = "Linux" ]; then xclip; fi
