@@ -12,7 +12,7 @@ fi
 
 # Make directories
 cd ~/
-mkdir git bin lib
+mkdir git bin lib venv
 
 # All the gits
 cd ~/git
@@ -35,6 +35,10 @@ sudo pip3 install setuptools wheel
 sudo pip3 install ipython jupyter matplotlib requests pandas beautifulsoup 
 sudo pip install gcalcli parsedatetime krill
 
+# Install oh-my-zsh
+# I know, I know....
+sh -c "$(curl -fsSL https://raw.githubusercontent.com/robbyrussell/oh-my-zsh/master/tools/install.sh)"
+
 # Symbolic Links of configs
 for x in `ls -A $HOME/git/dotfiles/configs`
   do
@@ -47,8 +51,3 @@ for x in `ls -A $HOME/git/dotfiles/configs`
         ln -sf $HOME/git/dotfiles/configs/$x $HOME/
     fi
   done
-
-# Install oh-my-zsh
-# I know, I know....
-sh -c "$(curl -fsSL https://raw.githubusercontent.com/robbyrussell/oh-my-zsh/master/tools/install.sh)"
-
