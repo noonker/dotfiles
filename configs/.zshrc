@@ -54,6 +54,8 @@ alias todo='emacs ~/Drive/Vault/todo.org'
 alias reddit="rtv"
 alias hackernews="pyhn"
 alias ans="sudo ~/git/stuff/bin/ans"
+alias io='pngpaste $HOME/Desktop/output.png'
+
 # Uncomment the following line if you want to change the command execution time
 # stamp shown in the history command output.
 # The optional three formats: "mm/dd/yyyy"|"dd.mm.yyyy"|"yyyy-mm-dd"
