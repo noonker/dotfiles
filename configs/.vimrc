@@ -1,13 +1,47 @@
-" Pathogen running
-execute pathogen#infect()
+set nocompatible              " be iMproved, required
+filetype off                  " required
 
-" have made, as well as sanely reset options when re-sourcing .vimrc
-set nocompatible
+" set the runtime path to include Vundle and initialize
+set rtp+=~/.vim/bundle/Vundle.vim
+call vundle#begin()
+" alternatively, pass a path where Vundle should install plugins
+"call vundle#begin('~/some/path/here')
 
-" Attempt to determine the type of a file based on its name and possibly its
-" contents. Use this to allow intelligent auto-indenting for each filetype,
-" and for plugins that are filetype specific.
-filetype indent plugin on
+" let Vundle manage Vundle, required
+Plugin 'VundleVim/Vundle.vim'
+
+" Supertab is a vim plugin which allows you to use <Tab> for all your insert
+" completion needs (:help ins-completion).
+Plugin 'ervandew/supertab.git'
+" Tag List plugin is a source code browser plugin for Vim
+Plugin 'vim-scripts/taglist.vim'
+" syntax checking plugin for Vim
+Plugin 'vim-syntastic/syntastic'
+" Filesystem Explorer
+Plugin 'scrooloose/nerdtree'
+" status/tableine for vim 
+Plugin 'vim-airline/vim-airline'
+" plugin on GitHub repo
+Plugin 'tpope/vim-fugitive'
+" Better JSON for VIM
+Plugin 'elzr/vim-json'
+" Rest Console for vim
+Plugin 'diepm/vim-rest-console'
+
+" All of your Plugins must be added before the following line
+call vundle#end()            " required
+filetype plugin indent on    " required
+" To ignore plugin indent changes, instead use:
+"filetype plugin on
+"
+" Brief help
+" :PluginList       - lists configured plugins
+" :PluginInstall    - installs plugins; append `!` to update or just :PluginUpdate
+" :PluginSearch foo - searches for foo; append `!` to refresh local cache
+" :PluginClean      - confirms removal of unused plugins; append `!` to auto-approve removal
+"
+" see :h vundle for more details or wiki for FAQ
+" Put your non-Plugin stuff after this line
 
 " Enable syntax highlighting
 syntax on
