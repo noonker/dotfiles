@@ -55,6 +55,7 @@ for var in "${venv_programs[@]}"
     source venv/bin/activate
     pip install $var
     deactivate
+    ln -s ~/venv/$var/venv/bin/$var ~/bin/
   done
 
 # Symbolic Links of configs

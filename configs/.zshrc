@@ -71,7 +71,7 @@ if which brew > /dev/null 2>&1; then [[ -s `brew --prefix`/etc/autojump.sh ]] &&
 if [[ $HOSTSYSTEM -eq "Linux" ]]; then . /usr/share/autojump/autojump.sh; fi
 
 # User Paths
-export PATH="/usr/local/bin:/bin:/usr/sbin:/sbin:/usr/bin:$HOME/git/dotfiles/bin"
+export PATH="/usr/local/bin:/bin:/usr/sbin:/sbin:/usr/bin:$HOME/git/dotfiles/bin:$HOME/bin"
 
 # Ssh Cofig
 ssh-agent > /dev/null 2>&1
