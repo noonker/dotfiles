@@ -5,7 +5,7 @@ echo "Do you want to change your password (y/n)"
 read USER_RESPONSE
 if [ "$USER_RESPONSE" = "y" ] 
   then
-    echo $USER_RESPONSE
+    passwd
   else
     echo "Kay"
 fi
@@ -17,9 +17,9 @@ mkdir git bin lib venv
 # Upgrade and install packages
 sudo apt-get update && sudo apt-get upgrade
 sudo apt-get install zsh tmux emacs vim python3-pip python-pip python-mysqldb\
-    xclip silversearcher-ag git
+    xclip silversearcher-ag git build-essential gcc
 
-sudo pip install setuptools wheel
+sudo pip install setuptools wheel virtualenv
 sudo pip3 install gcalcli parsedatetime krill
 
 # All the gits
