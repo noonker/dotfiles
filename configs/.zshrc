@@ -54,6 +54,7 @@ alias reddit="rtv"
 alias hackernews="pyhn"
 alias ans="sudo ~/git/stuff/bin/ans"
 alias io='pngpaste $HOME/Desktop/output.png'
+alias science='ssh -N -f -L localhost:8080:localhost:8888 root@remote.okay.solutions'
 
 # Uncomment the following line if you want to change the command execution time
 # stamp shown in the history command output.
