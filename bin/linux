@@ -34,6 +34,10 @@ for var in "${git_urls[@]}"
   do
     git clone "${var}"
   done
+
+# Install vundle for vim
+git clone https://github.com/VundleVim/Vundle.vim.git ~/.vim/bundle/Vundle.vim
+
 # Install oh-my-zsh
 # I know, I know....
 sh -c "$(curl -fsSL https://raw.githubusercontent.com/robbyrussell/oh-my-zsh/master/tools/install.sh)"
@@ -43,7 +47,7 @@ venv_programs=(
   'rainbowstream'
 )
 
-for var in "${git_urls[@]}"
+for var in "${venv_programs[@]}"
   do
     mkdir $var
     cd ~/venv/$var
