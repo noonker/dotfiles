@@ -50,7 +50,6 @@ alias :wq='exit'
 alias lsl='ls -al | less'
 alias webpls='python -m SimpleHTTPServer 8000'
 alias emacs='emacs -nw'
-alias todo='emacs ~/Drive/Vault/todo.org'
 alias reddit="rtv"
 alias hackernews="pyhn"
 alias ans="sudo ~/git/stuff/bin/ans"
