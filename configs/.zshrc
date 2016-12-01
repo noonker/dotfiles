@@ -70,7 +70,8 @@ if which brew > /dev/null 2>&1; then [[ -s `brew --prefix`/etc/autojump.sh ]] &&
 if [ "$HOSTSYSTEM" = "Linux" ]; then . /usr/share/autojump/autojump.sh; fi
 
 # User Paths
-export PATH="/usr/local/bin:/bin:/usr/sbin:/sbin:/usr/bin:$HOME/git/dotfiles/bin:$HOME/bin"
+export PATH="/usr/local/bin:/bin:/usr/sbin:/sbin:/usr/bin:$HOME/git/dotfiles/bin:$HOME/bin:$PATH"
+[ -d $HOME/anaconda3 ] && export PATH="/root/anaconda3/bin:$PATH"
 
 # Ssh Cofig
 ssh-agent > /dev/null 2>&1
