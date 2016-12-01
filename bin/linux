@@ -17,11 +17,11 @@ mkdir git bin lib venv
 # Upgrade and install packages
 sudo apt-get update && sudo apt-get upgrade
 sudo apt-get install zsh tmux emacs vim python3-pip python-pip python-mysqldb\
-    xclip silversearcher-ag git
+    xclip silversearcher-ag git python-matplotlib
 
-sudo pip3 install setuptools wheel
-sudo pip3 install ipython jupyter matplotlib requests pandas beautifulsoup 
-sudo pip install gcalcli parsedatetime krill
+sudo pip install setuptools wheel
+sudo pip install ipython jupyter requests pandas beautifulsoup 
+sudo pip3 install gcalcli parsedatetime krill
 
 # All the gits
 cd ~/git
@@ -45,6 +45,7 @@ sh -c "$(curl -fsSL https://raw.githubusercontent.com/robbyrussell/oh-my-zsh/mas
 #VENV Problematic Programs
 venv_programs=(
   'rainbowstream'
+  'hangups'
 )
 
 for var in "${venv_programs[@]}"
