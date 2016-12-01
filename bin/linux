@@ -14,6 +14,15 @@ fi
 cd ~/
 mkdir git bin lib venv
 
+# Upgrade and install packages
+sudo apt-get update && sudo apt-get upgrade
+sudo apt-get install zsh tmux emacs vim python3-pip python-pip python-mysqldb\
+    xclip silversearcher-ag git
+
+sudo pip3 install setuptools wheel
+sudo pip3 install ipython jupyter matplotlib requests pandas beautifulsoup 
+sudo pip install gcalcli parsedatetime krill
+
 # All the gits
 cd ~/git
 
@@ -25,19 +34,24 @@ for var in "${git_urls[@]}"
   do
     git clone "${var}"
   done
-
-# Upgrade and install packages
-sudo apt-get update && sudo apt-get upgrade
-sudo apt-get install zsh tmux emacs vim python3-pip python-pip python-mysqldb\
-    xclip silversearcher-ag
-
-sudo pip3 install setuptools wheel
-sudo pip3 install ipython jupyter matplotlib requests pandas beautifulsoup 
-sudo pip install gcalcli parsedatetime krill
-
 # Install oh-my-zsh
 # I know, I know....
 sh -c "$(curl -fsSL https://raw.githubusercontent.com/robbyrussell/oh-my-zsh/master/tools/install.sh)"
+
+#VENV Problematic Programs
+venv_programs=(
+  'rainbowstream'
+)
+
+for var in "${git_urls[@]}"
+  do
+    mkdir $var
+    cd ~/venv/$var
+    virtualenv venv
+    source venv/bin/activate
+    pip install $var
+    deactivate
+  done
 
 # Symbolic Links of configs
 for x in `ls -A $HOME/git/dotfiles/configs`
