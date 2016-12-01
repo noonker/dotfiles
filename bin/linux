@@ -19,7 +19,7 @@ sudo apt-get update && sudo apt-get upgrade
 sudo apt-get install -y zsh tmux emacs vim python3-pip python-pip python-mysqldb\
     xclip silversearcher-ag git build-essential gcc
 
-sudo pip install setuptools wheel virtualenv
+sudo pip3 install setuptools wheel virtualenv
 sudo pip3 install gcalcli parsedatetime krill
 
 # All the gits
