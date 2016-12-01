@@ -16,7 +16,7 @@ mkdir git bin lib venv
 
 # Upgrade and install packages
 sudo apt-get update && sudo apt-get upgrade
-sudo apt-get install zsh tmux emacs vim python3-pip python-pip python-mysqldb\
+sudo apt-get install -y zsh tmux emacs vim python3-pip python-pip python-mysqldb\
     xclip silversearcher-ag git build-essential gcc
 
 sudo pip install setuptools wheel virtualenv
@@ -52,7 +52,7 @@ for var in "${venv_programs[@]}"
     mkdir $var
     cd ~/venv/$var
     virtualenv venv
-    source venv/bin/activate
+    source ./venv/bin/activate
     pip install $var
     deactivate
     ln -s ~/venv/$var/venv/bin/$var ~/bin/
