@@ -21,7 +21,7 @@ autoload -U colors
 colors
 
 # Keeps my tmux configuration by working by making a fake command to execute
-if [[ $HOSTSYSTEM -eq "Linux" ]]; then chmod +x $HOME/git/dotfiles/bin/reattach-to-user-namespace; fi
+if [ "$HOSTSYSTEM" = "Linux" ]; then chmod +x $HOME/git/dotfiles/bin/reattach-to-user-namespace; fi
 
 # Exporting Local Libs
 PYTHONPATH=$PYTHONPATH:$HOME/git/dotfiles/lib/python; export PYTHONPATH
@@ -67,7 +67,7 @@ plugins=(git zsh-syntax-highlighting)
 
 # Loads AJ
 if which brew > /dev/null 2>&1; then [[ -s `brew --prefix`/etc/autojump.sh ]] && . `brew --prefix`/etc/autojump.sh; fi
-if [[ $HOSTSYSTEM -eq "Linux" ]]; then . /usr/share/autojump/autojump.sh; fi
+if [ "$HOSTSYSTEM" = "Linux" ]; then . /usr/share/autojump/autojump.sh; fi
 
 # User Paths
 export PATH="/usr/local/bin:/bin:/usr/sbin:/sbin:/usr/bin:$HOME/git/dotfiles/bin:$HOME/bin"

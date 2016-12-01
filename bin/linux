@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Chance user password
+# Change user password
 echo "Do you want to change your password (y/n)"
 read USER_RESPONSE
 if [ "$USER_RESPONSE" = "y" ] 
@@ -37,10 +37,6 @@ for var in "${git_urls[@]}"
 # Install vundle for vim
 git clone https://github.com/VundleVim/Vundle.vim.git ~/.vim/bundle/Vundle.vim
 
-# Install oh-my-zsh
-# I know, I know....
-sh -c "$(curl -fsSL https://raw.githubusercontent.com/robbyrussell/oh-my-zsh/master/tools/install.sh)"
-
 #VENV Problematic Programs
 venv_programs=(
   'rainbowstream'
@@ -49,7 +45,7 @@ venv_programs=(
 
 for var in "${venv_programs[@]}"
   do
-    mkdir $var
+    mkdir ~/venv/$var
     cd ~/venv/$var
     virtualenv venv
     source ./venv/bin/activate
@@ -70,3 +66,26 @@ for x in `ls -A $HOME/git/dotfiles/configs`
         ln -sf $HOME/git/dotfiles/configs/$x $HOME/
     fi
   done
+
+# Install Anaconda
+echo "Do you want to install jupyter and anaconda (y/n)"
+read USER_RESPONSE
+if [ "$USER_RESPONSE" = "y" ] 
+  then
+    mkdir ~/tmp
+    cd ~/tmp
+    sudo pip3 install jupyter
+    echo "Please paste anaconda sh url here https://www.continuum.io/downloads:"
+    read DOWNLOAD
+    wget -o anaconda.sh $DOWNLOAD
+    bash anaconda.sh
+  else
+    echo "Kay"
+fi
+
+
+# Install oh-my-zsh
+# I know, I know....
+sh -c "$(curl -fsSL https://raw.githubusercontent.com/robbyrussell/oh-my-zsh/master/tools/install.sh)"
+
+
