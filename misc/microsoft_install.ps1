@@ -21,7 +21,8 @@ $programs=
   ("Synergy", "https://symless.com/account/"),
   ("VLC", "http://www.videolan.org/vlc/index.html"),
   ("Wireshark", "https://www.wireshark.org/#download"),
-  ("xming", "https://sourceforge.net/projects/xming/")
+  ("xming", "https://sourceforge.net/projects/xming/"),
+  ("Anaconda", "https://www.continuum.io/downloads")
 
 ForEach ($item in $programs) {
   Start-Process $item[1]
