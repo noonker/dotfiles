@@ -17,7 +17,7 @@ mkdir git bin lib venv
 # Upgrade and install packages
 sudo apt-get update && sudo apt-get upgrade -y
 sudo apt-get install -y zsh tmux emacs vim python3-pip python-pip python-mysqldb\
-    xclip silversearcher-ag git build-essential gcc
+    xclip silversearcher-ag git build-essential gcc autojump libglu1
 
 sudo pip3 install setuptools wheel virtualenv
 sudo pip3 install gcalcli parsedatetime krill
@@ -87,5 +87,7 @@ fi
 # Install oh-my-zsh
 # I know, I know....
 sh -c "$(curl -fsSL https://raw.githubusercontent.com/robbyrussell/oh-my-zsh/master/tools/install.sh)"
+
+printf "export SHELL=/bin/zsh\nexec /bin/zsh -l" > .bashrc
 
 
