@@ -83,11 +83,10 @@ if [ "$USER_RESPONSE" = "y" ]
     echo "Kay"
 fi
 
+printf "export SHELL=/bin/zsh\nexec /bin/zsh -l" > .bashrc
 
 # Install oh-my-zsh
 # I know, I know....
 sh -c "$(curl -fsSL https://raw.githubusercontent.com/robbyrussell/oh-my-zsh/master/tools/install.sh)"
 
-printf "export SHELL=/bin/zsh\nexec /bin/zsh -l" > .bashrc
-
-
+mv ~/.zshrc.pre-oh-my-zsh ~/.zshrc
