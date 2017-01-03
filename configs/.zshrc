@@ -49,12 +49,13 @@ alias :q='exit'
 alias :wq='exit'
 alias lsl='ls -al | less'
 alias webpls='python -m SimpleHTTPServer 8000'
-alias emacs='emacs -nw'
+#alias emacs='emacs -nw'
 alias reddit="rtv"
 alias hackernews="pyhn"
 alias ans="sudo ~/git/stuff/bin/ans"
 alias io='pngpaste $HOME/Desktop/output.png'
 alias science='ssh -N -f -L localhost:8080:localhost:8888 root@remote.okay.solutions'
+alias thanks='echo "Thank you for your diligence in moving this matter forward and obtaining the information I need." | ucopy'
 
 # Uncomment the following line if you want to change the command execution time
 # stamp shown in the history command output.
