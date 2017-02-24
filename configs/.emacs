@@ -56,7 +56,8 @@ Return a list of installed packages or nil for every skipped package."
                           'wttrin
                           'fireplace
 			  'ensime
-			  'dumb-jump)
+			  'dumb-jump
+                          'es-mode)
 
 (evil-mode t)
 (global-flycheck-mode)
@@ -170,8 +171,12 @@ Return a list of installed packages or nil for every skipped package."
 (global-set-key (kbd "C-c <right>") 'dumb-jump-go)
 (global-set-key (kbd "C-c <down>") 'dumb-jump-quick-look)
 
-
+(add-to-list 'load-path "/path/to/es-mode-dir")
+(autoload 'es-mode "es-mode.el"
+            "Major mode for editing Elasticsearch queries" t)
+(add-to-list 'auto-mode-alist '("\\.es$" . es-mode))
 (setq inhibit-startup-message t)
+
 (custom-set-variables
  ;; custom-set-variables was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
