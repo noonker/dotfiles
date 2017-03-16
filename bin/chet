@@ -1,0 +1,21 @@
+#!/bin/bash
+
+pip3 install virtualenv screen
+mkdir $HOME/venv
+virtualenv $HOME/venv/chet
+cd $HOME/venv/chet
+git clone https://github.com/hangoutsbot/hangoutsbot.git
+git clone https://github.com/okaysolutions/hangupsbot-modules.git
+source $HOME/venv/chet/bin/activate
+pip3 install -r hangoutsbot/requirements.txt
+
+
+echo 'https://accounts.google.com/o/oauth2/programmatic_auth?hl=en&scope=https%3A%2F%2Fwww.google.com%2Faccounts%2FOAuthLogin+https%3A%2F%2Fwww.googleapis.com%2Fauth%2Fuserinfo.email&client_id=936475272427.apps.googleusercontent.com&access_type=offline&delegated_client_id=183697946088-m3jnlsqshjhh5lbvg05k46q1k4qqtrgn.apps.googleusercontent.com&top_level_cookie=1'
+printf "\n\n\n"
+read x
+LINE="def _get_authorization_code(session, credentials_prompt):"
+RETURN="\n    return \"$x\""
+AUTH="$HOME/venv/chet/lib/python3.5/site-packages/hangups/auth.py"
+sed -i "s/$LINE/$LINE$RETURN/" $AUTH
+
+ln -s $HOME/venv/chet/hangupsbot-modules/* $HOME/venv/chet/hangoutsbot/hangupsbot/plugins/
