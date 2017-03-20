@@ -1,4 +1,4 @@
 #!/bin/bash
 echo "STARTED" > /tmp/selenium 
-(java -jar $HOME/Drive/prasc/opt/selenium.jar >> /tmp/selenium) &
+(java -jar $HOME/bin/selenium.jar >> /tmp/selenium) &
 echo $! >> /tmp/selenium
