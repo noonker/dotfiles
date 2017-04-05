@@ -89,7 +89,8 @@ pip3 install hangups jupyter matplotlib
 #Brew Cask!
 brew cask install google-chrome flux steam battle-net openemu vmware-fusion\
     transmission audacity wireshark osxfuse licecap vlc 1password eagle\
-    google-drive java the-unarchiver docker android-studio pngpaste
+    google-drive java the-unarchiver docker android-studio pngpaste\
+    owasp-zap
 
 # Music terminal
 brew tap mopidy/mopidy
