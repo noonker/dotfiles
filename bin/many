@@ -42,10 +42,10 @@ shift $((OPTIND-1))
 for host in $*
 do
     if [ -z $window_available ]; then
-        tmux new-window "ssh $user@$host"
+        tmux new-window "ssh $host"
         window_available=1
     else
-        tmux split-window -d "ssh $user@$host"
+        tmux split-window -d "ssh $host"
         tmux select-layout tiled > /dev/null
     fi
 done
