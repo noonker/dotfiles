@@ -60,7 +60,7 @@ Return a list of installed packages or nil for every skipped package."
                           'es-mode
 			  'restclient)
 
-(evil-mode t)
+;;(evil-mode t)
 (global-flycheck-mode)
 (global-linum-mode t)
 (powerline-default-theme)
@@ -87,9 +87,9 @@ Return a list of installed packages or nil for every skipped package."
                     :foreground "black"
                     :background "green")
 
-(require 'whitespace)
-(setq whitespace-style '(face empty tabs lines-tail trailing))
-(global-whitespace-mode t)
+;;(require 'whitespace)
+;;(setq whitespace-style '(face empty tabs lines-tail trailing))
+;;(global-whitespace-mode t)
 (projectile-global-mode)
 (autopair-global-mode 1)
 
@@ -157,7 +157,7 @@ Return a list of installed packages or nil for every skipped package."
 (global-set-key (kbd "C-x M-t") 'cleanup-region)
 (global-set-key (kbd "C-c n") 'cleanup-buffer)
 
-(setq-default show-trailing-whitespace t)
+;;(setq-default show-trailing-whitespace t)
 
 ;; Move backups
 (setq backup-directory-alist '(("." . "~/.emacs.d/backups")))
@@ -182,3 +182,4 @@ Return a list of installed packages or nil for every skipped package."
       '("gnutls-cli --insecure -p %p %h"
       "gnutls-cli --insecure -p %p %h --protocols ssl3"
       "openssl s_client -connect %h:%p -no_ssl2 -ign_eof"))
+(load-theme 'monokai t)
