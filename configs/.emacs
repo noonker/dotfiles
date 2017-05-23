@@ -94,6 +94,14 @@ Return a list of installed packages or nil for every skipped package."
 (autopair-global-mode 1)
 
 
+;; Macro for OS checking
+;; https://stackoverflow.com/questions/1817257/how-to-determine-operating-system-in-elisp
+(defmacro with-system (type &rest body)
+  "Evaluate BODY if `system-type' equals TYPE."
+  (declare (indent defun))
+  `(when (eq system-type ',type)
+     ,@body))
+
 ;; Enable mouse support
 (unless window-system
   (require 'mouse)
@@ -159,6 +167,12 @@ Return a list of installed packages or nil for every skipped package."
 
 ;;(setq-default show-trailing-whitespace t)
 
+;; Use plink on windows
+(with-system windows-nt
+  (message "this is a windows system! I know this")
+  (require 'tramp)
+  (set-default 'tramp-default-method "plink"))
+
 ;; Move backups
 (setq backup-directory-alist '(("." . "~/.emacs.d/backups")))
 (setq delete-old-versions -1)
@@ -183,3 +197,17 @@ Return a list of installed packages or nil for every skipped package."
       "gnutls-cli --insecure -p %p %h --protocols ssl3"
       "openssl s_client -connect %h:%p -no_ssl2 -ign_eof"))
 (load-theme 'monokai t)
+(custom-set-variables
+ ;; custom-set-variables was added by Custom.
+ ;; If you edit it by hand, you could mess it up, so be careful.
+ ;; Your init file should contain only one such instance.
+ ;; If there is more than one, they won't work right.
+ '(package-selected-packages
+   (quote
+    (restclient es-mode wttrin twittering-mode spark powerline org-plus-contrib monokai-theme magit iedit helm-projectile helm-ag flycheck fireplace evil ensime dumb-jump autopair 2048-game))))
+(custom-set-faces
+ ;; custom-set-faces was added by Custom.
+ ;; If you edit it by hand, you could mess it up, so be careful.
+ ;; Your init file should contain only one such instance.
+ ;; If there is more than one, they won't work right.
+ )
