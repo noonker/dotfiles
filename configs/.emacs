@@ -99,6 +99,9 @@ Return a list of installed packages or nil for every skipped package."
 (autopair-global-mode 1)
 
 
+;; Twitter password shenanagans
+(setq twittering-use-master-password t)
+
 ;; Macro for OS checking
 ;; https://stackoverflow.com/questions/1817257/how-to-determine-operating-system-in-elisp
 (defmacro with-system (type &rest body)
