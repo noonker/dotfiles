@@ -63,7 +63,10 @@ Return a list of installed packages or nil for every skipped package."
                           'es-mode
 			  'restclient
 			  'exec-path-from-shell
-			  'monokai-theme)
+			  'monokai-theme
+			  'excorporate
+			  'hackernews
+			  'notmuch)
 
 ;;(evil-mode t)
 (global-flycheck-mode)
