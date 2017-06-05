@@ -37,13 +37,16 @@ Return a list of installed packages or nil for every skipped package."
 ;; Activate installed packages
 (package-initialize)
 
+;; Set exec-path
+(when (memq window-system '(mac ns x))
+  (exec-path-from-shell-initialize))
+
 ;; Assuming you wish to install "iedit" and "magit"
 (ensure-package-installed 'iedit
                           'magit
                           'flycheck
                           'helm
                           'powerline
-                          'evil
                           '2048-game
                           'projectile
                           'helm-projectile
@@ -58,7 +61,9 @@ Return a list of installed packages or nil for every skipped package."
 			  'ensime
 			  'dumb-jump
                           'es-mode
-			  'restclient)
+			  'restclient
+			  'exec-path-from-shell
+			  'monokai-theme)
 
 ;;(evil-mode t)
 (global-flycheck-mode)
@@ -197,17 +202,3 @@ Return a list of installed packages or nil for every skipped package."
       "gnutls-cli --insecure -p %p %h --protocols ssl3"
       "openssl s_client -connect %h:%p -no_ssl2 -ign_eof"))
 (load-theme 'monokai t)
-(custom-set-variables
- ;; custom-set-variables was added by Custom.
- ;; If you edit it by hand, you could mess it up, so be careful.
- ;; Your init file should contain only one such instance.
- ;; If there is more than one, they won't work right.
- '(package-selected-packages
-   (quote
-    (restclient es-mode wttrin twittering-mode spark powerline org-plus-contrib monokai-theme magit iedit helm-projectile helm-ag flycheck fireplace evil ensime dumb-jump autopair 2048-game))))
-(custom-set-faces
- ;; custom-set-faces was added by Custom.
- ;; If you edit it by hand, you could mess it up, so be careful.
- ;; Your init file should contain only one such instance.
- ;; If there is more than one, they won't work right.
- )

@@ -20,9 +20,6 @@ export $HOSTSYSTEM
 autoload -U colors
 colors
 
-# Keeps my tmux configuration by working by making a fake command to execute
-if [ "$HOSTSYSTEM" = "Linux" ]; then chmod +x $HOME/git/dotfiles/bin/reattach-to-user-namespace; fi
-
 # Exporting Local Libs
 PYTHONPATH=$PYTHONPATH:$HOME/git/dotfiles/lib/python; export PYTHONPATH
 PYTHONPATH=$PYTHONPATH:$HOME/Drive/prasc/lib/python; export PYTHONPATH
@@ -125,4 +122,4 @@ ls
 export DISPLAY=:0
 
 # Starts tmux
-[[ $TERM != *"screen"* ]] && exec tmux 
+# [[ $TERM != *"screen"* ]] && exec tmux 
