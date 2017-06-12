@@ -66,7 +66,8 @@ Return a list of installed packages or nil for every skipped package."
 			  'monokai-theme
 			  'excorporate
 			  'hackernews
-			  'notmuch)
+			  'notmuch
+			  'xclip)
 
 ;;(evil-mode t)
 (global-flycheck-mode)
@@ -139,6 +140,7 @@ Return a list of installed packages or nil for every skipped package."
 ;;
 ;;(setq interprogram-cut-function 'paste-to-osx)
 ;;(setq interprogram-paste-function 'copy-from-osx)
+(xclip-mode 1)
 
 ;; Shorten yes and no
 (defalias 'yes-or-no-p 'y-or-n-p)
