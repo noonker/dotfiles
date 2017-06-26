@@ -70,7 +70,8 @@ Return a list of installed packages or nil for every skipped package."
 			  'xclip
 			  'evil
 			  'w3m
-			  'mediawiki)
+			  'mediawiki
+			  'butler)
 
 ;;(evil-mode t)
 (global-flycheck-mode)
