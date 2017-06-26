@@ -224,8 +224,20 @@ Return a list of installed packages or nil for every skipped package."
 (add-to-list 'auto-mode-alist '("\\.es$" . es-mode))
 (setq inhibit-startup-message t)
 
+;; w3m
+(setq browse-url-browser-function 'w3m-browse-url)
+(autoload 'w3m-browse-url "w3m" "Ask a WWW browser to show a URL." t)
+;; optional keyboard short-cut
+(global-set-key "\C-xm" 'browse-url-at-point)
+(setq w3m-use-cookies t)
+
+;; ipython fix
+(setq python-shell-interpreter "ipython"
+      python-shell-interpreter-args "--simple-prompt -i")
+
 (setq tls-program
       '("gnutls-cli --insecure -p %p %h"
       "gnutls-cli --insecure -p %p %h --protocols ssl3"
       "openssl s_client -connect %h:%p -no_ssl2 -ign_eof"))
+
 (load-theme 'monokai t)
