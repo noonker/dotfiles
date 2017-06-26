@@ -67,7 +67,10 @@ Return a list of installed packages or nil for every skipped package."
 			  'excorporate
 			  'hackernews
 			  'notmuch
-			  'xclip)
+			  'xclip
+			  'evil
+			  'w3m
+			  'mediawiki)
 
 ;;(evil-mode t)
 (global-flycheck-mode)
@@ -140,7 +143,23 @@ Return a list of installed packages or nil for every skipped package."
 ;;
 ;;(setq interprogram-cut-function 'paste-to-osx)
 ;;(setq interprogram-paste-function 'copy-from-osx)
-(xclip-mode 1)
+;;(xclip-mode 1)
+
+
+;; ANSI term options
+(defun oleh-term-exec-hook ()
+  (let* ((buff (current-buffer))
+         (proc (get-buffer-process buff)))
+    (set-process-sentinel
+     proc
+     `(lambda (process event)
+        (if (string= event "finished\n")
+            (kill-buffer ,buff))))))
+
+(add-hook 'term-exec-hook 'oleh-term-exec-hook)
+(eval-after-load "term"
+  '(define-key term-raw-map (kbd "C-c C-y") 'term-paste))
+
 
 ;; Shorten yes and no
 (defalias 'yes-or-no-p 'y-or-n-p)
