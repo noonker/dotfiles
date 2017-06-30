@@ -246,4 +246,9 @@ Return a list of installed packages or nil for every skipped package."
       "gnutls-cli --insecure -p %p %h --protocols ssl3"
       "openssl s_client -connect %h:%p -no_ssl2 -ign_eof"))
 
+
+;; Feeds
+(global-set-key (kbd "C-x w") 'elfeed)
+
+;; load theme
 (load-theme 'monokai t)
