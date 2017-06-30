@@ -38,8 +38,8 @@ Return a list of installed packages or nil for every skipped package."
 (package-initialize)
 
 ;; Set exec-path
-(when (memq window-system '(mac ns x))
-  (exec-path-from-shell-initialize))
+;; (when (memq window-system '(mac ns x))
+;;  (exec-path-from-shell-initialize))
 
 ;; Assuming you wish to install "iedit" and "magit"
 (ensure-package-installed 'iedit
@@ -72,7 +72,7 @@ Return a list of installed packages or nil for every skipped package."
                           'w3m
                           'mediawiki
                           'erc-colorize
-                          'elfeed)
+                          'mingus)
 
 ;;(evil-mode t)
 (global-flycheck-mode)

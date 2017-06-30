@@ -17,8 +17,9 @@ mkdir git bin lib venv
 # Upgrade and install packages
 sudo apt-get update && sudo apt-get upgrade -y
 sudo apt-get install -y zsh tmux emacs vim python3-pip python-pip python-mysqldb\
-    xclip silversearcher-ag git build-essential gcc autojump libglu1
+    xclip silversearcher-ag git build-essential gcc autojump libglu1 mopidy
 
+sudo pip install mopidy-gmusic
 sudo pip3 install setuptools wheel virtualenv
 sudo pip3 install gcalcli parsedatetime krill
 
