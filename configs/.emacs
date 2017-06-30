@@ -58,26 +58,30 @@ Return a list of installed packages or nil for every skipped package."
                           'twittering-mode
                           'wttrin
                           'fireplace
-			  'ensime
-			  'dumb-jump
+                          'ensime
+                          'dumb-jump
                           'es-mode
-			  'restclient
-			  'exec-path-from-shell
-			  'monokai-theme
-			  'excorporate
-			  'hackernews
-			  'notmuch
-			  'xclip
-			  'evil
-			  'w3m
-			  'mediawiki
-			  'butler)
+                          'restclient
+                          'exec-path-from-shell
+                          'monokai-theme
+                          'excorporate
+                          'hackernews
+                          'notmuch
+                          'xclip
+                          'evil
+                          'w3m
+                          'mediawiki
+                          'erc-colorize
+                          'elfeed)
 
 ;;(evil-mode t)
 (global-flycheck-mode)
-(global-linum-mode t)
+;;(global-linum-mode t)
 (powerline-default-theme)
 (global-company-mode)
+
+;; erc-colors
+(erc-colorize-mode 1)
 
 (global-set-key (kbd "M-x") 'helm-M-x)
 (global-set-key (kbd "M-x") #'helm-M-x)
@@ -218,6 +222,7 @@ Return a list of installed packages or nil for every skipped package."
 (global-set-key (kbd "C-c <left>") 'dumb-jump-back)
 (global-set-key (kbd "C-c <right>") 'dumb-jump-go)
 (global-set-key (kbd "C-c <down>") 'dumb-jump-quick-look)
+(global-set-key (kbd "C-2") 'helm-mini)
 
 (add-to-list 'load-path "/path/to/es-mode-dir")
 (autoload 'es-mode "es-mode.el"
