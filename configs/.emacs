@@ -237,6 +237,28 @@ Return a list of installed packages or nil for every skipped package."
 (global-set-key "\C-xm" 'browse-url-at-point)
 (setq w3m-use-cookies t)
 
+;; Gmail
+(setq user-mail-address "noonker@gmail.com"
+      user-full-name "Joshua Person")
+
+
+(setq gnus-select-method
+      '(nnimap "outlook"
+	       (nnimap-address "outlook.office365.com")  ; it could also be imap.googlemail.com if that's your server.
+	       (nnimap-server-port "imaps")
+	       (nnimap-stream ssl)))
+
+(setq gnus-secondary-select-methods
+      '((nnimap "gmail"
+                (nnimap-address "imap.gmail.com")
+                (nnimap-server-port 993)
+                (nnimap-stream ssl)
+                (nnimap-authinfo-file "~/.authinfo"))))
+
+(setq smtpmail-smtp-server "smtp.gmail.com"
+      smtpmail-smtp-service 587
+      gnus-ignored-newsgroups "^to\\.\\|^[0-9. ]+\\( \\|$\\)\\|^[\"]\"[#'()]")
+
 ;; ipython fix
 (setq python-shell-interpreter "ipython"
       python-shell-interpreter-args "--simple-prompt -i")
@@ -246,9 +268,9 @@ Return a list of installed packages or nil for every skipped package."
       "gnutls-cli --insecure -p %p %h --protocols ssl3"
       "openssl s_client -connect %h:%p -no_ssl2 -ign_eof"))
 
-
-;; Feeds
-(global-set-key (kbd "C-x w") 'elfeed)
+;; Google chrome as default browser
+(setq browse-url-browser-function 'browse-url-generic
+      browse-url-generic-program "google-chrome")
 
 ;; load theme
 (load-theme 'monokai t)
