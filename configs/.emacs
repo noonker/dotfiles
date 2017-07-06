@@ -72,7 +72,8 @@ Return a list of installed packages or nil for every skipped package."
                           'w3m
                           'mediawiki
                           'erc-colorize
-                          'mingus)
+                          'mingus
+                          'column-marker)
 
 ;;(evil-mode t)
 (global-flycheck-mode)
@@ -217,6 +218,10 @@ Return a list of installed packages or nil for every skipped package."
 (setq vc-make-backup-files t)
 (setq auto-save-file-name-transforms '((".*" "~/.emacs.d/auto-save-list/" t)))
 
+;; Turn of scrollbars
+(scroll-bar-mode -1)
+
+;; Dumb Jump
 (global-set-key (kbd "C-c l") 'helm-projectile-switch-to-buffer)
 
 (global-set-key (kbd "C-c <left>") 'dumb-jump-back)
@@ -271,6 +276,20 @@ Return a list of installed packages or nil for every skipped package."
 ;; Google chrome as default browser
 (setq browse-url-browser-function 'browse-url-generic
       browse-url-generic-program "google-chrome")
+
+
+;; Temporarily maximize buffer
+
+(defun toggle-maximize-buffer () "Maximize buffer"
+  (interactive)
+  (if (= 1 (length (window-list)))
+    (jump-to-register '_)
+    (progn
+      (set-register '_ (list (current-window-configuration)))
+      (delete-other-windows))))
+
+;; Bind it to a key.
+(global-set-key [(super shift return)] 'toggle-maximize-buffer)
 
 ;; load theme
 (load-theme 'monokai t)
