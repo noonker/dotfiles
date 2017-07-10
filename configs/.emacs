@@ -111,6 +111,8 @@ Return a list of installed packages or nil for every skipped package."
 (projectile-global-mode)
 (autopair-global-mode 1)
 
+;; Ensure tramp uses remote path
+(add-to-list 'tramp-remote-path 'tramp-own-remote-path)
 
 ;; Twitter password shenanagans
 (setq twittering-use-master-password t)
