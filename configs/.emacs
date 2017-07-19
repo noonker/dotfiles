@@ -73,13 +73,27 @@ Return a list of installed packages or nil for every skipped package."
                           'mediawiki
                           'erc-colorize
                           'mingus
-                          'column-marker)
+                          'column-marker
+                          'emojify)
 
 ;;(evil-mode t)
 (global-flycheck-mode)
 ;;(global-linum-mode t)
 (powerline-default-theme)
 (global-company-mode)
+
+;; Python iPython
+(setq
+ python-shell-interpreter "ipython"
+ python-shell-interpreter-args "--colors=Linux --profile=default"
+ python-shell-prompt-regexp "In \\[[0-9]+\\]: "
+ python-shell-prompt-output-regexp "Out\\[[0-9]+\\]: "
+ python-shell-completion-setup-code
+ "from IPython.core.completerlib import module_completion"
+ python-shell-completion-module-string-code
+ "';'.join(module_completion('''%s'''))\n"
+ python-shell-completion-string-code
+ "';'.join(get_ipython().Completer.all_completions('''%s'''))\n")
 
 ;; erc-colors
 (erc-colorize-mode 1)
@@ -153,6 +167,19 @@ Return a list of installed packages or nil for every skipped package."
 ;;(setq interprogram-paste-function 'copy-from-osx)
 ;;(xclip-mode 1)
 
+(progn
+ ;; Make whitespace-mode with very basic background coloring for whitespaces.
+  ;; http://ergoemacs.org/emacs/whitespace-mode.html
+  (setq whitespace-style (quote (face indentation spaces tabs newline space-mark tab-mark newline-mark )))
+
+  ;; Make whitespace-mode and whitespace-newline-mode use “¶” for end of line char and “▷” for tab.
+  (setq whitespace-display-mappings
+        ;; all numbers are unicode codepoint in decimal. e.g. (insert-char 182 1)
+        '(
+          (indentation [127789])
+          (newline-mark 10 [182 10]) ; LINE FEED,
+          (tab-mark 9 [9655 9] [92 9]) ; tab
+          )))
 
 ;; ANSI term options
 (defun oleh-term-exec-hook ()
