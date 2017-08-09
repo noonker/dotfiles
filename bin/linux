@@ -16,7 +16,7 @@ mkdir git bin lib venv
 
 # Upgrade and install packages
 sudo apt-get update && sudo apt-get upgrade -y
-sudo apt-get install -y zsh tmux emacs vim python3-pip python-pip python-mysqldb\
+sudo apt-get install -y tmux emacs vim python3-pip python-pip python-mysqldb\
     xclip silversearcher-ag git build-essential gcc autojump libglu1 mopidy
 
 sudo pip install mopidy-gmusic
@@ -34,9 +34,6 @@ for var in "${git_urls[@]}"
   do
     git clone "${var}"
   done
-
-# Install vundle for vim
-git clone https://github.com/VundleVim/Vundle.vim.git ~/.vim/bundle/Vundle.vim
 
 #VENV Problematic Programs
 venv_programs=(
@@ -83,11 +80,3 @@ if [ "$USER_RESPONSE" = "y" ]
   else
     echo "Kay"
 fi
-
-printf "export SHELL=/bin/zsh\nexec /bin/zsh -l" > .bashrc
-
-# Install oh-my-zsh
-# I know, I know....
-sh -c "$(curl -fsSL https://raw.githubusercontent.com/robbyrussell/oh-my-zsh/master/tools/install.sh)"
-
-mv ~/.zshrc.pre-oh-my-zsh ~/.zshrc
