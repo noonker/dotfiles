@@ -74,7 +74,8 @@ Return a list of installed packages or nil for every skipped package."
                           'erc-colorize
                           'mingus
                           'column-marker
-                          'emojify)
+                          'emojify
+			  'minimap)
 
 ;;(evil-mode t)
 (global-flycheck-mode)
@@ -294,8 +295,8 @@ Return a list of installed packages or nil for every skipped package."
       gnus-ignored-newsgroups "^to\\.\\|^[0-9. ]+\\( \\|$\\)\\|^[\"]\"[#'()]")
 
 ;; ipython fix
-(setq python-shell-interpreter "ipython"
-      python-shell-interpreter-args "--simple-prompt -i")
+(setq python-shell-interpreter "ipython")
+;;      python-shell-interpreter-args "--simple-prompt -i")
 
 (setq tls-program
       '("gnutls-cli --insecure -p %p %h"
