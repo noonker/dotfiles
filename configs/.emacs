@@ -304,12 +304,9 @@ Return a list of installed packages or nil for every skipped package."
       "openssl s_client -connect %h:%p -no_ssl2 -ign_eof"))
 
 ;; Google chrome as default browser
-(setq browse-url-browser-function 'browse-url-generic
-      browse-url-generic-program "google-chrome")
-
+(setq browse-url-browser-function 'browse-url-chromium)
 
 ;; Temporarily maximize buffer
-
 (defun toggle-maximize-buffer () "Maximize buffer"
   (interactive)
   (if (= 1 (length (window-list)))
@@ -320,6 +317,24 @@ Return a list of installed packages or nil for every skipped package."
 
 ;; Bind it to a key.
 (global-set-key [(super shift return)] 'toggle-maximize-buffer)
+
+;; Insert date
+(defun insert-current-date () (interactive)
+  (insert (shell-command-to-string "echo -n $(date +%Y-%m-%d)")))
+
+;; Start hangups
+(defun hangups ()
+  (interactive)
+  (ansi-term "hangups" "hangups"))
+
+;; Start tmux
+(defun tmux()
+  (interactive)
+  (ansi-term "tmux" "tmux"))
+
+;; No menus by default
+(tool-bar-mode -1)
+(menu-bar-mode -1)
 
 ;; load theme
 (load-theme 'monokai t)
