@@ -75,7 +75,11 @@ Return a list of installed packages or nil for every skipped package."
                           'mingus
                           'column-marker
                           'emojify
-			  'minimap)
+                          'minimap
+                          'request
+			  'adaptive-wrap
+			  'multiple-cursors
+			  'isend-mode)
 
 ;;(evil-mode t)
 (global-flycheck-mode)
@@ -234,6 +238,50 @@ Return a list of installed packages or nil for every skipped package."
 (global-set-key (kbd "C-c n") 'cleanup-buffer)
 
 ;;(setq-default show-trailing-whitespace t)
+
+;; cnc-command
+(defun visible-buffers ()
+  "Definition"
+  (interactive)
+  (mapcar '(lambda (window) (buffer-name (window-buffer window))) (window-list)))
+
+(defun all-buffers-except-this ()
+  "Definition"
+  (interactive)
+  (delete (buffer-name (current-buffer)) (visible-buffers))
+  )
+
+(defun cnc-from-file (cmd)
+  "A command to run commands on the other open buffers"
+  (interactive "sCmd: ")
+  (dolist (elt (all-buffers-except-this))
+    (comint-send-string elt (format "%s\n" cmd)))
+  )
+
+(defun cnc-prompt (cmd)
+  "A command to run commands on the other open buffers"
+  (interactive "sCmd: ")
+  (dolist (elt (visible-buffers))
+    (comint-send-string elt (format "%s\n" cmd)))
+  )
+
+(global-set-key (kbd "C-c y") `cnc-prompt)
+
+
+;; Winner Mode
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; I sometimes still use C-x r w <register> to store a window configuration in a register,           ;;
+;; and C-x r j <register> (where <register> is a single character) to jump back to it.               ;;
+;; While this is a nice way for storing a few window configurations which you want to go             ;;
+;; back to after some time, I find winner-mode to be more convenient in a few regards.               ;;
+;; (For example, you won't have to bother naming the configurations).                                ;;
+;; Just put (winner-mode 1) in your .emacs, bind winner-undo and winner-redo to convenient shortcuts ;;
+;; (or use the IMHO awkward C-c <left> and C-c <right> predefined ones)                              ;;
+;; and you'll be able to switch back to previous window configurations.                              ;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(winner-mode 1)
 
 ;; Use plink on windows
 (with-system windows-nt
