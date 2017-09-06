@@ -251,11 +251,13 @@ Return a list of installed packages or nil for every skipped package."
   (delete (buffer-name (current-buffer)) (visible-buffers))
   )
 
-(defun cnc-from-file (cmd)
+(defun cnc-from-file ()
   "A command to run commands on the other open buffers"
-  (interactive "sCmd: ")
+  (interactive)
   (dolist (elt (all-buffers-except-this))
-    (comint-send-string elt (format "%s\n" cmd)))
+    (comint-send-string elt (format "%s\n" (thing-at-point `line))))
+  (next-line)
+  t
   )
 
 (defun cnc-prompt (cmd)
@@ -266,7 +268,7 @@ Return a list of installed packages or nil for every skipped package."
   )
 
 (global-set-key (kbd "C-c y") `cnc-prompt)
-
+(global-set-key (kbd "C-c .") `cnc-from-file)
 
 ;; Winner Mode
 
@@ -282,6 +284,18 @@ Return a list of installed packages or nil for every skipped package."
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (winner-mode 1)
+
+;; Remote ansi-term
+;; Use this for remote so I can specify command line arguments
+(defun remote-term (new-buffer-name cmd &rest switches)
+  (setq term-ansi-buffer-name (concat "*" new-buffer-name "*"))
+  (setq term-ansi-buffer-name (generate-new-buffer-name term-ansi-buffer-name))
+  (setq term-ansi-buffer-name (apply 'make-term term-ansi-buffer-name cmd nil switches))
+  (set-buffer term-ansi-buffer-name)
+  (term-mode)
+  (term-char-mode)
+;;  (term-set-escape-char ?\C-x)
+  (switch-to-buffer term-ansi-buffer-name))
 
 ;; Use plink on windows
 (with-system windows-nt
@@ -306,6 +320,12 @@ Return a list of installed packages or nil for every skipped package."
 (global-set-key (kbd "C-c <right>") 'dumb-jump-go)
 (global-set-key (kbd "C-c <down>") 'dumb-jump-quick-look)
 (global-set-key (kbd "C-2") 'helm-mini)
+
+(setq helm-mini-default-sources 
+      '(helm-source-buffers-list 
+        helm-source-bookmarks 
+        helm-source-recentf 
+        helm-source-buffer-not-found))
 
 (add-to-list 'load-path "/path/to/es-mode-dir")
 (autoload 'es-mode "es-mode.el"
