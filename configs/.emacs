@@ -303,6 +303,32 @@ Return a list of installed packages or nil for every skipped package."
   (require 'tramp)
   (set-default 'tramp-default-method "plink"))
 
+;; Easy window splitting
+(defun split-maj-min (number)
+(interactive "N")
+"Function to split windows into one major window and multiple minor windows"
+(split-window-horizontally)
+(other-window 1)
+(while (> number 1)
+  (setq number (+ -1 number))
+  (split-window-vertically))
+(balance-windows))
+
+(defun split-cnc (number)
+(interactive "N")
+"Function to split windows into one major window and multiple minor ansi-terms"
+(split-window-horizontally)
+(other-window 1)
+(ansi-term "/bin/bash" "cnc")
+(while (> number 1)
+  (split-window-vertically)
+  (ansi-term "/bin/bash" "cnc")
+  (other-window 1)
+  (setq number (+ -1 number)))
+(ansi-term "/bin/bash" "cnc")
+(other-window 1)
+(balance-windows))
+
 ;; Move backups
 (setq backup-directory-alist '(("." . "~/.emacs.d/backups")))
 (setq delete-old-versions -1)
