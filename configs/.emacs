@@ -79,7 +79,10 @@ Return a list of installed packages or nil for every skipped package."
                           'request
 			  'adaptive-wrap
 			  'multiple-cursors
-			  'isend-mode)
+			  'isend-mode
+			  'pcap-mode
+			  'firefox-controller
+			  )
 
 ;;(evil-mode t)
 (global-flycheck-mode)
@@ -268,7 +271,7 @@ Return a list of installed packages or nil for every skipped package."
   )
 
 (global-set-key (kbd "C-c y") `cnc-prompt)
-(global-set-key (kbd "C-c .") `cnc-from-file)
+(global-set-key (kbd "C-c C-.") `cnc-from-file)
 
 ;; Winner Mode
 
