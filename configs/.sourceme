@@ -3,7 +3,7 @@ PYTHONPATH=$PYTHONPATH:$HOME/git/dotfiles/lib/python; export PYTHONPATH
 export PATH="$HOME/git/dotfiles/bin:$HOME/bin:$HOME/.local/bin:$PATH"
 [ -d $HOME/anaconda3 ] && export PATH="/root/anaconda3/bin:$PATH"
 
-# Ssh Cofig
+# SSH Config
 ssh-agent > /dev/null 2>&1
 ssh-add > /dev/null 2>&1
 
