@@ -55,7 +55,7 @@ git_urls=(
     'https://github.com:okaysolutions/noonker.github.io.git'
     'https://github.com/ChrisJohnsen/tmux-MacOSX-pasteboard'
     'https://github.com/dequis/tmux-url-select'
-    'https://github.com:okaysolutions/dotfiles.git'
+    'https://github.com:noonker/dotfiles.git'
     'https://github.com/lysyi3m/osx-terminal-themes.git'
     #'git@git.arbor.net:jperson/stuff.git'
     )
@@ -100,9 +100,7 @@ pip install mopody-gmusic
 #Programs to install
 urls=(
     'http://www.keithmcmillen.com/downloads/'
-    'http://backstage.renoise.com'
     'https://itunes.apple.com/us/app/xcode/id497799835?mt=12'
-    'https://itunes.apple.com/us/app/hyperdock/id449830122?mt=12'
     'http://www.seleniumhq.org/download/'
     'https://agilebits.com/onepassword/extensions'
     'https://www.ghostery.com/try-us/download-browser-extension/'

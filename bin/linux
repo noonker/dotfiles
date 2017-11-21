@@ -16,7 +16,7 @@ mkdir git bin lib venv
 
 # Upgrade and install packages
 sudo apt-get update && sudo apt-get upgrade -y
-sudo apt-get install -y tmux emacs vim python3-pip python-pip python-mysqldb\
+sudo apt-get install -y emacs vim python3-pip python-pip python-mysqldb\
     xclip silversearcher-ag git build-essential gcc autojump libglu1 mopidy
 
 sudo pip install mopidy-gmusic
@@ -27,7 +27,7 @@ sudo pip3 install gcalcli parsedatetime krill
 cd ~/git
 
 git_urls=(
-  'https://github.com/okaysolutions/dotfiles.git'
+  'https://github.com/noonker/dotfiles.git'
   )
 
 for var in "${git_urls[@]}"
@@ -37,7 +37,6 @@ for var in "${git_urls[@]}"
 
 #VENV Problematic Programs
 venv_programs=(
-  'rainbowstream'
   'hangups'
 )
 

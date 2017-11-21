@@ -1,8 +1,0 @@
-#!/bin/bash
-
-while true;
-do
-  clear
-  gcalcli agenda now tomorrow | head -n 6
-  sleep 2000
-done;
