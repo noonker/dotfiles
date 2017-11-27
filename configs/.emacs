@@ -81,7 +81,10 @@ Return a list of installed packages or nil for every skipped package."
 			  'multiple-cursors
 			  'isend-mode
 			  'pcap-mode
+			  'exwm
 			  'firefox-controller
+			  'icicles
+			  'ace-popup-menu
 			  )
 
 ;;(evil-mode t)
@@ -139,6 +142,16 @@ Return a list of installed packages or nil for every skipped package."
 ;; Twitter password shenanagans
 (setq twittering-use-master-password t)
 
+;; Icicles mode
+(icy-mode 1)
+
+;; Ace menu
+(ace-popup-menu-mode 1)
+
+;; Windmove
+(when (fboundp 'windmove-default-keybindings)
+  (windmove-default-keybindings))
+
 ;; Macro for OS checking
 ;; https://stackoverflow.com/questions/1817257/how-to-determine-operating-system-in-elisp
 (defmacro with-system (type &rest body)
@@ -174,6 +187,11 @@ Return a list of installed packages or nil for every skipped package."
 ;;(setq interprogram-cut-function 'paste-to-osx)
 ;;(setq interprogram-paste-function 'copy-from-osx)
 ;;(xclip-mode 1)
+
+
+(require 'exwm)
+(require 'exwm-config)
+(exwm-config-default)
 
 (progn
  ;; Make whitespace-mode with very basic background coloring for whitespaces.
