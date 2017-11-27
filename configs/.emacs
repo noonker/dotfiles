@@ -85,7 +85,9 @@ Return a list of installed packages or nil for every skipped package."
 			  'firefox-controller
 			  'icicles
 			  'ace-popup-menu
+			  'ipcalc
 			  )
+
 
 ;;(evil-mode t)
 (global-flycheck-mode)
