@@ -73,8 +73,8 @@ git clone https://github.com/VundleVim/Vundle.vim.git ~/.vim/bundle/Vundle.vim
 ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
 
 # All the brews!
-brew install toilet cmake ctags gcc gnuplot irssi links mysql nmap openssl\
-    python reattach-to-user-namespace sqlite tmux toilet wget zsh autojump\
+brew install toilet cmake ctags gcc gnuplot links mysql nmap openssl\
+    python reattach-to-user-namespace sqlite tmux toilet wget autojump\
     dtrx gnuradio the_silver_searcher toilet aircrack-ng unrar\
     subversion python3 gpg keybase alpine emacs android-platform-tools chromedriver
 
