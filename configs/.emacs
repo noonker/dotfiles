@@ -86,6 +86,8 @@ Return a list of installed packages or nil for every skipped package."
 			  'icicles
 			  'ace-popup-menu
 			  'ipcalc
+        'neotree
+        'all-the-icons
 			  )
 
 
@@ -434,6 +436,10 @@ Return a list of installed packages or nil for every skipped package."
 
 ;; Bind it to a key.
 (global-set-key [(super shift return)] 'toggle-maximize-buffer)
+
+;; Neotree
+(global-set-key [f8] 'neotree-toggle)
+(setq neo-theme (if (display-graphic-p) 'icons 'arrow))
 
 ;; Insert date
 (defun insert-current-date () (interactive)
