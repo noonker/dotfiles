@@ -91,6 +91,7 @@ Return a list of installed packages or nil for every skipped package."
                           'rainbow-delimiters
                           'rainbow-mode
                           'nyan-mode
+                          'ace-jump-mode
                           )
 
 
@@ -154,6 +155,7 @@ Return a list of installed packages or nil for every skipped package."
 
 ;; Ace menu
 (ace-popup-menu-mode 1)
+(define-key global-map (kbd "C-c SPC") 'ace-jump-mode)
 
 ;; Windmove
 (when (fboundp 'windmove-default-keybindings)
