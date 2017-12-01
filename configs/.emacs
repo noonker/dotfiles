@@ -77,18 +77,21 @@ Return a list of installed packages or nil for every skipped package."
                           'emojify
                           'minimap
                           'request
-			  'adaptive-wrap
-			  'multiple-cursors
-			  'isend-mode
-			  'pcap-mode
-			  'exwm
-			  'firefox-controller
-			  'icicles
-			  'ace-popup-menu
-			  'ipcalc
-        'neotree
-        'all-the-icons
-			  )
+                          'adaptive-wrap
+                          'multiple-cursors
+                          'isend-mode
+                          'pcap-mode
+                          'exwm
+                          'firefox-controller
+                          'icicles
+                          'ace-popup-menu
+                          'ipcalc
+                          'neotree
+                          'all-the-icons
+                          'rainbow-delimiters
+                          'rainbow-mode
+                          'nyan-mode
+                          )
 
 
 ;;(evil-mode t)
