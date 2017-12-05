@@ -93,6 +93,8 @@ Return a list of installed packages or nil for every skipped package."
                           'nyan-mode
                           'ace-jump-mode
 			  'jenkins
+			  'helm
+			  'helm-pass
                           )
 
 
