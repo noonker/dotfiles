@@ -185,6 +185,19 @@ Return a list of installed packages or nil for every skipped package."
   (defun track-mouse (e))
   (setq mouse-sel-mode t)
   )
+;; Slack code for highlighted text
+;; Todo auto expand the selected reason
+(defun sc (b e)
+  "adds slack tags for code"
+  (interactive "r")
+  (save-restriction
+    (narrow-to-region b e)
+    (save-excursion
+      (goto-char (point-min))
+        (insert (format "%s\n" "```"))
+	(goto-char (point-max))
+        (insert (format "\n%s" "```"))
+        )))
 
 ;; Enable copy and paste
 ;;(defun copy-from-osx ()
