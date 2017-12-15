@@ -95,6 +95,7 @@ Return a list of installed packages or nil for every skipped package."
 			  'jenkins
 			  'helm
 			  'helm-pass
+			  'smartscan
                           )
 
 
@@ -156,6 +157,9 @@ Return a list of installed packages or nil for every skipped package."
 ;; Icicles mode
 (icy-mode 1)
 
+;; Smartscan mode
+(smartscan-mode 1)
+
 ;; Ace menu
 (ace-popup-menu-mode 1)
 (define-key global-map (kbd "C-c SPC") 'ace-jump-mode)
@@ -214,9 +218,9 @@ Return a list of installed packages or nil for every skipped package."
 ;;(xclip-mode 1)
 
 
-(require 'exwm)
-(require 'exwm-config)
-(exwm-config-default)
+;; (require 'exwm)
+;; (require 'exwm-config)
+;; (exwm-config-default)
 
 (progn
  ;; Make whitespace-mode with very basic background coloring for whitespaces.
