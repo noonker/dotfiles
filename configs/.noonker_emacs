@@ -396,7 +396,7 @@ Return a list of installed packages or nil for every skipped package."
 (global-set-key (kbd "C-c <left>") 'dumb-jump-back)
 (global-set-key (kbd "C-c <right>") 'dumb-jump-go)
 (global-set-key (kbd "C-c <down>") 'dumb-jump-quick-look)
-(global-set-key (kbd "C-2") 'helm-mini)
+(global-set-key (kbd "M-2") 'helm-mini)
 
 (setq helm-mini-default-sources 
       '(helm-source-buffers-list 
