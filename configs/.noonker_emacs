@@ -96,7 +96,8 @@ Return a list of installed packages or nil for every skipped package."
 			  'helm
 			  'helm-pass
 			  'smartscan
-        'minesweeper
+			  'minesweeper
+			  'auctex
                           )
 
 
@@ -336,6 +337,16 @@ Return a list of installed packages or nil for every skipped package."
 
 (winner-mode 1)
 
+;; LaTeX
+(setq TeX-auto-save t)
+(setq TeX-parse-self t)
+(setq-default TeX-master nil)
+(add-hook 'LaTeX-mode-hook 'visual-line-mode)
+(add-hook 'LaTeX-mode-hook 'flyspell-mode)
+(add-hook 'LaTeX-mode-hook 'LaTeX-math-mode)
+(add-hook 'LaTeX-mode-hook 'turn-on-reftex)
+(setq reftex-plug-into-AUCTeX t)
+
 ;; Remote ansi-term
 ;; Use this for remote so I can specify command line arguments
 (defun remote-term (new-buffer-name cmd &rest switches)
@@ -441,7 +452,7 @@ Return a list of installed packages or nil for every skipped package."
 
 ;; ipython fix
 (setq python-shell-interpreter "ipython"
-    python-shell-interpreter-args "--simple-prompt -i")
+);;    python-shell-interpreter-args "--simple-prompt -i")
 
 (setq tls-program
       '("gnutls-cli --insecure -p %p %h"
