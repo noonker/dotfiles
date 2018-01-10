@@ -12,16 +12,16 @@ fi
 
 # Make directories
 cd ~/
-mkdir git bin lib venv
+mkdir git venv
 
 # Upgrade and install packages
 sudo apt-get update && sudo apt-get upgrade -y
 sudo apt-get install -y emacs vim python3-pip python-pip python-mysqldb\
-    xclip silversearcher-ag git build-essential gcc autojump libglu1 mopidy
+     xclip silversearcher-ag git build-essential gcc autojump libglu1 mopidy\
+     xzdec make gpg pass scdaemon libykpers-1-1
 
 sudo pip install mopidy-gmusic
-sudo pip3 install setuptools wheel virtualenv
-sudo pip3 install gcalcli parsedatetime krill
+sudo pip3 install setuptools wheel virtualenv ipython jupyter
 
 # All the gits
 cd ~/git
@@ -34,6 +34,13 @@ for var in "${git_urls[@]}"
   do
     git clone "${var}"
   done
+# Set up git
+git config --global user.email "noonker@gmail.com"
+git config --global user.name "Joshua Person"
+
+# Set up pass
+git clone https://noonker@bitbucket.org/noonker/pass.git
+mv pass $HOME/.password-store
 
 #VENV Problematic Programs
 venv_programs=(
@@ -65,6 +72,7 @@ for x in `ls -A $HOME/git/dotfiles/configs`
   done
 
 # Adding the two sourced files to .emacs
+touch $HOME/.emacs
 echo '' >> $HOME/.emacs
 echo '(load-library "~/.noonker_emacs")' >> $HOME/.emacs
 echo '(load-library "~/.jperson_emacs")' >> $HOME/.emacs
@@ -84,3 +92,19 @@ if [ "$USER_RESPONSE" = "y" ]
   else
     echo "Kay"
 fi
+
+# Install LaTeX
+echo "Do you want to install LaTeX? (y/n)"
+read USER_RESPONSE
+if [ "$USER_RESPONSE" = "y" ] 
+  then
+    sudo apt-get install evince texlive texlive-full
+    # Init tex package manager
+    tlmgr init-usertree
+
+    # Install tex documents styles
+    tlmgr install songs
+  else
+    echo "Kay"
+fi
+
