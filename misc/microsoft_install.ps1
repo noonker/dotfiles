@@ -7,12 +7,15 @@ $programs=
   ("VLC", "http://www.videolan.org/vlc/index.html"),
   ("Wireshark", "https://www.wireshark.org/#download"),
   ("Firefox", "https://www.mozilla.org/en-US/firefox/developer/"),
-  ("Emacs", "https://www.gnu.org/software/emacs/"),
   ("Audacity", "http://www.audacityteam.org/"),
   ("Clip Studio", "http://www.clipstudio.net/en"),
   ("Virtualbox", "https://www.virtualbox.org/wiki/Downloads"),
   ("Tascam", "http://tascam.com/product/us-2x2/downloads/"),
-  ("Kindle", "https://www.amazon.com/kindlepcdownload/")
+  ("Kindle", "https://www.amazon.com/kindlepcdownload/"),
+  ("Gimp", "https://www.gimp.org/downloads/"),
+  ("ASIO4ALL", "http://www.asio4all.org/"),
+  ("Splice", "https://splice.com/"),
+  ("Renoise", "https://backstage.renoise.com")
 
 ForEach ($item in $programs) {
   Start-Process $item[1]
