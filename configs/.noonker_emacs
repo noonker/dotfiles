@@ -55,7 +55,6 @@ Return a list of installed packages or nil for every skipped package."
                           'helm-ag
                           'company
                           'autopair
-                          'twittering-mode
                           'wttrin
                           'fireplace
                           'ensime
@@ -66,9 +65,7 @@ Return a list of installed packages or nil for every skipped package."
                           'monokai-theme
                           'excorporate
                           'hackernews
-                          'notmuch
                           'xclip
-                          'evil
                           'w3m
                           'mediawiki
                           'erc-colorize
@@ -81,8 +78,6 @@ Return a list of installed packages or nil for every skipped package."
                           'multiple-cursors
                           'isend-mode
                           'pcap-mode
-                          'exwm
-                          'firefox-controller
                           'icicles
                           'ace-popup-menu
                           'ipcalc
@@ -407,7 +402,7 @@ Return a list of installed packages or nil for every skipped package."
 (global-set-key (kbd "C-c <left>") 'dumb-jump-back)
 (global-set-key (kbd "C-c <right>") 'dumb-jump-go)
 (global-set-key (kbd "C-c <down>") 'dumb-jump-quick-look)
-(global-set-key (kbd "M-2") 'helm-mini)
+(global-set-key (kbd "C-2") 'helm-mini)
 
 (setq helm-mini-default-sources 
       '(helm-source-buffers-list 
@@ -495,6 +490,9 @@ Return a list of installed packages or nil for every skipped package."
 ;; No menus by default
 (tool-bar-mode -1)
 (menu-bar-mode -1)
+
+(setq wttrin-default-accept-language '("Accept-Language" . "en-US"))
+(setq wttrin-default-cities '("Ann Arbor" "Escanaba"))
 
 ;; load theme
 (load-theme 'monokai t)
