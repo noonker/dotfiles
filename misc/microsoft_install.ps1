@@ -15,7 +15,9 @@ $programs=
   ("Gimp", "https://www.gimp.org/downloads/"),
   ("ASIO4ALL", "http://www.asio4all.org/"),
   ("Splice", "https://splice.com/"),
-  ("Renoise", "https://backstage.renoise.com")
+  ("Renoise", "https://backstage.renoise.com"),
+  ("Gimp", "https://www.gimp.org/"),
+  ("Blender", "https://www.blender.org/download/")
 
 ForEach ($item in $programs) {
   Start-Process $item[1]
