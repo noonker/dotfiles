@@ -412,6 +412,7 @@ Return a list of installed packages or nil for every skipped package."
 (global-set-key (kbd "C-c <right>") 'dumb-jump-go)
 (global-set-key (kbd "C-c <down>") 'dumb-jump-quick-look)
 (global-set-key (kbd "C-2") 'helm-mini)
+(global-set-key (kbd "C-x j") 'kill-this-buffer)
 
 (setq helm-mini-default-sources 
       '(helm-source-buffers-list 
@@ -464,7 +465,7 @@ Return a list of installed packages or nil for every skipped package."
       "openssl s_client -connect %h:%p -no_ssl2 -ign_eof"))
 
 ;; Google chrome as default browser
-(setq browse-url-browser-function 'browse-url-chromium)
+(setq browse-url-browser-function 'eww-browse-url)
 
 ;; Temporarily maximize buffer
 (defun toggle-maximize-buffer () "Maximize buffer"
