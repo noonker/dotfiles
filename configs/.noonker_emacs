@@ -96,6 +96,8 @@ Return a list of installed packages or nil for every skipped package."
 			  'howdoi
 			  'docker
 			  'magithub
+			  'speed-type
+			  'latex-preview-pane
                           )
 
 
