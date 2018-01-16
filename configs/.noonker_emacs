@@ -50,6 +50,7 @@ Return a list of installed packages or nil for every skipped package."
                           '2048-game
                           'projectile
                           'helm-projectile
+			  'helm-google
                           'org
                           'org-plus-contrib
                           'helm-ag
