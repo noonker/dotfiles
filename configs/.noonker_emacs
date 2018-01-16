@@ -457,6 +457,13 @@ Return a list of installed packages or nil for every skipped package."
 
 (setq mail-user-agent 'gnus-user-agent)
 
+(defun todo (text)
+  (interactive "sTodo: ")
+  (mail "" "noonker@gmail.com" text)
+  (mail-send-and-exit)
+  (kill-buffer "*mail*")
+  )
+
 ;; ipython fix
 (setq python-shell-interpreter "ipython"
 );;    python-shell-interpreter-args "--simple-prompt -i")
