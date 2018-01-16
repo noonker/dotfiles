@@ -455,6 +455,8 @@ Return a list of installed packages or nil for every skipped package."
       smtpmail-smtp-service 587
       gnus-ignored-newsgroups "^to\\.\\|^[0-9. ]+\\( \\|$\\)\\|^[\"]\"[#'()]")
 
+(setq mail-user-agent 'gnus-user-agent)
+
 ;; ipython fix
 (setq python-shell-interpreter "ipython"
 );;    python-shell-interpreter-args "--simple-prompt -i")
