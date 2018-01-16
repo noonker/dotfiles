@@ -142,6 +142,8 @@ Return a list of installed packages or nil for every skipped package."
                     :foreground "black"
                     :background "green")
 
+(require 'mediawiki)
+
 ;;(require 'whitespace)
 ;;(setq whitespace-style '(face empty tabs lines-tail trailing))
 ;;(global-whitespace-mode t)
