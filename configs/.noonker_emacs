@@ -46,7 +46,6 @@ Return a list of installed packages or nil for every skipped package."
                           'magit
                           'flycheck
                           'helm
-                          'powerline
                           '2048-game
                           'projectile
                           'helm-projectile
@@ -57,7 +56,6 @@ Return a list of installed packages or nil for every skipped package."
                           'company
                           'autopair
                           'wttrin
-                          'fireplace
                           'ensime
                           'dumb-jump
                           'es-mode
@@ -67,7 +65,6 @@ Return a list of installed packages or nil for every skipped package."
                           'excorporate
                           'hackernews
                           'xclip
-                          'w3m
                           'mediawiki
                           'erc-colorize
                           'mingus
@@ -99,6 +96,9 @@ Return a list of installed packages or nil for every skipped package."
 			  'magithub
 			  'speed-type
 			  'latex-preview-pane
+			  'js-comint
+			  'beacon
+			  'spray
                           )
 
 
@@ -506,6 +506,18 @@ Return a list of installed packages or nil for every skipped package."
   (interactive)
   (ansi-term "tmux" "tmux"))
 
+;; Start Selenium
+(defun selenium()
+  (interactive)
+  (save-excursion
+    (async-shell-command "java -jar $HOME/Documents/selenium.jar")))
+
+;; Start Selenium
+(defun mopidy()
+  (interactive)
+  (save-excursion
+    (async-shell-command "mopidy")))
+
 ;; No menus by default
 (tool-bar-mode -1)
 (menu-bar-mode -1)
@@ -514,4 +526,5 @@ Return a list of installed packages or nil for every skipped package."
 (setq wttrin-default-cities '("Ann Arbor" "Escanaba"))
 
 ;; load theme
+(beacon-mode 1)
 (load-theme 'monokai t)
