@@ -99,13 +99,15 @@ Return a list of installed packages or nil for every skipped package."
 			  'js-comint
 			  'beacon
 			  'spray
+			  'powershell
+			  'pass
                           )
 
 
 ;;(evil-mode t)
 (global-flycheck-mode)
 ;;(global-linum-mode t)
-(powerline-default-theme)
+;;(powerline-default-theme)
 (global-company-mode)
 
 ;; Python iPython
