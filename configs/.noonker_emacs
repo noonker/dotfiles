@@ -4,6 +4,8 @@
 ;;; Commentary:
 ;;
 ;; I'm just here so I won't get fined
+;; Hey future josh, here's a debugging statement for ya
+;; (setq debug-on-error t)
 ;;
 ;;; Code:
 
