@@ -89,7 +89,6 @@ Return a list of installed packages or nil for every skipped package."
                           'ace-jump-mode
 			  'jenkins
 			  'helm
-			  'helm-pass
 			  'smartscan
 			  'minesweeper
 			  'auctex
@@ -102,7 +101,6 @@ Return a list of installed packages or nil for every skipped package."
 			  'beacon
 			  'spray
 			  'powershell
-			  'pass
                           )
 
 
@@ -520,7 +518,7 @@ Return a list of installed packages or nil for every skipped package."
 (defun mopidy()
   (interactive)
   (save-excursion
-    (async-shell-command "mopidy")))
+    (ansi-term "mopidy" "mopidy")))
 
 ;; No menus by default
 (tool-bar-mode -1)
@@ -528,6 +526,16 @@ Return a list of installed packages or nil for every skipped package."
 
 (setq wttrin-default-accept-language '("Accept-Language" . "en-US"))
 (setq wttrin-default-cities '("Ann Arbor" "Escanaba"))
+
+(defun passc ()
+  "Copy the password of the entry in the current buffer."
+  (interactive)
+    (helm-find-files-1 "~/.password-store/Internet")
+    (goto-char (point-min))
+    (copy-region-as-kill (point) (line-end-position))
+    (kill-this-buffer))
+
+(global-set-key (kbd "C-<return>") 'passc)
 
 ;; load theme
 (beacon-mode 1)
