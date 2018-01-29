@@ -18,7 +18,7 @@ mkdir git venv
 sudo apt-get update && sudo apt-get upgrade -y
 sudo apt-get install -y emacs vim python3-pip python-pip python-mysqldb\
      xclip silversearcher-ag git build-essential gcc autojump libglu1 mopidy\
-     xzdec make gpg pass scdaemon libykpers-1-1
+     xzdec make gpg pass scdaemon libykpers-1-1 docker.io curl
 
 sudo pip install mopidy-gmusic
 sudo pip3 install setuptools wheel virtualenv ipython jupyter

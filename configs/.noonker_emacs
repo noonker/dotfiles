@@ -51,7 +51,7 @@ Return a list of installed packages or nil for every skipped package."
                           '2048-game
                           'projectile
                           'helm-projectile
-			  'helm-google
+                          'helm-google
                           'org
                           'org-plus-contrib
                           'helm-ag
@@ -70,7 +70,6 @@ Return a list of installed packages or nil for every skipped package."
                           'mediawiki
                           'erc-colorize
                           'mingus
-                          'column-marker
                           'emojify
                           'minimap
                           'request
@@ -78,7 +77,6 @@ Return a list of installed packages or nil for every skipped package."
                           'multiple-cursors
                           'isend-mode
                           'pcap-mode
-                          'icicles
                           'ace-popup-menu
                           'ipcalc
                           'neotree
@@ -87,20 +85,21 @@ Return a list of installed packages or nil for every skipped package."
                           'rainbow-mode
                           'nyan-mode
                           'ace-jump-mode
-			  'jenkins
-			  'helm
-			  'smartscan
-			  'minesweeper
-			  'auctex
-			  'howdoi
-			  'docker
-			  'magithub
-			  'speed-type
-			  'latex-preview-pane
-			  'js-comint
-			  'beacon
-			  'spray
-			  'powershell
+                          'jenkins
+                          'helm
+                          'smartscan
+                          'minesweeper
+                          'auctex
+                          'howdoi
+                          'docker
+                          'magithub
+                          'speed-type
+                          'latex-preview-pane
+                          'js-comint
+                          'beacon
+                          'spray
+                          'powershell
+                          'helm-pass
                           )
 
 
@@ -163,7 +162,7 @@ Return a list of installed packages or nil for every skipped package."
 (setq twittering-use-master-password t)
 
 ;; Icicles mode
-(icy-mode 1)
+;; (icy-mode 1)
 
 ;; Smartscan mode
 (smartscan-mode 1)
