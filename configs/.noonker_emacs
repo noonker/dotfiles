@@ -100,6 +100,7 @@ Return a list of installed packages or nil for every skipped package."
                           'spray
                           'powershell
                           'helm-pass
+			  'undo-tree
                           )
 
 
@@ -467,7 +468,7 @@ Return a list of installed packages or nil for every skipped package."
 
 ;; ipython fix
 (setq python-shell-interpreter "ipython"
-);;    python-shell-interpreter-args "--simple-prompt -i")
+    python-shell-interpreter-args "--simple-prompt -i")
 
 (setq tls-program
       '("gnutls-cli --insecure -p %p %h"
@@ -475,7 +476,8 @@ Return a list of installed packages or nil for every skipped package."
       "openssl s_client -connect %h:%p -no_ssl2 -ign_eof"))
 
 ;; Google chrome as default browser
-(setq browse-url-browser-function 'eww-browse-url)
+;; (setq browse-url-browser-function 'eww)
+(setq browse-url-browser-function 'browse-url-default-browser)
 
 ;; Temporarily maximize buffer
 (defun toggle-maximize-buffer () "Maximize buffer"
