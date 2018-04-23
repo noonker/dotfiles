@@ -101,6 +101,8 @@ Return a list of installed packages or nil for every skipped package."
                           'powershell
                           'helm-pass
 			  'undo-tree
+			  'elfeed
+			  'twittering-mode
                           )
 
 
@@ -538,6 +540,12 @@ Return a list of installed packages or nil for every skipped package."
 
 (global-set-key (kbd "C-<return>") 'passc)
 
+(setq elfeed-feeds
+      '("https://stallman.org/rss/rss.xml"
+        "https://theoutline.com/feeds/recent.rss"
+        "https://asert.arbornetworks.com/feed/"))
+
+
 ;; load theme
 (beacon-mode 1)
-(load-theme 'monokai t)
+(load-theme 'solarized-dark t)
