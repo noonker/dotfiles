@@ -103,6 +103,7 @@ Return a list of installed packages or nil for every skipped package."
 			  'undo-tree
 			  'elfeed
 			  'twittering-mode
+			  'eshell-git-prompt
                           )
 
 
@@ -124,6 +125,9 @@ Return a list of installed packages or nil for every skipped package."
  "';'.join(module_completion('''%s'''))\n"
  python-shell-completion-string-code
  "';'.join(get_ipython().Completer.all_completions('''%s'''))\n")
+;; IPython autoreloading && debugging registers
+(set-register ?d '"import pdb\npdb.set_trace()")
+(set-register ?r '"%load_ext autoreload\n%autoreload 2")
 
 ;; erc-colors
 (erc-colorize-mode 1)
@@ -173,6 +177,9 @@ Return a list of installed packages or nil for every skipped package."
 ;; Ace menu
 (ace-popup-menu-mode 1)
 (define-key global-map (kbd "C-c SPC") 'ace-jump-mode)
+
+;; Eshell theme
+(eshell-git-prompt-use-theme 'robbyrussell)
 
 ;; Windmove
 (when (fboundp 'windmove-default-keybindings)
@@ -548,4 +555,16 @@ Return a list of installed packages or nil for every skipped package."
 
 ;; load theme
 (beacon-mode 1)
+
+(setq helm-exit-idle-delay 0)
+(defun dark()
+  (interactive)
+  (load-theme 'solarized-dark t)
+  )
+
+(defun light()
+  (interactive)
+  (load-theme 'solarized-light t)
+  )
+
 (load-theme 'solarized-dark t)
