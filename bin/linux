@@ -16,10 +16,10 @@ mkdir git venv
 
 # Upgrade and install packages
 sudo apt-get update && sudo apt-get upgrade -y
-sudo apt-get install -y emacs vim python3-pip python-pip python-mysqldb\
+sudo apt-get install -y emacs25 vim python3-pip python-pip python-mysqldb\
      xclip silversearcher-ag git build-essential gcc autojump libglu1 mopidy\
      xzdec make gpg pass scdaemon libykpers-1-1 docker.io curl wireshark gimp\
-     audacity
+     audacity git scdaemon pass whois
 
 sudo pip install mopidy-gmusic
 sudo pip3 install setuptools wheel virtualenv ipython jupyter awscli boto3 flake8 pylint
@@ -28,7 +28,9 @@ sudo pip3 install setuptools wheel virtualenv ipython jupyter awscli boto3 flake
 cd ~/git
 
 git_urls=(
-  'https://github.com/noonker/dotfiles.git'
+    'https://github.com/noonker/dotfiles.git'
+    'https://github.com/ch11ng/xelb.git'
+    'https://github.com/ch11ng/exwm.git'
   )
 
 for var in "${git_urls[@]}"
@@ -78,6 +80,9 @@ echo '' >> $HOME/.emacs
 echo '(load-library "~/.noonker_emacs")' >> $HOME/.emacs
 echo '(load-library "~/.jperson_emacs")' >> $HOME/.emacs
 
+# GPG Status
+gpg --card-status
+
 # Install Anaconda
 echo "Do you want to install jupyter and anaconda (y/n)"
 read USER_RESPONSE
@@ -93,6 +98,16 @@ if [ "$USER_RESPONSE" = "y" ]
   else
     echo "Kay"
 fi
+
+
+# Signal
+curl -s https://updates.signal.org/desktop/apt/keys.asc | sudo apt-key add -
+echo "deb [arch=amd64] https://updates.signal.org/desktop/apt xenial main" | sudo tee -a /etc/apt/sources.list.d/signal-xenial.list
+sudo apt update && sudo apt install signal-desktop
+
+
+# Change  WM
+ln -s $HOME/git/exwm/xinitrc $HOME/.xinitrc
 
 # Install LaTeX
 echo "Do you want to install LaTeX? (y/n)"
