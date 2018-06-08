@@ -106,6 +106,7 @@ Return a list of installed packages or nil for every skipped package."
 			  'eshell-git-prompt
 			  'solarized-theme
 			  'exwm
+			  'ein
                           )
 
 
@@ -124,6 +125,9 @@ Return a list of installed packages or nil for every skipped package."
 
 (exwm-input-set-key (kbd "s-<tab>") #'switch-to-last-buffer)
 
+(require 'exwm-systemtray)
+(exwm-systemtray-enable)
+(setq exwm-systemtray-height 24)
 
 ;;(evil-mode t)
 (global-flycheck-mode)
