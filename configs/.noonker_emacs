@@ -107,31 +107,42 @@ Return a list of installed packages or nil for every skipped package."
 			  'solarized-theme
 			  'exwm
 			  'ein
+			  'flymd
+			  'outline-magic
                           )
 
+(add-hook 'outline-mode-hook 
+          (lambda () 
+            (require 'outline-cycle)))
+            
+(add-hook 'outline-minor-mode-hook 
+          (lambda () 
+            (require 'outline-magic)
+            (define-key outline-minor-mode-map  (kbd "<C-tab>") 'outline-cycle)))
 
-(setq feeling-adventurous nil)
+(add-hook 'python-mode-hook
+          (lambda ()
+            (outline-minor-mode)
+))
 
-(if feeling-adventurous (
-			 ;; exwm trial 2
-			 (add-to-list 'load-path "$HOME/git/xelb/")
-			 (add-to-list 'load-path "$HOME/git/exwm/")
+;; exwm trial 2
+(add-to-list 'load-path "$HOME/git/xelb/")
+(add-to-list 'load-path "$HOME/git/exwm/")
 
-			 (require 'exwm)
-			 (require 'exwm-config)
-			 (exwm-config-default)
+(require 'exwm)
+(require 'exwm-config)
+(exwm-config-default)
 
-			 (defun switch-to-last-buffer ()
-			   "Switch to last open buffer in current window."
-			   (interactive)
-			   (switch-to-buffer (other-buffer (current-buffer) 1)))
+(defun switch-to-last-buffer ()
+  "Switch to last open buffer in current window."
+  (interactive)
+  (switch-to-buffer (other-buffer (current-buffer) 1)))
 
-			 (exwm-input-set-key (kbd "s-<tab>") #'switch-to-last-buffer)
+(exwm-input-set-key (kbd "s-<tab>") #'switch-to-last-buffer)
 
-			 (require 'exwm-systemtray)
-			 (exwm-systemtray-enable)
-			 (setq exwm-systemtray-height 24)
-			 ))
+(require 'exwm-systemtray)
+(exwm-systemtray-enable)
+(setq exwm-systemtray-height 24)
 
 
 ;;(evil-mode t)
@@ -449,7 +460,8 @@ Return a list of installed packages or nil for every skipped package."
 (global-set-key (kbd "C-c <left>") 'dumb-jump-back)
 (global-set-key (kbd "C-c <right>") 'dumb-jump-go)
 (global-set-key (kbd "C-c <down>") 'dumb-jump-quick-look)
-(global-set-key (kbd "C-2 ") 'helm-mini)
+(global-set-key (kbd "C-c c") 'helm-mini)
+(global-set-key (kbd "C-2") 'helm-mini)
 (global-set-key (kbd "C-x j") 'kill-this-buffer)
 
 (setq helm-mini-default-sources 
