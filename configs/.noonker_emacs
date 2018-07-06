@@ -606,4 +606,9 @@ Return a list of installed packages or nil for every skipped package."
   (load-theme 'solarized-light t)
   )
 
+(defun monokai()
+  (interactive)
+  (load-theme 'monokai t)
+  )
+
 (load-theme 'solarized-dark t)
