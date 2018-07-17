@@ -58,7 +58,6 @@ Return a list of installed packages or nil for every skipped package."
                           'company
                           'autopair
                           'wttrin
-                          'ensime
                           'dumb-jump
                           'es-mode
                           'restclient
@@ -109,6 +108,7 @@ Return a list of installed packages or nil for every skipped package."
 			  'ein
 			  'flymd
 			  'outline-magic
+			  'pdf-tools
                           )
 
 (add-hook 'outline-mode-hook 
@@ -202,6 +202,8 @@ Return a list of installed packages or nil for every skipped package."
 
 ;; Ensure tramp uses remote path
 ;; (add-to-list 'tramp-remote-path 'tramp-own-remote-path)
+
+(setq tramp-auto-save-directory "/tmp")
 
 ;; Twitter password shenanagans
 (setq twittering-use-master-password t)
@@ -451,6 +453,12 @@ Return a list of installed packages or nil for every skipped package."
 (setq vc-make-backup-files t)
 (setq auto-save-file-name-transforms '((".*" "~/.emacs.d/auto-save-list/" t)))
 
+;; no vc in tramp
+(setq vc-ignore-dir-regexp
+      (format "\\(%s\\)\\|\\(%s\\)"
+	      vc-ignore-dir-regexp
+	      tramp-file-name-regexp))
+
 ;; Turn of scrollbars
 (scroll-bar-mode -1)
 
@@ -611,4 +619,4 @@ Return a list of installed packages or nil for every skipped package."
   (load-theme 'monokai t)
   )
 
-(load-theme 'solarized-dark t)
+(load-theme 'monokai t)
