@@ -109,6 +109,7 @@ Return a list of installed packages or nil for every skipped package."
 			  'flymd
 			  'outline-magic
 			  'pdf-tools
+			  'sx
                           )
 
 (add-hook 'outline-mode-hook 
@@ -166,7 +167,7 @@ Return a list of installed packages or nil for every skipped package."
 ;; IPython autoreloading && debugging registers
 (set-register ?d '"import pdb\npdb.set_trace()")
 (set-register ?r '"%load_ext autoreload\n%autoreload 2")
-
+(set-register ?e '"sudo docker run -p 9200:9200 -p 9300:9300 -e \"discovery.type=single-node\" docker.elastic.co/elasticsearch/elasticsearch:6.3.2 -v \"$PWD/config\":/usr/share/elasticsearch/config")
 ;; erc-colors
 (erc-colorize-mode 1)
 
@@ -210,6 +211,11 @@ Return a list of installed packages or nil for every skipped package."
 
 ;; Icicles mode
 ;; (icy-mode 1)
+
+(require 'recentf)
+(setq recentf-auto-cleanup 'never) ;; disable before we start recentf!
+(recentf-mode 1)
+
 
 ;; Smartscan mode
 (smartscan-mode 1)
@@ -376,6 +382,8 @@ Return a list of installed packages or nil for every skipped package."
 
 (global-set-key (kbd "C-c y") `cnc-prompt)
 (global-set-key (kbd "C-c C-.") `cnc-from-file)
+
+(setq projectile-mode-line "Projectile")
 
 ;; Winner Mode
 
@@ -594,14 +602,26 @@ Return a list of installed packages or nil for every skipped package."
 
 (global-set-key (kbd "C-<return>") 'passc)
 
-(setq elfeed-feeds
-      '("https://stallman.org/rss/rss.xml"
-        "https://theoutline.com/feeds/recent.rss"
-        "https://asert.arbornetworks.com/feed/"))
-
+(setq erc-hide-list '("JOIN" "PART" "QUIT"))
 
 ;; load theme
 (beacon-mode 1)
+
+;; Company Mode shit
+(setq company-dabbrev-downcase 0)
+(setq company-idle-delay 0)
+
+(defun complete-or-indent ()
+  (interactive)
+  (if (company-manual-begin)
+      (company-complete-common)
+    (indent-according-to-mode)))
+
+(defun indent-or-complete ()
+  (interactive)
+  (if (looking-at "\\_>")
+      (company-complete-common)
+    (indent-according-to-mode)))
 
 (setq helm-exit-idle-delay 0)
 (defun dark()

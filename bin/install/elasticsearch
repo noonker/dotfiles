@@ -1,0 +1,7 @@
+docker pull docker.elastic.co/elasticsearch/elasticsearch:6.3.2
+mkdir $HOME/.eslocal
+export ESLOCAL=$HOME/.eslocal
+printf "path:\n  logs: /data/log\n  data: /data/data" > $ESLOCAL/elasticsearch.yml
+
+
+docker run -p 9200:9200 -p 9300:9300 -v- $ESLOCAL:/data dockerfile/elasticsearch-e "discovery.type=single-node" docker.elastic.co/elasticsearch/elasticsearch:6.3.2 -Des.config=/data/elasticsearch.yml
