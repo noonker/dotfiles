@@ -110,6 +110,9 @@ Return a list of installed packages or nil for every skipped package."
 			  'outline-magic
 			  'pdf-tools
 			  'sx
+			  'system-packages
+			  'fish-completion
+			  'gnus-desktop-notify
                           )
 
 (add-hook 'outline-mode-hook 
@@ -130,20 +133,24 @@ Return a list of installed packages or nil for every skipped package."
 (add-to-list 'load-path "$HOME/git/xelb/")
 (add-to-list 'load-path "$HOME/git/exwm/")
 
-(require 'exwm)
-(require 'exwm-config)
-(exwm-config-default)
+;; (require 'exwm)
+;; (require 'exwm-config)
+;; (exwm-config-default)
 
-(defun switch-to-last-buffer ()
-  "Switch to last open buffer in current window."
-  (interactive)
-  (switch-to-buffer (other-buffer (current-buffer) 1)))
+;; (defun switch-to-last-buffer ()
+;;   "Switch to last open buffer in current window."
+;;   (interactive)
+;;   (switch-to-buffer (other-buffer (current-buffer) 1)))
 
-(exwm-input-set-key (kbd "s-<tab>") #'switch-to-last-buffer)
+;; (exwm-input-set-key (kbd "s-<tab>") #'switch-to-last-buffer)
 
-(require 'exwm-systemtray)
-(exwm-systemtray-enable)
-(setq exwm-systemtray-height 24)
+;; (require 'exwm-systemtray)
+;; (exwm-systemtray-enable)
+;; (setq exwm-systemtray-height 24)
+
+(when (and (executable-find "fish")
+           (require 'fish-completion nil t))
+  (global-fish-completion-mode))
 
 
 ;;(evil-mode t)
@@ -500,32 +507,42 @@ Return a list of installed packages or nil for every skipped package."
 (setq w3m-use-cookies t)
 
 ;; Gmail
-(setq user-mail-address "noonker@gmail.com"
+(setq user-mail-address "noonker@pm.me"
       user-full-name "Joshua Person")
 
+(setq gnus-select-method '(nnimap "127.0.0.1"
+                                  (nnimap-address "127.0.0.1")
+                                  (nnimap-server-port 1143)
+				  (nnimap-stream starttls)))
 
-(setq gnus-select-method
-      '(nnimap "outlook"
-	       (nnimap-address "outlook.office365.com")  ; it could also be imap.googlemail.com if that's your server.
-	       (nnimap-server-port "imaps")
-	       (nnimap-stream ssl)))
+(setq mail-sources '((imap :server "127.0.0.1"
+                           :user "noonker@pm.me"
+			   )))
 
-(setq gnus-secondary-select-methods
-      '((nnimap "gmail"
-                (nnimap-address "imap.gmail.com")
-                (nnimap-server-port 993)
-                (nnimap-stream ssl)
-                (nnimap-authinfo-file "~/.authinfo"))))
+(setq tls-program
+      '("gnutls-cli --insecure -p %p %h"
+      "gnutls-cli --insecure -p %p %h --protocols ssl3"
+      "openssl s_client -connect %h:%p -no_ssl2 -ign_eof"))
 
-(setq smtpmail-smtp-server "smtp.gmail.com"
-      smtpmail-smtp-service 587
-      gnus-ignored-newsgroups "^to\\.\\|^[0-9. ]+\\( \\|$\\)\\|^[\"]\"[#'()]")
+(setq message-send-mail-function 'smtpmail-send-it
+      smtpmail-smtp-user "noonker@pm.me"
+      smtpmail-auth-credentials "~/.pasword-store/.authinfo.gpg"
+      smtpmail-stream-type  'starttls
+      smtpmail-local-domain "127.0.0.1"
+      smtpmail-default-smtp-server "127.0.0.1"
+      smtpmail-smtp-server "127.0.0.1"
+      smtpmail-smtp-service 1025
+      smtpmail-debug-info t)
+
+(require 'gnus-desktop-notify)
+(gnus-desktop-notify-mode)
+(gnus-demon-add-scanmail)
 
 (setq mail-user-agent 'gnus-user-agent)
 
 (defun todo (text)
   (interactive "sTodo: ")
-  (mail "" "noonker@gmail.com" text)
+  (mail "" "noonker@pm.me" text)
   (mail-send-and-exit)
   (kill-buffer "*mail*")
   )
@@ -533,11 +550,6 @@ Return a list of installed packages or nil for every skipped package."
 ;; ipython fix
 (setq python-shell-interpreter "ipython"
     python-shell-interpreter-args "--simple-prompt -i")
-
-(setq tls-program
-      '("gnutls-cli --insecure -p %p %h"
-      "gnutls-cli --insecure -p %p %h --protocols ssl3"
-      "openssl s_client -connect %h:%p -no_ssl2 -ign_eof"))
 
 ;; Google chrome as default browser
 ;; (setq browse-url-browser-function 'eww)
@@ -607,9 +619,11 @@ Return a list of installed packages or nil for every skipped package."
 ;; load theme
 (beacon-mode 1)
 
+
 ;; Company Mode shit
 (setq company-dabbrev-downcase 0)
 (setq company-idle-delay 0)
+(setq company-minimum-prefix-length 2)
 
 (defun complete-or-indent ()
   (interactive)
