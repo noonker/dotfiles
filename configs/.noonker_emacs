@@ -112,7 +112,8 @@ Return a list of installed packages or nil for every skipped package."
 			  'sx
 			  'system-packages
 			  'fish-completion
-			  'gnus-desktop-notify
+			  'easy-hugo
+			  'slack
                           )
 
 (add-hook 'outline-mode-hook 
@@ -534,10 +535,6 @@ Return a list of installed packages or nil for every skipped package."
       smtpmail-smtp-service 1025
       smtpmail-debug-info t)
 
-(require 'gnus-desktop-notify)
-(gnus-desktop-notify-mode)
-(gnus-demon-add-scanmail)
-
 (setq mail-user-agent 'gnus-user-agent)
 
 (defun todo (text)
@@ -614,6 +611,12 @@ Return a list of installed packages or nil for every skipped package."
 
 (global-set-key (kbd "C-<return>") 'passc)
 
+(defun ruthless-kill ()
+  "Kill the line without copying it"
+  (interactive)
+  (delete-region (point) (line-end-position)))
+(global-set-key (kbd "C-c k") 'ruthless-kill)
+
 (setq erc-hide-list '("JOIN" "PART" "QUIT"))
 
 ;; load theme
@@ -653,4 +656,47 @@ Return a list of installed packages or nil for every skipped package."
   (load-theme 'monokai t)
   )
 
+
+;;; Big QOL changes.
+(setq slack-buffer-emojify t) ;; if you want to enable emoji, default nil
+(setq slack-buffer-function #'switch-to-buffer)
+(setq slack-prefer-current-team t)
+(setq slack-display-team-name nil)
+
+(add-hook 'slack-mode-hook #'emojify-mode)
+(setq slack-buffer-create-on-notify t)
+;; (setq alert-default-style 'mode-line)
+(setq alert-default-style 'notifications)
+
+(defun slack-user-status (_id _team) "")
+;;; Channels
+(setq slack-message-notification-title-format-function
+      (lambda (_team room threadp)
+        (concat (if threadp "Thread in #%s") room)))
+
+(defun endless/-cleanup-room-name (room-name)
+  "Make group-chat names a bit more human-readable."
+  (replace-regexp-in-string
+   "--" " "
+   (replace-regexp-in-string "#mpdm-" "" room-name)))
+
+;;; Private messages and group chats
+(setq
+ slack-message-im-notification-title-format-function
+ (lambda (_team room threadp)
+   (concat (if threadp "Thread in %s") 
+           (endless/-cleanup-room-name room))))
+
+(defun slk ()
+  "start slack"
+  (interactive)
+  (slack-start)
+  (defmethod slack-buffer-name :static ((class slack-room-buffer) room team)
+    (slack-if-let* ((room-name (slack-room-name room)))
+	(format  "$%s"
+		 room-name)))
+  (slack-change-current-team)
+)
+
 (load-theme 'monokai t)
+
