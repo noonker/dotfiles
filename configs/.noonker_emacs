@@ -107,7 +107,6 @@ Return a list of installed packages or nil for every skipped package."
 			  'exwm
 			  'ein
 			  'flymd
-			  'outline-magic
 			  'pdf-tools
 			  'sx
 			  'system-packages
@@ -116,14 +115,6 @@ Return a list of installed packages or nil for every skipped package."
 			  'slack
                           )
 
-(add-hook 'outline-mode-hook 
-          (lambda () 
-            (require 'outline-cycle)))
-            
-(add-hook 'outline-minor-mode-hook 
-          (lambda () 
-            (require 'outline-magic)
-            (define-key outline-minor-mode-map  (kbd "<C-tab>") 'outline-cycle)))
 
 (add-hook 'python-mode-hook
           (lambda ()
@@ -176,6 +167,10 @@ Return a list of installed packages or nil for every skipped package."
 (set-register ?d '"import pdb\npdb.set_trace()")
 (set-register ?r '"%load_ext autoreload\n%autoreload 2")
 (set-register ?e '"sudo docker run -p 9200:9200 -p 9300:9300 -e \"discovery.type=single-node\" docker.elastic.co/elasticsearch/elasticsearch:6.3.2 -v \"$PWD/config\":/usr/share/elasticsearch/config")
+(set-register ?p '"\\(\\([0-9]\\{1,3\\}\\(\\.\\|\\[\\.\\]\\)\\)\\{3\\}[0-9]\\{1,3\\}\\)")
+(set-register ?o '"\\([a-zA-Z0-9-_]+\\(\\.\\|\\[\\.\\]\\)\\)*[a-zA-Z0-9][a-zA-Z0-9-_]+\\(\\.\\|\\[\\.\\]\\)[a-zA-Z]\\{2,11\\}")
+(set-register ?i '"\\(\\(\\([0-9]\\{1,3\\}\\(\\.\\|\\[\\.\\]\\)\\)\\{3\\}[0-9]\\{1,3\\}\\)\\|\\([a-zA-Z0-9-_]+\\(\\.\\|\\[\\.\\]\\)\\)*[a-zA-Z0-9][a-zA-Z0-9-_]+\\(\\.\\|\\[\\.\\]\\)[a-zA-Z]\\{2,11\\}\\)")
+
 ;; erc-colors
 (erc-colorize-mode 1)
 
@@ -609,8 +604,6 @@ Return a list of installed packages or nil for every skipped package."
     (copy-region-as-kill (point) (line-end-position))
     (kill-this-buffer))
 
-(global-set-key (kbd "C-<return>") 'passc)
-
 (defun ruthless-kill ()
   "Kill the line without copying it"
   (interactive)
@@ -698,5 +691,41 @@ Return a list of installed packages or nil for every skipped package."
   (slack-change-current-team)
 )
 
-(load-theme 'monokai t)
+(defun ioc-search-forward ()
+  (interactive)
+  (let ((good-regex "\\(\\(\\([0-9]\\{1,3\\}\\(\\.\\|\\[\\.\\]\\)\\)\\{3\\}[0-9]\\{1,3\\}\\)\\|\\([a-zA-Z0-9-_]+\\(\\.\\|\\[\\.\\]\\)\\)*[a-zA-Z0-9][a-zA-Z0-9-_]+\\(\\.\\|\\[\\.\\]\\)[a-zA-Z]\\{2,11\\}\\)"))
+  (when (re-search-forward good-regex (point-max) t 2)
+    (setf
+     (point) (match-beginning 0)
+     (mark) (match-end 0)))))
 
+(global-set-key (kbd "C-<return>") 'ioc-search-forward)
+
+(defun refang ()
+    "Refang the first element in the kill ring."
+  (interactive)
+  (let ((refang-regex "\\[\\.\\]")
+	(last-kill (car kill-ring)))
+    (set-text-properties 0 (length last-kill) nil last-kill)
+    (kill-new (replace-regexp-in-string refang-regex "." last-kill))
+    )
+  )
+
+
+(defun defang ()
+  "Defangs the first element in the kill ring buffer."
+  (interactive)
+  (with-temp-buffer
+    (let ((ioc (reverse (car kill-ring))))
+      (insert ioc)
+      (goto-char
+       (string-match "\\." ioc))
+      (move-point-visually 1)
+      (insert "]")
+      (move-point-visually 2)
+      (insert "[")
+      (setq defanged (reverse (buffer-string)))
+      (kill-new defanged)
+    )))
+
+(load-theme 'monokai t)
