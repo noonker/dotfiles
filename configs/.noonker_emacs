@@ -387,6 +387,9 @@ Return a list of installed packages or nil for every skipped package."
 (global-set-key (kbd "C-c C-.") `cnc-from-file)
 
 (setq projectile-mode-line "Projectile")
+(projectile-mode +1)
+(define-key projectile-mode-map (kbd "s-p") 'projectile-command-map)
+(define-key projectile-mode-map (kbd "C-c p") 'projectile-command-map)
 
 ;; Winner Mode
 
@@ -685,9 +688,9 @@ Return a list of installed packages or nil for every skipped package."
   (interactive)
   (slack-start)
   (defmethod slack-buffer-name :static ((class slack-room-buffer) room team)
-    (slack-if-let* ((room-name (slack-room-name room)))
-	(format  "$%s"
-		 room-name)))
+  (slack-if-let* ((room-name (slack-room-name room team)))
+      (format  ":%s"
+               room-name)))
   (slack-change-current-team)
 )
 
