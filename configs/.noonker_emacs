@@ -113,9 +113,18 @@ Return a list of installed packages or nil for every skipped package."
 			  'fish-completion
 			  'easy-hugo
 			  'slack
-                          )
+			  'ssh
+			  )
+
+(require 'ssh)
+(add-hook 'ssh-mode-hook
+	  (lambda ()
+	    (setq ssh-directory-tracking-mode t)
+	    (shell-dirtrack-mode t)
+	    (setq dirtrackp nil)))
 
 
+(require 'cl)
 (add-hook 'python-mode-hook
           (lambda ()
             (outline-minor-mode)
@@ -621,7 +630,7 @@ Return a list of installed packages or nil for every skipped package."
 
 ;; Company Mode shit
 (setq company-dabbrev-downcase 0)
-(setq company-idle-delay 0)
+(setq company-idle-delay 0.3)
 (setq company-minimum-prefix-length 2)
 
 (defun complete-or-indent ()
@@ -687,10 +696,10 @@ Return a list of installed packages or nil for every skipped package."
   "start slack"
   (interactive)
   (slack-start)
-  (defmethod slack-buffer-name :static ((class slack-room-buffer) room team)
-  (slack-if-let* ((room-name (slack-room-name room team)))
-      (format  ":%s"
-               room-name)))
+  ;; (defmethod slack-buffer-name :static ((class slack-room-buffer) room team)
+  ;; (slack-if-let* ((room-name (slack-room-name room team)))
+  ;;     (format  ":%s"
+  ;;              room-name)))
   (slack-change-current-team)
 )
 
