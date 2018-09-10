@@ -162,7 +162,7 @@ Return a list of installed packages or nil for every skipped package."
 
 ;; Python iPython
 (setq
- python-shell-interpreter "ipython"
+ python-shell-interpreter "ipython3"
  python-shell-interpreter-args "--colors=Linux --profile=default"
  python-shell-prompt-regexp "In \\[[0-9]+\\]: "
  python-shell-prompt-output-regexp "Out\\[[0-9]+\\]: "
@@ -552,7 +552,7 @@ Return a list of installed packages or nil for every skipped package."
   )
 
 ;; ipython fix
-(setq python-shell-interpreter "ipython"
+(setq python-shell-interpreter "ipython3"
     python-shell-interpreter-args "--simple-prompt -i")
 
 ;; Google chrome as default browser
@@ -696,10 +696,10 @@ Return a list of installed packages or nil for every skipped package."
   "start slack"
   (interactive)
   (slack-start)
-  ;; (defmethod slack-buffer-name :static ((class slack-room-buffer) room team)
-  ;; (slack-if-let* ((room-name (slack-room-name room team)))
-  ;;     (format  ":%s"
-  ;;              room-name)))
+   (defmethod slack-buffer-name :static ((class slack-room-buffer) room team)
+    (slack-if-let* ((room-name (slack-room-name room team)))
+       (format  ":%s"
+                room-name)))
   (slack-change-current-team)
 )
 
