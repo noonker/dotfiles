@@ -114,7 +114,10 @@ Return a list of installed packages or nil for every skipped package."
 			  'easy-hugo
 			  'slack
 			  'ssh
+			  'gnuplot
+			  'gnuplot-mode
 			  )
+
 
 (require 'ssh)
 (add-hook 'ssh-mode-hook
@@ -153,6 +156,10 @@ Return a list of installed packages or nil for every skipped package."
            (require 'fish-completion nil t))
   (global-fish-completion-mode))
 
+
+;;(require 'emms-setup)
+;;(emms-all)
+;; (emms-default-players)
 
 ;;(evil-mode t)
 (global-flycheck-mode)
@@ -213,6 +220,8 @@ Return a list of installed packages or nil for every skipped package."
 (projectile-global-mode)
 (autopair-global-mode 1)
 
+(add-hook 'prog-mode-hook 'rainbow-delimiters-mode)
+(add-hook 'prog-mode-hook 'rainbow-mode)
 ;; Ensure tramp uses remote path
 ;; (add-to-list 'tramp-remote-path 'tramp-own-remote-path)
 
@@ -325,6 +334,9 @@ Return a list of installed packages or nil for every skipped package."
 (eval-after-load "term"
   '(define-key term-raw-map (kbd "C-c C-y") 'term-paste))
 
+(org-babel-do-load-languages
+ 'org-babel-load-languages
+ '((dot . t)))
 
 ;; Shorten yes and no
 (defalias 'yes-or-no-p 'y-or-n-p)
@@ -544,11 +556,13 @@ Return a list of installed packages or nil for every skipped package."
 
 (setq mail-user-agent 'gnus-user-agent)
 
-(defun todo (text)
+(defun todo (text &optional body) 
   (interactive "sTodo: ")
-  (mail "" "noonker@pm.me" text)
-  (mail-send-and-exit)
-  (kill-buffer "*mail*")
+  (compose-mail-other-window "noonker@pm.me" text)
+  (mail-text)
+  (if body
+      (insert body))
+  (message-send-and-exit)
   )
 
 ;; ipython fix
@@ -739,5 +753,69 @@ Return a list of installed packages or nil for every skipped package."
       (setq defanged (reverse (buffer-string)))
       (kill-new defanged)
     )))
+
+
+(require 'emms-setup)
+(require 'emms-streams)
+(require 'emms-stream-info)
+
+;; EMMS Streams
+(setq emms-stream-default-list
+      (append 
+       '(("SomaFM: Dubstep" "http://somafm.com/dubstep130.pls" 1 streamlist)
+	 ("SomaFM: Goa" "http://somafm.com/suburbsofgoa130.pls" 1 streamlist)
+	 ("SomaDM: The Trip" "http://somafm.com/thetrip130.pls" 1 streamlist)
+	 ("SomaDM: Boot Liquor" "http://somafm.com/bootliquor130.pls" 1 streamlist)
+	 ("SomaDM: Digitails" "http://somafm.com/digitalis130.pls" 1 streamlist)
+	 ("SomaDM: Space" "http://somafm.com/spacestation130.pls" 1 streamlist)
+	 ("SomaDM: Bagel" "http://somafm.com/bagel130.pls" 1 streamlist)
+	 ("SomaDM: Soul" "http://somafm.com/7soul130.pls" 1 streamlist)
+	 ("SomaDM: Folk" "http://somafm.com/folkfwd130.pls" 1 streamlist)
+	 ("SomaDM: IDM" "http://somafm.com/cliqhop130.pls" 1 streamlist)
+	 ("SomaDM: Lush" "http://somafm.com/lush130.pls" 1 streamlist)
+	 ("SomaDM: SF1033" "http://somafm.com/sf1033130.pls" 1 streamlist)
+	 ("SomaDM: DS1" "http://somafm.com/deepspaceone130.pls" 1 streamlist)
+	 ("SomaDM: Jazz" "http://somafm.com/sonicuniverse130.pls" 1 streamlist))
+       emms-stream-default-list))
+
+ (setq emms-directory "~/org/emms"
+	emms-stream-default-action "play"
+	emms-stream-info-backend 'mplayer
+	emms-stream-bookmarks-file "~/org/emms/streams"
+	emms-mode-line-format " 𝄞 " )
+
+(require 'emms-mode-line-icon)
+
+(emms-mode-line-cycle 1)
+
+ (emms-minimalistic)
+ (emms-default-players)
+ (emms-mode-line-enable)
+
+ (advice-add 'emms-stream-info-mplayer-backend
+	      :override
+	      (lambda (url)
+		"The original function isn't working, using this temporarily until I figure it out."
+		(condition-case excep
+		    (call-process "mplayer" nil t nil
+				  "-msglevel" "decaudio=-1:cache=-1:statusline=-1:cplayer=-1" "-cache" "180"
+				  "-endpos" "0" "-vo" "null" "-ao" "null" "-playlist"
+				  url)
+		  (file-error
+		   (error "Could not find the mplayer backend binary")))))
+
+(require 'elfeed)
+(defun elfeed-mail-todo (&optional use-generic-p)
+  "Mail this to myself for later reading"
+  (interactive "P")
+  (let ((entries (elfeed-search-selected)))
+    (cl-loop for entry in entries
+             do (elfeed-untag entry 'unread)
+             when (elfeed-entry-title entry)
+             do (todo it (elfeed-entry-link entry)))
+    (mapc #'elfeed-search-update-entry entries)
+    (unless (use-region-p) (forward-line))))
+
+(define-key elfeed-search-mode-map (kbd "m") 'elfeed-mail-todo)
 
 (load-theme 'monokai t)
