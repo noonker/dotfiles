@@ -22,7 +22,8 @@ sudo apt-get install -y emacs25 vim python3-pip python-pip python-mysqldb\
      audacity git scdaemon pass whois fish
 
 sudo pip install mopidy-gmusic
-sudo pip3 install setuptools wheel virtualenv ipython jupyter awscli boto3 flake8 pylint selenium
+sudo pip3 install setuptools wheel virtualenv ipython jupyter awscli boto3\
+     flake8 pylint selenium scapy
 
 # All the gits
 cd ~/git

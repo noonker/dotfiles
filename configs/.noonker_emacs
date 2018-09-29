@@ -54,11 +54,13 @@ Return a list of installed packages or nil for every skipped package."
                           'helm-google
                           'org
                           'org-plus-contrib
-                          'helm-ag
+			  'org-jira
+			  'helm-ag
                           'company
                           'autopair
                           'wttrin
                           'dumb-jump
+			  'confluence
                           'es-mode
                           'restclient
                           'exec-path-from-shell
@@ -116,6 +118,9 @@ Return a list of installed packages or nil for every skipped package."
 			  'ssh
 			  'gnuplot
 			  'gnuplot-mode
+			  'smtpmail-multi
+			  'gnus-desktop-notify
+			  'free-keys
 			  )
 
 
@@ -554,6 +559,13 @@ Return a list of installed packages or nil for every skipped package."
       "gnutls-cli --insecure -p %p %h --protocols ssl3"
       "openssl s_client -connect %h:%p -no_ssl2 -ign_eof"))
 
+(gnus-demon-add-handler 'gnus-group-get-new-news 60 nil)
+
+;; Alert with notifications for new mail
+(require 'gnus-desktop-notify)
+(gnus-desktop-notify-mode)
+(gnus-demon-add-scanmail)
+
 ;; SMTP settings loving lifted from http://www.mostlymaths.net/2010/12/emacs-30-day-challenge-using-gnus-to.html
 ;; Now lets configure smtpmail.el with your name and functions to send;; mail using your smtp accounts by changing the from field
 (require 'smtpmail)
@@ -629,7 +641,7 @@ information."))))
 ;; (setq browse-url-browser-function 'eww)
 (setq browse-url-browser-function 'browse-url-default-browser)
 
-;; Temporarily maximize buffer
+;; Temporarily maximize buffers
 (defun toggle-maximize-buffer () "Maximize buffer"
   (interactive)
   (if (= 1 (length (window-list)))
@@ -873,5 +885,19 @@ information."))))
     (unless (use-region-p) (forward-line))))
 
 (define-key elfeed-search-mode-map (kbd "m") 'elfeed-mail-todo)
+
+(setq current_ioc "google.com")
+(defun new_current_ioc (new_ioc)
+  "Change the value of the global value current_ioc."
+  (interactive "sIoc: ")
+  (setq current_ioc new_ioc)
+  )
+
+(global-set-key (kbd "M-I") 'new_current_ioc)
+(setq org-jira-jira-status-to-org-keyword-alist
+       '(("IN PROGRESS" . "INPROGRESS")
+         ("TO DO" . "TODO")
+         ("DONE" . "DONE")))
+
 
 (load-theme 'monokai t)
