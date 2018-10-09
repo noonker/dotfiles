@@ -6,6 +6,9 @@
 ;; I'm just here so I won't get fined
 ;; Hey future josh, here's a debugging statement for ya
 ;; (setq debug-on-error t)
+;; (setq request-message-level 'debug)
+;; (setq request-log-level 'debug)
+
 ;;
 ;;; Code:
 
@@ -105,7 +108,6 @@ Return a list of installed packages or nil for every skipped package."
 			  'elfeed
 			  'twittering-mode
 			  'eshell-git-prompt
-			  'solarized-theme
 			  'exwm
 			  'ein
 			  'flymd
@@ -116,11 +118,14 @@ Return a list of installed packages or nil for every skipped package."
 			  'easy-hugo
 			  'slack
 			  'ssh
+			  'google-translate
 			  'gnuplot
 			  'gnuplot-mode
 			  'smtpmail-multi
 			  'gnus-desktop-notify
 			  'free-keys
+			  'yara-mode
+			  'csv-mode
 			  )
 
 
@@ -427,7 +432,6 @@ Return a list of installed packages or nil for every skipped package."
 ;; (For example, you won't have to bother naming the configurations).                                ;;
 ;; Just put (winner-mode 1) in your .emacs, bind winner-undo and winner-redo to convenient shortcuts ;;
 ;; (or use the IMHO awkward C-c <left> and C-c <right> predefined ones)                              ;;
-;; and you'll be able to switch back to previous window configurations.                              ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (winner-mode 1)
@@ -785,44 +789,6 @@ information."))))
   (slack-change-current-team)
 )
 
-(defun ioc-search-forward ()
-  (interactive)
-  (let ((good-regex "\\(\\(\\([0-9]\\{1,3\\}\\(\\.\\|\\[\\.\\]\\)\\)\\{3\\}[0-9]\\{1,3\\}\\)\\|\\([a-zA-Z0-9-_]+\\(\\.\\|\\[\\.\\]\\)\\)*[a-zA-Z0-9][a-zA-Z0-9-_]+\\(\\.\\|\\[\\.\\]\\)[a-zA-Z]\\{2,11\\}\\)"))
-  (when (re-search-forward good-regex (point-max) t 2)
-    (setf
-     (point) (match-beginning 0)
-     (mark) (match-end 0)))))
-
-(global-set-key (kbd "C-<return>") 'ioc-search-forward)
-
-(defun refang ()
-    "Refang the first element in the kill ring."
-  (interactive)
-  (let ((refang-regex "\\[\\.\\]")
-	(last-kill (car kill-ring)))
-    (set-text-properties 0 (length last-kill) nil last-kill)
-    (kill-new (replace-regexp-in-string refang-regex "." last-kill))
-    )
-  )
-
-
-(defun defang ()
-  "Defangs the first element in the kill ring buffer."
-  (interactive)
-  (with-temp-buffer
-    (let ((ioc (reverse (car kill-ring))))
-      (insert ioc)
-      (goto-char
-       (string-match "\\." ioc))
-      (move-point-visually 1)
-      (insert "]")
-      (move-point-visually 2)
-      (insert "[")
-      (setq defanged (reverse (buffer-string)))
-      (kill-new defanged)
-    )))
-
-
 (require 'emms-setup)
 (require 'emms-streams)
 (require 'emms-stream-info)
@@ -886,14 +852,7 @@ information."))))
 
 (define-key elfeed-search-mode-map (kbd "m") 'elfeed-mail-todo)
 
-(setq current_ioc "google.com")
-(defun new_current_ioc (new_ioc)
-  "Change the value of the global value current_ioc."
-  (interactive "sIoc: ")
-  (setq current_ioc new_ioc)
-  )
 
-(global-set-key (kbd "M-I") 'new_current_ioc)
 (setq org-jira-jira-status-to-org-keyword-alist
        '(("IN PROGRESS" . "INPROGRESS")
          ("TO DO" . "TODO")
