@@ -74,7 +74,8 @@ ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/
 brew install toilet cmake ctags gcc gnuplot links mysql nmap openssl\
     python reattach-to-user-namespace sqlite tmux toilet wget autojump\
     dtrx gnuradio the_silver_searcher toilet aircrack-ng unrar\
-    subversion python3 gpg keybase alpine emacs android-platform-tools chromedriver
+    subversion python3 gpg keybase alpine emacs android-platform-tools chromedriver\
+    zmap
 
 #All the pips!
 pip install ipython bokeh flake8 gcalcli MySQL-python pep8\
