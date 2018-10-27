@@ -22,8 +22,7 @@ sudo apt-get install -y emacs25 vim python3-pip python-pip python-mysqldb\
      audacity git scdaemon pass whois fish zmap
 
 sudo pip install mopidy-gmusic
-sudo pip3 install setuptools wheel virtualenv ipython jupyter awscli boto3\
-     flake8 pylint selenium scapy
+sudo pip3 install setuptools virtualenv ipython jupyter awscli boto3 flake8 pylint selenium scapy
 
 # All the gits
 cd ~/git
@@ -38,7 +37,8 @@ git_urls=(
 for var in "${git_urls[@]}"
   do
     git clone "${var}"
-  done
+done
+
 # Set up git
 git config --global user.email "noonker@gmail.com"
 git config --global user.name "Joshua Person"
