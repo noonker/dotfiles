@@ -179,7 +179,7 @@ Return a list of installed packages or nil for every skipped package."
 
 ;; Python iPython
 (setq
- python-shell-interpreter "ipython3"
+ python-shell-interpreter "ipython"
  python-shell-interpreter-args "--colors=Linux --profile=default"
  python-shell-prompt-regexp "In \\[[0-9]+\\]: "
  python-shell-prompt-output-regexp "Out\\[[0-9]+\\]: "
@@ -226,7 +226,7 @@ Return a list of installed packages or nil for every skipped package."
                     :background "green")
 
 (require 'mediawiki)
-
+(setq url-user-agent "FOO")
 ;;(require 'whitespace)
 ;;(setq whitespace-style '(face empty tabs lines-tail trailing))
 ;;(global-whitespace-mode t)
@@ -823,7 +823,7 @@ information."))))
 
 (require 'emms-mode-line-icon)
 
-(emms-mode-line-cycle 1)
+;; (emms-mode-line-cycle 1)
 
  (emms-minimalistic)
  (emms-default-players)
