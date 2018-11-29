@@ -261,6 +261,8 @@ Return a list of installed packages or nil for every skipped package."
 ;; Eshell theme
 (eshell-git-prompt-use-theme 'robbyrussell)
 
+;; very good comment
+
 ;; Windmove
 (when (fboundp 'windmove-default-keybindings)
   (windmove-default-keybindings))
