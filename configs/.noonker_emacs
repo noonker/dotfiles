@@ -57,13 +57,13 @@ Return a list of installed packages or nil for every skipped package."
                           'helm-google
                           'org
                           'org-plus-contrib
-			  'org-jira
-			  'helm-ag
+                          'org-jira
+                          'helm-ag
                           'company
                           'autopair
                           'wttrin
                           'dumb-jump
-			  'confluence
+                          'confluence
                           'es-mode
                           'restclient
                           'exec-path-from-shell
@@ -104,29 +104,29 @@ Return a list of installed packages or nil for every skipped package."
                           'spray
                           'powershell
                           'helm-pass
-			  'undo-tree
-			  'elfeed
-			  'twittering-mode
-			  'eshell-git-prompt
-			  'exwm
-			  'ein
-			  'flymd
-			  'pdf-tools
-			  'sx
-			  'system-packages
-			  'fish-completion
-			  'easy-hugo
-			  'slack
-			  'ssh
-			  'google-translate
-			  'gnuplot
-			  'gnuplot-mode
-			  'smtpmail-multi
-			  'gnus-desktop-notify
-			  'free-keys
-			  'yara-mode
-			  'csv-mode
-			  )
+                          'undo-tree
+                          'elfeed
+                          'twittering-mode
+                          'eshell-git-prompt
+                          'ein
+                          'flymd
+                          'pdf-tools
+                          'sx
+                          'system-packages
+                          'fish-completion
+                          'easy-hugo
+                          'slack
+                          'ssh
+                          'google-translate
+                          'gnuplot
+                          'gnuplot-mode
+                          'smtpmail-multi
+                          'gnus-desktop-notify
+                          'free-keys
+                          'yara-mode
+                          'csv-mode
+                          'emms
+                          )
 
 
 (require 'ssh)
@@ -161,7 +161,11 @@ Return a list of installed packages or nil for every skipped package."
 ;; (require 'exwm-systemtray)
 ;; (exwm-systemtray-enable)
 ;; (setq exwm-systemtray-height 24)
-
+(require 'epg-config)
+(setenv "QUBES_GPG_DOMAIN" "gpg-server")
+(customize-set-variable 'epg-gpg-program "/usr/bin/qubes-gpg-client-wrapper")
+(push (cons 'OpenPGP (epg-config--make-gpg-configuration epg-gpg-program))
+      epg--configurations)
 (when (and (executable-find "fish")
            (require 'fish-completion nil t))
   (global-fish-completion-mode))
@@ -558,9 +562,8 @@ Return a list of installed packages or nil for every skipped package."
                       (nnir-search-engine imap)
                       ))
 
-
 (setq mail-sources '((imap :server "127.0.0.1"
-                           :user "noonker@pm.me"
+                            :user "noonker@pm.me"
 			   )))
 
 (setq tls-program
