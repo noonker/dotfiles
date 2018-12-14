@@ -126,6 +126,7 @@ Return a list of installed packages or nil for every skipped package."
                           'yara-mode
                           'csv-mode
                           'emms
+			  'color-theme-sanityinc-tomorrow
                           )
 
 
@@ -714,7 +715,9 @@ information."))))
   "Kill the line without copying it"
   (interactive)
   (delete-region (point) (line-end-position)))
+
 (global-set-key (kbd "C-c k") 'ruthless-kill)
+(global-set-key (kbd "M-S") 'helm-slack)
 
 (setq erc-hide-list '("JOIN" "PART" "QUIT"))
 
@@ -790,10 +793,10 @@ information."))))
   "start slack"
   (interactive)
   (slack-start)
-   (defmethod slack-buffer-name :static ((class slack-room-buffer) room team)
+  (cl-defmethod slack-buffer-name ((_class (subclass slack-room-buffer)) room team)
     (slack-if-let* ((room-name (slack-room-name room team)))
-       (format  ":%s"
-                room-name)))
+	(format  ":%s"
+		 room-name)))
   (slack-change-current-team)
 )
 
@@ -867,4 +870,4 @@ information."))))
          ("DONE" . "DONE")))
 
 
-(load-theme 'monokai t)
+(load-theme 'sanityinc-tomorrow-eighties t)
