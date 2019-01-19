@@ -127,6 +127,7 @@ Return a list of installed packages or nil for every skipped package."
                           'csv-mode
                           'emms
 			  'color-theme-sanityinc-tomorrow
+			  'slime
                           )
 
 
@@ -848,6 +849,9 @@ information."))))
 				  url)
 		  (file-error
 		   (error "Could not find the mplayer backend binary")))))
+
+(setq inferior-lisp-program "/usr/bin/sbcl")
+(setq slime-contribs '(slime-fancy))
 
 (require 'elfeed)
 (defun elfeed-mail-todo (&optional use-generic-p)
