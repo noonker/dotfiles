@@ -164,7 +164,6 @@ Return a list of installed packages or nil for every skipped package."
 (when (not (memq window-system '(mac ns)))
   (setenv "QUBES_GPG_DOMAIN" "gpg-server")
   (customize-set-variable 'epg-gpg-program "/usr/bin/qubes-gpg-client-wrapper")
-  (customize-set-variable 'epg-gpg-program "gpg")
   (push (cons 'OpenPGP (epg-config--make-gpg-configuration epg-gpg-program))
         epg--configurations))
 
