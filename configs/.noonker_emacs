@@ -148,14 +148,6 @@ Return a list of installed packages or nil for every skipped package."
             (outline-minor-mode)
 ))
 
-;; exwm trial 2
-(add-to-list 'load-path "$HOME/git/xelb/")
-(add-to-list 'load-path "$HOME/git/exwm/")
-
-;; (require 'exwm)
-;; (require 'exwm-config)
-;; (exwm-config-default)
-
 ;; (defun switch-to-last-buffer ()
 ;;   "Switch to last open buffer in current window."
 ;;   (interactive)
@@ -187,7 +179,6 @@ Return a list of installed packages or nil for every skipped package."
 
 ;;(evil-mode t)
 (global-flycheck-mode)
-;;(global-linum-mode t)
 ;;(powerline-default-theme)
 (global-company-mode)
 
@@ -222,11 +213,10 @@ Return a list of installed packages or nil for every skipped package."
 (global-set-key (kbd "C-x r b") #'helm-filtered-bookmarks)
 (global-set-key (kbd "C-x C-f") #'helm-find-files)
 (global-set-key (kbd "C-c 2") 'helm-do-ag)
-(helm-mode 1)
 
 (setq projectile-completion-system 'helm)
 (setq projectile-enable-caching t)
-(helm-projectile-on)
+;;(helm-projectile-on)
 (setq linum-format "%d ")
 
 (set-face-attribute 'flycheck-warning nil
@@ -739,9 +729,6 @@ information."))))
 
 (setq erc-hide-list '("JOIN" "PART" "QUIT"))
 
-;; load theme
-(beacon-mode 1)
-
 
 ;; Company Mode shit
 (setq company-dabbrev-downcase 0)
@@ -882,7 +869,19 @@ information."))))
     (mapc #'elfeed-search-update-entry entries)
     (unless (use-region-p) (forward-line))))
 
+(defun elfeed-eww-open (&optional use-generic-p)
+  "open with eww"
+  (interactive "P")
+  (let ((entries (elfeed-search-selected)))
+    (cl-loop for entry in entries
+             do (elfeed-untag entry 'unread)
+             when (elfeed-entry-link entry)
+             do (eww-browse-url it))
+    (mapc #'elfeed-search-update-entry entries)
+    (unless (use-region-p) (forward-line))))
+
 (define-key elfeed-search-mode-map (kbd "m") 'elfeed-mail-todo)
+(define-key elfeed-search-mode-map (kbd "w") 'elfeed-eww-open)
 
 
 (setq org-jira-jira-status-to-org-keyword-alist
@@ -905,5 +904,7 @@ information."))))
 ;; (add-to-list 'ac-modes 'processing-mode)
 ;; (add-hook 'processing-mode-hook 'processing-mode-init)
 
+
+(global-set-key (kbd "<f9>") 'spray-mode)
 
 (load-theme 'sanityinc-tomorrow-eighties t)
