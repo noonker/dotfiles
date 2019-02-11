@@ -278,8 +278,11 @@ Return a list of installed packages or nil for every skipped package."
   `(when (eq system-type ',type)
      ,@body))
 
+(when (not (memq window-system '(mac ns)))
+  (setq-default explicit-shell-file-name "/usr/bin/fish"))
 
-(setq-default explicit-shell-file-name "/usr/local/bin/fish")
+(when (memq window-system '(mac ns))
+(setq-default explicit-shell-file-name "/usr/local/bin/fish"))
 
 ;; Enable mouse support
 (unless window-system
