@@ -129,6 +129,8 @@ Return a list of installed packages or nil for every skipped package."
 			  'color-theme-sanityinc-tomorrow
 			  'slime
 			  'chess
+			  'processing-mode
+			  'fish-mode
                           )
 
 
@@ -164,12 +166,16 @@ Return a list of installed packages or nil for every skipped package."
 ;; (require 'exwm-systemtray)
 ;; (exwm-systemtray-enable)
 ;; (setq exwm-systemtray-height 24)
+
 (require 'epg-config)
-(setenv "QUBES_GPG_DOMAIN" "gpg-server")
-(customize-set-variable 'epg-gpg-program "/usr/bin/qubes-gpg-client-wrapper")
-;; (customize-set-variable 'epg-gpg-program "gpg")
-(push (cons 'OpenPGP (epg-config--make-gpg-configuration epg-gpg-program))
-      epg--configurations)
+
+(when (not (memq window-system '(mac ns)))
+  (setenv "QUBES_GPG_DOMAIN" "gpg-server")
+  (customize-set-variable 'epg-gpg-program "/usr/bin/qubes-gpg-client-wrapper")
+  (customize-set-variable 'epg-gpg-program "gpg")
+  (push (cons 'OpenPGP (epg-config--make-gpg-configuration epg-gpg-program))
+        epg--configurations))
+
 (when (and (executable-find "fish")
            (require 'fish-completion nil t))
   (global-fish-completion-mode))
@@ -283,6 +289,9 @@ Return a list of installed packages or nil for every skipped package."
   `(when (eq system-type ',type)
      ,@body))
 
+
+(setq-default explicit-shell-file-name "/usr/local/bin/fish")
+
 ;; Enable mouse support
 (unless window-system
   (require 'mouse)
@@ -342,6 +351,12 @@ Return a list of installed packages or nil for every skipped package."
           (newline-mark 10 [182 10]) ; LINE FEED,
           (tab-mark 9 [9655 9] [92 9]) ; tab
           )))
+
+(when (memq window-system '(mac ns))
+  (setenv "SHELL" "/bin/bash")
+  (exec-path-from-shell-initialize)
+  (exec-path-from-shell-copy-envs
+   '("PATH")))
 
 ;; ANSI term options
 (defun oleh-term-exec-hook ()
@@ -852,7 +867,7 @@ information."))))
 		  (file-error
 		   (error "Could not find the mplayer backend binary")))))
 
-(setq inferior-lisp-program "/usr/bin/sbcl")
+(setq inferior-lisp-program "/usr/local/bin/sbcl")
 (setq slime-contribs '(slime-fancy))
 
 (require 'elfeed)
@@ -874,6 +889,21 @@ information."))))
        '(("IN PROGRESS" . "INPROGRESS")
          ("TO DO" . "TODO")
          ("DONE" . "DONE")))
+
+(setq processing-location "/usr/local/bin/processing-java")
+(setq processing-application-dir "/Applications/Processing.app")
+(setq processing-sketchbook-dir "~/Documents/Processing")
+
+;; (defun processing-mode-init ()
+;;   (make-local-variable 'ac-sources)
+;;   (setq ac-sources '(ac-source-dictionary ac-source-yasnippet))
+;;   (make-local-variable 'ac-user-dictionary)
+;;   (setq ac-user-dictionary (append processing-functions
+;;                                    processing-builtins
+;;                                    processing-constants)))
+
+;; (add-to-list 'ac-modes 'processing-mode)
+;; (add-hook 'processing-mode-hook 'processing-mode-init)
 
 
 (load-theme 'sanityinc-tomorrow-eighties t)
