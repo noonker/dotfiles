@@ -207,11 +207,10 @@ Return a list of installed packages or nil for every skipped package."
 (global-set-key (kbd "C-x r b") #'helm-filtered-bookmarks)
 (global-set-key (kbd "C-x C-f") #'helm-find-files)
 (global-set-key (kbd "C-c 2") 'helm-do-ag)
-(helm-mode 1)
 
 (setq projectile-completion-system 'helm)
 (setq projectile-enable-caching t)
-(helm-projectile-on)
+;;(helm-projectile-on)
 (setq linum-format "%d ")
 
 (set-face-attribute 'flycheck-warning nil
@@ -875,5 +874,7 @@ information."))))
          ("TO DO" . "TODO")
          ("DONE" . "DONE")))
 
+
+(global-set-key (kbd "<f9>") 'spray-mode)
 
 (load-theme 'sanityinc-tomorrow-eighties t)
