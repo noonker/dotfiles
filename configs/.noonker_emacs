@@ -6,7 +6,7 @@
 ;; I'm just here so I won't get fined
 ;; Hey future josh, here's a debugging statement for ya
 ;; (setq debug-on-error t)
-;; (setq request-message-level 'debug)
+;; (setq request-message-level 'info) 
 ;; (setq request-log-level 'debug)
 
 ;;
@@ -107,6 +107,7 @@ Return a list of installed packages or nil for every skipped package."
                           'undo-tree
                           'elfeed
                           'twittering-mode
+			  'ace-window
                           'eshell-git-prompt
                           'ein
                           'flymd
@@ -895,6 +896,9 @@ information."))))
 (setq processing-location "/usr/local/bin/processing-java")
 (setq processing-application-dir "/Applications/Processing.app")
 (setq processing-sketchbook-dir "~/Documents/Processing")
+
+
+(global-set-key (kbd "C-'") 'ace-window)
 
 ;; (defun processing-mode-init ()
 ;;   (make-local-variable 'ac-sources)
