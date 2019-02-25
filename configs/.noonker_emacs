@@ -199,6 +199,7 @@ Return a list of installed packages or nil for every skipped package."
 (set-register ?d '"import pdb\npdb.set_trace()")
 (set-register ?r '"%load_ext autoreload\n%autoreload 2")
 (set-register ?e '"sudo docker run -p 9200:9200 -p 9300:9300 -e \"discovery.type=single-node\" docker.elastic.co/elasticsearch/elasticsearch:6.3.2 -v \"$PWD/config\":/usr/share/elasticsearch/config")
+(set-register ?c '"sudo socat TCP-LISTEN:6001,reuseaddr,fork EXEC:\"qrexec-client-vm screenshare my-screenshare\"&") 
 (set-register ?p '"\\(\\([0-9]\\{1,3\\}\\(\\.\\|\\[\\.\\]\\)\\)\\{3\\}[0-9]\\{1,3\\}\\)")
 (set-register ?o '"\\([a-zA-Z0-9-_]+\\(\\.\\|\\[\\.\\]\\)\\)*[a-zA-Z0-9][a-zA-Z0-9-_]+\\(\\.\\|\\[\\.\\]\\)[a-zA-Z]\\{2,11\\}")
 (set-register ?i '"\\(\\(\\([0-9]\\{1,3\\}\\(\\.\\|\\[\\.\\]\\)\\)\\{3\\}[0-9]\\{1,3\\}\\)\\|\\([a-zA-Z0-9-_]+\\(\\.\\|\\[\\.\\]\\)\\)*[a-zA-Z0-9][a-zA-Z0-9-_]+\\(\\.\\|\\[\\.\\]\\)[a-zA-Z]\\{2,11\\}\\)")
