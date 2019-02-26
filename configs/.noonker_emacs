@@ -55,9 +55,9 @@ Return a list of installed packages or nil for every skipped package."
                           'projectile
                           'helm-projectile
                           'helm-google
-                          'org
-                          'org-plus-contrib
-                          'org-jira
+                          ;;'org
+                          ;;'org-plus-contrib
+                          ;;'org-jira
                           'helm-ag
                           'company
                           'autopair
