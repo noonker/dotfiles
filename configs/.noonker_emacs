@@ -206,6 +206,9 @@ Return a list of installed packages or nil for every skipped package."
 (set-register ?s '";; This buffer is for text that is not saved, and for Lisp evaluation.
 ;; To create a file, visit it with <open> and enter text in its buffer.
 ")
+(set-register ?f "#+BEGIN_SRC emacs-lisp
+(hunting-emails)
+#+END_SRC")
 
 ;; erc-colors
 (erc-colorize-mode 1)
@@ -218,7 +221,7 @@ Return a list of installed packages or nil for every skipped package."
 
 (setq projectile-completion-system 'helm)
 (setq projectile-enable-caching t)
-;;(helm-projectile-on)
+(helm-projectile-on)
 (setq linum-format "%d ")
 
 (set-face-attribute 'flycheck-warning nil
@@ -369,7 +372,8 @@ Return a list of installed packages or nil for every skipped package."
 
 (org-babel-do-load-languages
  'org-babel-load-languages
- '((dot . t)))
+ '((dot . t)
+   (elasticsearch . t)))
 
 ;; Shorten yes and no
 (defalias 'yes-or-no-p 'y-or-n-p)
