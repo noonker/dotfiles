@@ -56,8 +56,8 @@ Return a list of installed packages or nil for every skipped package."
                           'helm-projectile
                           'helm-google
                           ;;'org
-                          ;;'org-plus-contrib
-                          ;;'org-jira
+                          'org-plus-contrib
+                          'org-jira
                           'helm-ag
                           'company
                           'autopair
@@ -133,6 +133,8 @@ Return a list of installed packages or nil for every skipped package."
 			  'processing-mode
 			  'fish-mode
 			  'ov
+			  'htmlize
+			  'ob-restclient
                           )
 
 
@@ -373,7 +375,14 @@ Return a list of installed packages or nil for every skipped package."
 (org-babel-do-load-languages
  'org-babel-load-languages
  '((dot . t)
-   (elasticsearch . t)))
+   (elasticsearch . t)
+   (python . t)
+   (restclient . t)
+   (plantuml . t)
+   (shell . t)))
+
+(setq org-plantuml-jar-path
+      (expand-file-name "~/Documents/plantuml.jar"))
 
 ;; Shorten yes and no
 (defalias 'yes-or-no-p 'y-or-n-p)
@@ -897,6 +906,7 @@ information."))))
        '(("IN PROGRESS" . "INPROGRESS")
          ("TO DO" . "TODO")
          ("DONE" . "DONE")))
+(setq org-log-done 'time)
 
 (setq processing-location "/usr/local/bin/processing-java")
 (setq processing-application-dir "/Applications/Processing.app")
