@@ -135,6 +135,7 @@ Return a list of installed packages or nil for every skipped package."
 			  'ov
 			  'htmlize
 			  'ob-restclient
+			  'w3m
                           )
 
 
@@ -237,7 +238,7 @@ Return a list of installed packages or nil for every skipped package."
                     :background "green")
 
 (require 'mediawiki)
-(setq url-user-agent "FOO")
+;; (setq url-user-agent "FOO")
 ;;(require 'whitespace)
 ;;(setq whitespace-style '(face empty tabs lines-tail trailing))
 ;;(global-whitespace-mode t)
@@ -482,6 +483,11 @@ Return a list of installed packages or nil for every skipped package."
 (add-hook 'LaTeX-mode-hook 'turn-on-reftex)
 (setq reftex-plug-into-AUCTeX t)
 
+
+
+;;Does this fix long-lines?
+(add-hook 'visual-line-mode-hook 'visual-fill-column-mode)
+
 ;; Remote ansi-term
 ;; Use this for remote so I can specify command line arguments
 (defun remote-term (new-buffer-name cmd &rest switches)
@@ -551,6 +557,7 @@ Return a list of installed packages or nil for every skipped package."
 (global-set-key (kbd "C-c c") 'helm-mini)
 (global-set-key (kbd "C-2") 'helm-mini)
 (global-set-key (kbd "C-x j") 'kill-this-buffer)
+(global-set-key (kbd "ESC M-RET") 'browse-url-firefox)
 
 (setq helm-mini-default-sources 
       '(helm-source-buffers-list 
@@ -565,11 +572,36 @@ Return a list of installed packages or nil for every skipped package."
 (setq inhibit-startup-message t)
 
 ;; w3m
-(setq browse-url-browser-function 'w3m-browse-url)
+(defun ffap-w3m-other-window (url &optional new-session)
+  "Browse url in w3m.
+  If current frame has only one window, create a new window and browse the webpage"
+  (interactive (progn
+                 (require 'browse-url)
+                 (browse-url-interactive-arg "Emacs-w3m URL: ")))
+  (let ((w3m-pop-up-windows t))
+    (if (one-window-p) (split-window))
+    (other-window 1)
+    (w3m-goto-url-new-session url new-session)
+    (other-window 1)))
+
+(setq browse-url-browser-function 'ffap-w3m-other-window)
 (autoload 'w3m-browse-url "w3m" "Ask a WWW browser to show a URL." t)
 ;; optional keyboard short-cut
 (global-set-key "\C-xm" 'browse-url-at-point)
 (setq w3m-use-cookies t)
+
+(defun rand-w3m-view-this-url-background-session ()
+  (interactive)
+  (let ((in-background-state w3m-new-session-in-background))
+    (setq w3m-new-session-in-background t)
+    (w3m-view-this-url-new-session)
+    (setq w3m-new-session-in-background in-background-state)))
+
+(defun my-w3m-bindings ()
+  (define-key w3m-mode-map (kbd "C-<return>") 'rand-w3m-view-this-url-background-session))
+
+(add-hook 'w3m-mode-hook 'my-w3m-bindings)
+
 
 ;; Gmail
 (setq user-mail-address "noonker@pm.me"
@@ -678,7 +710,7 @@ information."))))
 
 ;; Google chrome as default browser
 ;; (setq browse-url-browser-function 'eww)
-(setq browse-url-browser-function 'browse-url-default-browser)
+;; (setq browse-url-browser-function 'browse-url-default-browser)
 
 ;; Temporarily maximize buffers
 (defun toggle-maximize-buffer () "Maximize buffer"
@@ -723,8 +755,8 @@ information."))))
     (ansi-term "mopidy" "mopidy")))
 
 ;; No menus by default
-(tool-bar-mode -1)
-(menu-bar-mode -1)
+;; (tool-bar-mode -1)
+;; (menu-bar-mode -1)
 
 (setq wttrin-default-accept-language '("Accept-Language" . "en-US"))
 (setq wttrin-default-cities '("Ann Arbor" "Escanaba"))
@@ -750,7 +782,7 @@ information."))))
 
 ;; Company Mode shit
 (setq company-dabbrev-downcase 0)
-(setq company-idle-delay 0.3)
+(setq company-idle-delay 0.7)
 (setq company-minimum-prefix-length 2)
 
 (defun complete-or-indent ()
@@ -898,8 +930,21 @@ information."))))
     (mapc #'elfeed-search-update-entry entries)
     (unless (use-region-p) (forward-line))))
 
+(defun elfeed-firefox-open (&optional use-generic-p)
+  "open with eww"
+  (interactive "P")
+  (let ((entries (elfeed-search-selected)))
+    (cl-loop for entry in entries
+             do (elfeed-untag entry 'unread)
+             when (elfeed-entry-link entry)
+             do (browse-url-firefox it))
+    (mapc #'elfeed-search-update-entry entries)
+    (unless (use-region-p) (forward-line))))
+
+
 (define-key elfeed-search-mode-map (kbd "m") 'elfeed-mail-todo)
 (define-key elfeed-search-mode-map (kbd "w") 'elfeed-eww-open)
+(define-key elfeed-search-mode-map (kbd "f") 'elfeed-firefox-open)
 
 
 (setq org-jira-jira-status-to-org-keyword-alist
@@ -928,5 +973,5 @@ information."))))
 
 
 (global-set-key (kbd "<f9>") 'spray-mode)
-
+(global-set-key (kbd "<f12>") 'helm-pass)
 (load-theme 'sanityinc-tomorrow-eighties t)
