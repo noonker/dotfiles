@@ -1,0 +1,47 @@
+# -*- eval: (setq org-confirm-babel-evaluate nil) -*-
+* Mortgages 
+:NOTES:
+Put notes here related to applications. This is automatically closed when opening the file so it wont automatically divulge sensitive information.
+:END:
+
+ - C-u C-c * for global recalculation
+ - Fields with # in the first column auto-recalculate when tabbing in that row
+ - # Also denotes a lender I'm considering
+ - Modify the constants and press C-c C-c to load them into the buffer
+ - The down variable is the total amount of money available to spend on a house.
+ - The `Adj. Down` column is the amount of money that is avalable to put towards the principal after closing costs have been calculated.
+
+#+constants: price=200000 down=40000
+#+tblname: mortgages
+|   | Bank              | Rate % | APR | Fees | Points | Incentives | Adj. Down | Closing Costs | Total (Full Term) | Total (10Yr) | Full Quote | URL           |
+| / |                   |        |     |      |        | (if any)   |           |               |                   |              |            | <13>          |
+|---+-------------------+--------+-----+------+--------+------------+-----------+---------------+-------------------+--------------+------------+---------------|
+| # | Example Bank      |  3.625 | 3.0 | 4000 |      1 | 0          |  33559.99 |     5494.4001 |         230322.96 |    217717.89 | Y          | https://chase.com |
+|---+-------------------+--------+-----+------+--------+------------+-----------+---------------+-------------------+--------------+------------+---------------|
+| $ | term=15           |        |     |      |        |            |           |               |                   |              |            |               |
+| $ | payments=$term*12 |        |     |      |        |            |           |               |                   |              |            |               |
+
+#+TBLFM: $8='(org-sbe "opt" (down $down) (fees $5) (price $price) (points $6) (incentives $7))::$9=$5+(($price - $8)*$6*10^-2)-$7::$10=(((($price-($down-$9))*(($4/100)/12))/(1-(1+(($4/100)/12))^-$payments))*$payments)+$9+$down::$11=(((($price-($down-$9))*(($4/100)/12))/(1-(1+(($4/100)/12))^-120))*120)+$9+$down
+
+ - This is an optimization formula used to find out how much down payment money will be available after points and closing costs are calculated
+ - When contacting the lender try to get the fees without the points
+
+#+NAME: opt
+#+begin_src python :var fees=1000 points=1 incentives=0
+min = down
+for x in range(0,down):
+    cur = fees + ((price - x) * points * 10 ** -2) - incentives
+    if cur < min:
+        min = cur
+return down - min
+#+end_src
+
+* Real Estate Agent
+** Agent
+*** Contact Info
+* Houses
+** Musts 
+** Wants    
+** Not Priority
+
+

@@ -9,6 +9,12 @@
 ;; (setq request-message-level 'info) 
 ;; (setq request-log-level 'debug)
 
+;;; Notes:
+;;
+;; This is probably not the best place for notes
+;; but oh well!
+;; For artist-mode and mac-print-page use an area of 67 wide  x 51 long 
+
 ;;
 ;;; Code:
 
@@ -136,6 +142,7 @@ Return a list of installed packages or nil for every skipped package."
 			  'htmlize
 			  'ob-restclient
 			  'w3m
+			  'platformio-mode
                           )
 
 
@@ -152,7 +159,7 @@ Return a list of installed packages or nil for every skipped package."
           (lambda ()
             (outline-minor-mode)
 ))
-
+(setq org-babel-python-command "python3")
 ;; (defun switch-to-last-buffer ()
 ;;   "Switch to last open buffer in current window."
 ;;   (interactive)
@@ -380,7 +387,8 @@ Return a list of installed packages or nil for every skipped package."
    (python . t)
    (restclient . t)
    (plantuml . t)
-   (shell . t)))
+   (shell . t)
+   (gnuplot . t)))
 
 (setq org-plantuml-jar-path
       (expand-file-name "~/Documents/plantuml.jar"))
@@ -710,7 +718,7 @@ information."))))
 
 ;; Google chrome as default browser
 ;; (setq browse-url-browser-function 'eww)
-;; (setq browse-url-browser-function 'browse-url-default-browser)
+(setq browse-url-browser-function 'browse-url-default-browser)
 
 ;; Temporarily maximize buffers
 (defun toggle-maximize-buffer () "Maximize buffer"
