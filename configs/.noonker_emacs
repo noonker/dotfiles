@@ -55,9 +55,9 @@ Return a list of installed packages or nil for every skipped package."
                           'projectile
                           'helm-projectile
                           'helm-google
-                          ;;'org
-                          'org-plus-contrib
-                          'org-jira
+                       ;;   'org
+                       ;;   'org-plus-contrib
+                       ;;   'org-jira
                           'helm-ag
                           'company
                           'autopair
@@ -136,6 +136,7 @@ Return a list of installed packages or nil for every skipped package."
 			  'htmlize
 			  'ob-restclient
 			  'w3m
+			  'yaml-mode
                           )
 
 
@@ -288,10 +289,10 @@ Return a list of installed packages or nil for every skipped package."
      ,@body))
 
 (when (not (memq window-system '(mac ns)))
-  (setq-default explicit-shell-file-name "/usr/bin/fish"))
+  (setq-default explicit-shell-file-name "/usr/bin/bash"))
 
 (when (memq window-system '(mac ns))
-(setq-default explicit-shell-file-name "/usr/local/bin/fish"))
+(setq-default explicit-shell-file-name "/usr/local/bin/bash"))
 
 ;; Enable mouse support
 (unless window-system
@@ -584,7 +585,8 @@ Return a list of installed packages or nil for every skipped package."
     (w3m-goto-url-new-session url new-session)
     (other-window 1)))
 
-(setq browse-url-browser-function 'ffap-w3m-other-window)
+;; (setq browse-url-browser-function 'ffap-w3m-other-window)
+(setq browse-url-browser-function 'browse-url-firefox)
 (autoload 'w3m-browse-url "w3m" "Ask a WWW browser to show a URL." t)
 ;; optional keyboard short-cut
 (global-set-key "\C-xm" 'browse-url-at-point)
