@@ -142,11 +142,8 @@ Return a list of installed packages or nil for every skipped package."
 			  'htmlize
 			  'ob-restclient
 			  'w3m
-<<<<<<< HEAD
 			  'yaml-mode
-=======
 			  'platformio-mode
->>>>>>> 862f29e2014ace778cbe18ef9f61677cfad2e35c
                           )
 
 
