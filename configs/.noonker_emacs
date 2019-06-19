@@ -57,25 +57,14 @@ Return a list of installed packages or nil for every skipped package."
                           'magit
                           'flycheck
                           'helm
-                          '2048-game
                           'projectile
-                          'helm-projectile
-                          'helm-google
-                       ;;   'org
-                       ;;   'org-plus-contrib
-                       ;;   'org-jira
-                          'helm-ag
                           'company
                           'autopair
-                          'wttrin
                           'dumb-jump
-                          'confluence
                           'es-mode
                           'restclient
                           'exec-path-from-shell
-                          'monokai-theme
                           'excorporate
-                          'hackernews
                           'xclip
                           'mediawiki
                           'erc-colorize
@@ -83,22 +72,17 @@ Return a list of installed packages or nil for every skipped package."
                           'emojify
                           'minimap
                           'request
-                          'adaptive-wrap
                           'multiple-cursors
                           'isend-mode
                           'pcap-mode
                           'ace-popup-menu
                           'ipcalc
                           'neotree
+			  'org-jira
                           'all-the-icons
                           'rainbow-delimiters
                           'rainbow-mode
-                          'nyan-mode
                           'ace-jump-mode
-                          'jenkins
-                          'helm
-                          'smartscan
-                          'minesweeper
                           'auctex
                           'howdoi
                           'docker
@@ -106,7 +90,6 @@ Return a list of installed packages or nil for every skipped package."
                           'speed-type
                           'latex-preview-pane
                           'js-comint
-                          'beacon
                           'spray
                           'powershell
                           'helm-pass
@@ -147,32 +130,11 @@ Return a list of installed packages or nil for every skipped package."
                           )
 
 
-(require 'ssh)
-(add-hook 'ssh-mode-hook
-	  (lambda ()
-	    (setq ssh-directory-tracking-mode t)
-	    (shell-dirtrack-mode t)
-	    (setq dirtrackp nil)))
-
-
 (require 'cl)
-(add-hook 'python-mode-hook
-          (lambda ()
-            (outline-minor-mode)
-))
-(setq org-babel-python-command "python3")
-;; (defun switch-to-last-buffer ()
-;;   "Switch to last open buffer in current window."
-;;   (interactive)
-;;   (switch-to-buffer (other-buffer (current-buffer) 1)))
-
-;; (exwm-input-set-key (kbd "s-<tab>") #'switch-to-last-buffer)
-
-;; (require 'exwm-systemtray)
-;; (exwm-systemtray-enable)
-;; (setq exwm-systemtray-height 24)
-
 (require 'epg-config)
+(require 'mediawiki)
+
+(setq org-babel-python-command "python3")
 
 (when (not (memq window-system '(mac ns)))
   (setenv "QUBES_GPG_DOMAIN" "gpg-server")
@@ -227,12 +189,12 @@ Return a list of installed packages or nil for every skipped package."
 (global-set-key (kbd "M-x") 'helm-M-x)
 (global-set-key (kbd "M-x") #'helm-M-x)
 (global-set-key (kbd "C-x r b") #'helm-filtered-bookmarks)
-(global-set-key (kbd "C-x C-f") #'helm-find-files)
+;; (global-set-key (kbd "C-x C-f") #'helm-find-files)
 (global-set-key (kbd "C-c 2") 'helm-do-ag)
 
-(setq projectile-completion-system 'helm)
+;;(setq projectile-completion-system 'helm)
 (setq projectile-enable-caching t)
-(helm-projectile-on)
+;; (helm-projectile-on)
 (setq linum-format "%d ")
 
 (set-face-attribute 'flycheck-warning nil
@@ -245,7 +207,6 @@ Return a list of installed packages or nil for every skipped package."
                     :foreground "black"
                     :background "green")
 
-(require 'mediawiki)
 ;; (setq url-user-agent "FOO")
 ;;(require 'whitespace)
 ;;(setq whitespace-style '(face empty tabs lines-tail trailing))
@@ -269,10 +230,6 @@ Return a list of installed packages or nil for every skipped package."
 (require 'recentf)
 (setq recentf-auto-cleanup 'never) ;; disable before we start recentf!
 (recentf-mode 1)
-
-
-;; Smartscan mode
-(smartscan-mode 1)
 
 ;; Ace menu
 (ace-popup-menu-mode 1)
@@ -340,12 +297,7 @@ Return a list of installed packages or nil for every skipped package."
 ;;
 ;;(setq interprogram-cut-function 'paste-to-osx)
 ;;(setq interprogram-paste-function 'copy-from-osx)
-;;(xclip-mode 1)
-
-
-;; (require 'exwm)
-;; (require 'exwm-config)
-;; (exwm-config-default)
+(xclip-mode 1)
 
 (progn
  ;; Make whitespace-mode with very basic background coloring for whitespaces.
@@ -558,7 +510,7 @@ Return a list of installed packages or nil for every skipped package."
 (scroll-bar-mode -1)
 
 ;; Dumb Jump
-(global-set-key (kbd "C-c l") 'helm-projectile-switch-to-buffer)
+;; (global-set-key (kbd "C-c l") 'helm-projectile-switch-to-buffer)
 
 (global-set-key (kbd "C-c <left>") 'dumb-jump-back)
 (global-set-key (kbd "C-c <right>") 'dumb-jump-go)
@@ -611,6 +563,8 @@ Return a list of installed packages or nil for every skipped package."
   (define-key w3m-mode-map (kbd "C-<return>") 'rand-w3m-view-this-url-background-session))
 
 (add-hook 'w3m-mode-hook 'my-w3m-bindings)
+(setq x-select-enable-clipboard t)
+(setq x-select-enable-primary t)
 
 
 ;; Gmail
@@ -715,7 +669,7 @@ information."))))
   )
 
 ;; ipython fix
-(setq python-shell-interpreter "ipython3"
+(setq python-shell-interpreter "ipython"
     python-shell-interpreter-args "--simple-prompt -i")
 
 ;; Google chrome as default browser
@@ -765,8 +719,8 @@ information."))))
     (ansi-term "mopidy" "mopidy")))
 
 ;; No menus by default
-;; (tool-bar-mode -1)
-;; (menu-bar-mode -1)
+(tool-bar-mode -1)
+(menu-bar-mode -1)
 
 (setq wttrin-default-accept-language '("Accept-Language" . "en-US"))
 (setq wttrin-default-cities '("Ann Arbor" "Escanaba"))
@@ -818,20 +772,15 @@ information."))))
   (load-theme 'solarized-light t)
   )
 
-(defun monokai()
-  (interactive)
-  (load-theme 'monokai t)
-  )
-
 
 ;;; Big QOL changes.
 (setq slack-buffer-emojify t) ;; if you want to enable emoji, default nil
-(setq slack-buffer-function #'switch-to-buffer)
+;; (setq slack-buffer-function #'switch-to-buffer)
 (setq slack-prefer-current-team t)
-(setq slack-display-team-name nil)
-
-(add-hook 'slack-mode-hook #'emojify-mode)
-(setq slack-buffer-create-on-notify t)
+;; (setq slack-display-team-name nil)
+;;(setq slack-request-timeout 9000) 
+;; (add-hook 'slack-mode-hook #'emojify-mode)
+;; (setq slack-buffer-create-on-notify t)
 ;; (setq alert-default-style 'mode-line)
 (setq alert-default-style 'notifications)
 
