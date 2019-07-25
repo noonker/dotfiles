@@ -8,7 +8,7 @@
 ;; (setq debug-on-error t)
 ;; (setq request-message-level 'info)
 ;; (setq request-log-level 'debug)
-
+;; (setq tramp-verbose 10)
 ;;; Notes:
 ;;
 ;; This is probably not the best place for notes
@@ -116,8 +116,8 @@ Return a list of installed packages or nil for every skipped package."
                           'yara-mode
                           'csv-mode
                           'emms
-			  'color-theme-sanityinc-tomorrow
 			  'slime
+			  'helm-projectile
 			  'chess
 			  'processing-mode
 			  'fish-mode
@@ -131,6 +131,9 @@ Return a list of installed packages or nil for every skipped package."
 			  'flycheck-irony
 			  'cider
 			  'auto-complete
+			  'solarized-theme
+			  'helm-ag
+			  'ag
                           )
 
 (ac-config-default)
@@ -150,29 +153,27 @@ Return a list of installed packages or nil for every skipped package."
 ;;            (require 'fish-completion nil t))
 ;;   (global-fish-completion-mode))
 
-
 ;;(require 'emms-setup)
 ;;(emms-all)
 ;; (emms-default-players)
 
-;;(evil-mode t)
 (global-flycheck-mode)
-;;(powerline-default-theme)
 (global-company-mode)
 
 ;; Python iPython
-(setq
- python-shell-interpreter "ipython"
- python-shell-interpreter-args "--colors=Linux --profile=default"
- python-shell-prompt-regexp "In \\[[0-9]+\\]: "
- python-shell-prompt-output-regexp "Out\\[[0-9]+\\]: "
- python-shell-completion-setup-code
- "from IPython.core.completerlib import module_completion"
- python-shell-completion-module-string-code
- "';'.join(module_completion('''%s'''))\n"
- python-shell-completion-string-code
- "';'.join(get_ipython().Completer.all_completions('''%s'''))\n")
+;; (setq
+;;  python-shell-interpreter "ipython"
+;;  python-shell-interpreter-args "--colors=Linux --profile=default"
+;;  python-shell-prompt-regexp "In \\[[0-9]+\\]: "
+;;  python-shell-prompt-output-regexp "Out\\[[0-9]+\\]: "
+;;  python-shell-completion-setup-code
+;;  "from IPython.core.completerlib import module_completion"
+;;  python-shell-completion-module-string-code
+;;  "';'.join(module_completion('''%s'''))\n"
+;;  python-shell-completion-string-code
+;;  "';'.join(get_ipython().Completer.all_completions('''%s'''))\n")
 ;; IPython autoreloading && debugging registers
+
 (set-register ?d '"import pdb\npdb.set_trace()")
 (set-register ?r '"%load_ext autoreload\n%autoreload 2")
 (set-register ?e '"sudo docker run -p 9200:9200 -p 9300:9300 -e \"discovery.type=single-node\" docker.elastic.co/elasticsearch/elasticsearch:6.3.2 -v \"$PWD/config\":/usr/share/elasticsearch/config")
@@ -193,12 +194,12 @@ Return a list of installed packages or nil for every skipped package."
 (global-set-key (kbd "M-x") 'helm-M-x)
 (global-set-key (kbd "M-x") #'helm-M-x)
 (global-set-key (kbd "C-x r b") #'helm-filtered-bookmarks)
-;; (global-set-key (kbd "C-x C-f") #'helm-find-files)
+(global-set-key (kbd "C-x C-f") #'helm-find-files)
 (global-set-key (kbd "C-c 2") 'helm-do-ag)
 
-;;(setq projectile-completion-system 'helm)
+(setq projectile-completion-system 'helm)
 (setq projectile-enable-caching t)
-;; (helm-projectile-on)
+(helm-projectile-on)
 (setq linum-format "%d ")
 
 (set-face-attribute 'flycheck-warning nil
@@ -223,7 +224,7 @@ Return a list of installed packages or nil for every skipped package."
 ;; Ensure tramp uses remote path
 ;; (add-to-list 'tramp-remote-path 'tramp-own-remote-path)
 
-(setq tramp-auto-save-directory "/tmp")
+;; (setq tramp-auto-save-directory "/tmp")
 
 ;; Twitter password shenanagans
 (setq twittering-use-master-password t)
@@ -289,18 +290,6 @@ Return a list of installed packages or nil for every skipped package."
         (insert (format "\n%s" "```"))
         )))
 
-;; Enable copy and paste
-;;(defun copy-from-osx ()
-;;  (shell-command-to-string "pbpaste"))
-;;
-;;(defun paste-to-osx (text &optional push)
-;;  (let ((process-connection-type nil))
-;;    (let ((proc (start-process "pbcopy" "*Messages*" "pbcopy")))
-;;      (process-send-string proc text)
-;;      (process-send-eof proc))))
-;;
-;;(setq interprogram-cut-function 'paste-to-osx)
-;;(setq interprogram-paste-function 'copy-from-osx)
 (xclip-mode 1)
 
 (progn
@@ -318,6 +307,18 @@ Return a list of installed packages or nil for every skipped package."
           )))
 
 (when (memq window-system '(mac ns))
+  ;; Enable copy and paste
+  (defun copy-from-osx ()
+    (shell-command-to-string "pbpaste"))
+
+  (defun paste-to-osx (text &optional push)
+    (let ((process-connection-type nil))
+      (let ((proc (start-process "pbcopy" "*Messages*" "pbcopy")))
+	(process-send-string proc text)
+	(process-send-eof proc))))
+
+  (setq interprogram-cut-function 'paste-to-osx)
+  (setq interprogram-paste-function 'copy-from-osx)
   (setenv "SHELL" "/bin/bash")
   (exec-path-from-shell-initialize)
   (exec-path-from-shell-copy-envs
@@ -386,7 +387,7 @@ Return a list of installed packages or nil for every skipped package."
 (global-set-key (kbd "C-x M-t") 'cleanup-region)
 (global-set-key (kbd "C-c n") 'cleanup-buffer)
 
-;;(setq-default show-trailing-whitespace t)
+(setq-default show-trailing-whitespace t)
 
 ;; cnc-command
 (defun visible-buffers ()
@@ -504,17 +505,17 @@ Return a list of installed packages or nil for every skipped package."
 (setq vc-make-backup-files t)
 (setq auto-save-file-name-transforms '((".*" "~/.emacs.d/auto-save-list/" t)))
 
-;; no vc in tramp
-(setq vc-ignore-dir-regexp
-      (format "\\(%s\\)\\|\\(%s\\)"
-	      vc-ignore-dir-regexp
-	      tramp-file-name-regexp))
+;; ;; no vc in tramp
+;; (setq vc-ignore-dir-regexp
+;;       (format "\\(%s\\)\\|\\(%s\\)"
+;; 	      vc-ignore-dir-regexp
+;; 	      tramp-file-name-regexp))
 
 ;; Turn of scrollbars
 (scroll-bar-mode -1)
-
+(getenv "PATH")
 ;; Dumb Jump
-;; (global-set-key (kbd "C-c l") 'helm-projectile-switch-to-buffer)
+(global-set-key (kbd "C-c l") 'helm-projectile-switch-to-buffer)
 
 (global-set-key (kbd "C-c <left>") 'dumb-jump-back)
 (global-set-key (kbd "C-c <right>") 'dumb-jump-go)
@@ -524,10 +525,11 @@ Return a list of installed packages or nil for every skipped package."
 (global-set-key (kbd "C-x j") 'kill-this-buffer)
 (global-set-key (kbd "ESC M-RET") 'browse-url-firefox)
 
-(setq helm-mini-default-sources
-      '(helm-source-buffers-list
-        helm-source-bookmarks
-;;        helm-source-recentf
+
+(setq helm-mini-default-sources 
+      '(helm-source-buffers-list 
+        helm-source-bookmarks 
+        helm-source-recentf 
         helm-source-buffer-not-found))
 
 (add-to-list 'load-path "/path/to/es-mode-dir")
@@ -673,8 +675,8 @@ information."))))
   )
 
 ;; ipython fix
-(setq python-shell-interpreter "ipython"
-    python-shell-interpreter-args "--simple-prompt -i")
+;; (setq python-shell-interpreter "ipython"
+;;    python-shell-interpreter-args "--simple-prompt -i")
 
 ;; Google chrome as default browser
 ;; (setq browse-url-browser-function 'eww)
@@ -747,7 +749,6 @@ information."))))
 
 (setq erc-hide-list '("JOIN" "PART" "QUIT"))
 
-
 ;; Company Mode shit
 (setq company-dabbrev-downcase 0)
 (setq company-idle-delay 0.7)
@@ -779,12 +780,11 @@ information."))))
 
 ;;; Big QOL changes.
 (setq slack-buffer-emojify t) ;; if you want to enable emoji, default nil
-;; (setq slack-buffer-function #'switch-to-buffer)
+(setq slack-buffer-function #'switch-to-buffer)
 (setq slack-prefer-current-team t)
-;; (setq slack-display-team-name nil)
-;;(setq slack-request-timeout 9000)
-;; (add-hook 'slack-mode-hook #'emojify-mode)
-;; (setq slack-buffer-create-on-notify t)
+(setq slack-display-team-name nil)
+(add-hook 'slack-mode-hook #'emojify-mode)
+(setq slack-buffer-create-on-notify t)
 ;; (setq alert-default-style 'mode-line)
 (setq alert-default-style 'notifications)
 
@@ -904,8 +904,19 @@ information."))))
     (mapc #'elfeed-search-update-entry entries)
     (unless (use-region-p) (forward-line))))
 
+(defun elfeed-w3m-open (&optional use-generic-p)
+  "open with eww"
+  (interactive "P")
+  (let ((entries (elfeed-search-selected)))
+    (cl-loop for entry in entries
+             do (elfeed-untag entry 'unread)
+             when (elfeed-entry-link entry)
+             do (ffap-w3m-other-window it))
+    (mapc #'elfeed-search-update-entry entries)
+    (unless (use-region-p) (forward-line))))
 
 (define-key elfeed-search-mode-map (kbd "m") 'elfeed-mail-todo)
+(define-key elfeed-search-mode-map (kbd "t") 'elfeed-w3m-open)
 (define-key elfeed-search-mode-map (kbd "w") 'elfeed-eww-open)
 (define-key elfeed-search-mode-map (kbd "f") 'elfeed-firefox-open)
 
@@ -967,4 +978,5 @@ information."))))
 
 (global-set-key (kbd "<f9>") 'spray-mode)
 (global-set-key (kbd "<f12>") 'helm-pass)
-(load-theme 'sanityinc-tomorrow-eighties t)
+
+(load-theme 'solarized-light t)
