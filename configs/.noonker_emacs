@@ -6,14 +6,14 @@
 ;; I'm just here so I won't get fined
 ;; Hey future josh, here's a debugging statement for ya
 ;; (setq debug-on-error t)
-;; (setq request-message-level 'info) 
+;; (setq request-message-level 'info)
 ;; (setq request-log-level 'debug)
 
 ;;; Notes:
 ;;
 ;; This is probably not the best place for notes
 ;; but oh well!
-;; For artist-mode and mac-print-page use an area of 67 wide  x 51 long 
+;; For artist-mode and mac-print-page use an area of 67 wide  x 51 long
 
 ;;
 ;;; Code:
