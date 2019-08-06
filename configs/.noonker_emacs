@@ -130,6 +130,8 @@ Return a list of installed packages or nil for every skipped package."
 			  'solarized-theme
 			  'helm-ag
 			  'ag
+			  'vterm
+			  'mastodon
                           )
 
 
@@ -254,11 +256,11 @@ Return a list of installed packages or nil for every skipped package."
   `(when (eq system-type ',type)
      ,@body))
 
-(when (not (memq window-system '(mac ns)))
-  (setq-default explicit-shell-file-name "/usr/bin/bash"))
+;; (when (not (memq window-system '(mac ns)))
+;;   (setq-default explicit-shell-file-name "/usr/bin/bash"))
 
-(when (memq window-system '(mac ns))
-(setq-default explicit-shell-file-name "/usr/local/bin/bash"))
+;; (when (memq window-system '(mac ns))
+;; (setq-default explicit-shell-file-name "/usr/local/bin/bash"))
 
 ;; Enable mouse support
 (unless window-system
@@ -384,7 +386,7 @@ Return a list of installed packages or nil for every skipped package."
 (global-set-key (kbd "C-x M-t") 'cleanup-region)
 (global-set-key (kbd "C-c n") 'cleanup-buffer)
 
-(setq-default show-trailing-whitespace t)
+;; (setq-default show-trailing-whitespace t)
 
 ;; cnc-command
 (defun visible-buffers ()
@@ -502,11 +504,11 @@ Return a list of installed packages or nil for every skipped package."
 (setq vc-make-backup-files t)
 (setq auto-save-file-name-transforms '((".*" "~/.emacs.d/auto-save-list/" t)))
 
-;; ;; no vc in tramp
-;; (setq vc-ignore-dir-regexp
-;;       (format "\\(%s\\)\\|\\(%s\\)"
-;; 	      vc-ignore-dir-regexp
-;; 	      tramp-file-name-regexp))
+;; no vc in tramp
+(setq vc-ignore-dir-regexp
+      (format "\\(%s\\)\\|\\(%s\\)"
+	      vc-ignore-dir-regexp
+	      tramp-file-name-regexp))
 
 ;; Turn of scrollbars
 (scroll-bar-mode -1)
@@ -747,7 +749,7 @@ information."))))
 
 ;; Company Mode shit
 (setq company-dabbrev-downcase 0)
-(setq company-idle-delay 0.7)
+(setq company-idle-delay 0.3)
 (setq company-minimum-prefix-length 2)
 
 (defun complete-or-indent ()
