@@ -239,6 +239,9 @@ Return a list of installed packages or nil for every skipped package."
 (ace-popup-menu-mode 1)
 (define-key global-map (kbd "C-c SPC") 'ace-jump-mode)
 
+;; Reveal
+(setq org-reveal-root "file:///home/user/git/reveal.js")
+
 ;; Eshell theme
 (eshell-git-prompt-use-theme 'robbyrussell)
 
@@ -947,4 +950,4 @@ information."))))
 (global-set-key (kbd "<f9>") 'spray-mode)
 (global-set-key (kbd "<f12>") 'helm-pass)
 
-(load-theme 'solarized-light t)
+(load-theme 'monokai t)
