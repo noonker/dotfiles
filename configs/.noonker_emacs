@@ -132,6 +132,7 @@ Return a list of installed packages or nil for every skipped package."
 			  'ag
 			  'vterm
 			  'mastodon
+			  'company-jedi
                           )
 
 
@@ -679,6 +680,11 @@ information."))))
 ;; (setq python-shell-interpreter "ipython"
 ;;    python-shell-interpreter-args "--simple-prompt -i")
 
+(defun my/python-mode-hook ()
+  (add-to-list 'company-backends 'company-jedi))
+
+(add-hook 'python-mode-hook 'my/python-mode-hook)
+
 ;; Google chrome as default browser
 ;; (setq browse-url-browser-function 'eww)
 (setq browse-url-browser-function 'browse-url-default-browser)
@@ -949,5 +955,9 @@ information."))))
 
 (global-set-key (kbd "<f9>") 'spray-mode)
 (global-set-key (kbd "<f12>") 'helm-pass)
+
+(setq reb-re-syntax 'string)
+(global-set-key (kbd "C-s-c C-s-c") 'mc/edit-lines)
+
 
 (load-theme 'monokai t)
