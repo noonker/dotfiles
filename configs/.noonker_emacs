@@ -133,6 +133,7 @@ Return a list of installed packages or nil for every skipped package."
 			  'vterm
 			  'mastodon
 			  'company-jedi
+			  'evil
                           )
 
 
@@ -212,7 +213,7 @@ Return a list of installed packages or nil for every skipped package."
                     :foreground "black"
                     :background "green")
 
-;; (setq url-user-agent "FOO")
+(setq url-user-agent " ")
 ;;(require 'whitespace)
 ;;(setq whitespace-style '(face empty tabs lines-tail trailing))
 ;;(global-whitespace-mode t)
@@ -932,7 +933,7 @@ information."))))
        '(("IN PROGRESS" . "INPROGRESS")
          ("TO DO" . "TODO")
          ("DONE" . "DONE")))
-(setq org-log-done 'time)
+;;(setq org-log-done 'time)
 
 (setq processing-location "/usr/local/bin/processing-java")
 (setq processing-application-dir "/Applications/Processing.app")
