@@ -6,14 +6,14 @@
 ;; I'm just here so I won't get fined
 ;; Hey future josh, here's a debugging statement for ya
 ;; (setq debug-on-error t)
-;; (setq request-message-level 'info) 
+;; (setq request-message-level 'info)
 ;; (setq request-log-level 'debug)
 ;; (setq tramp-verbose 10)
 ;;; Notes:
 ;;
 ;; This is probably not the best place for notes
 ;; but oh well!
-;; For artist-mode and mac-print-page use an area of 67 wide  x 51 long 
+;; For artist-mode and mac-print-page use an area of 67 wide  x 51 long
 
 ;;
 ;;; Code:
@@ -127,6 +127,10 @@ Return a list of installed packages or nil for every skipped package."
 			  'w3m
 			  'yaml-mode
 			  'platformio-mode
+			  'irony
+			  'flycheck-irony
+			  'cider
+			  'auto-complete
 			  'solarized-theme
 			  'helm-ag
 			  'ag
@@ -136,7 +140,7 @@ Return a list of installed packages or nil for every skipped package."
 			  'evil
                           )
 
-
+(ac-config-default)
 (require 'cl)
 (require 'epg-config)
 (require 'mediawiki)
@@ -149,10 +153,9 @@ Return a list of installed packages or nil for every skipped package."
   (push (cons 'OpenPGP (epg-config--make-gpg-configuration epg-gpg-program))
         epg--configurations))
 
- (when (and (executable-find "fish")
-            (require 'fish-completion nil t))
-   (global-fish-completion-mode))
-
+;; (when (and (executable-find "fish")
+;;            (require 'fish-completion nil t))
+;;   (global-fish-completion-mode))
 
 ;;(require 'emms-setup)
 ;;(emms-all)
@@ -178,7 +181,7 @@ Return a list of installed packages or nil for every skipped package."
 (set-register ?d '"import pdb\npdb.set_trace()")
 (set-register ?r '"%load_ext autoreload\n%autoreload 2")
 (set-register ?e '"sudo docker run -p 9200:9200 -p 9300:9300 -e \"discovery.type=single-node\" docker.elastic.co/elasticsearch/elasticsearch:6.3.2 -v \"$PWD/config\":/usr/share/elasticsearch/config")
-(set-register ?c '"sudo socat TCP-LISTEN:6001,reuseaddr,fork EXEC:\"qrexec-client-vm screenshare my-screenshare\"&") 
+(set-register ?c '"sudo socat TCP-LISTEN:6001,reuseaddr,fork EXEC:\"qrexec-client-vm screenshare my-screenshare\"&")
 (set-register ?p '"\\(\\([0-9]\\{1,3\\}\\(\\.\\|\\[\\.\\]\\)\\)\\{3\\}[0-9]\\{1,3\\}\\)")
 (set-register ?o '"\\([a-zA-Z0-9-_]+\\(\\.\\|\\[\\.\\]\\)\\)*[a-zA-Z0-9][a-zA-Z0-9-_]+\\(\\.\\|\\[\\.\\]\\)[a-zA-Z]\\{2,11\\}")
 (set-register ?i '"\\(\\(\\([0-9]\\{1,3\\}\\(\\.\\|\\[\\.\\]\\)\\)\\{3\\}[0-9]\\{1,3\\}\\)\\|\\([a-zA-Z0-9-_]+\\(\\.\\|\\[\\.\\]\\)\\)*[a-zA-Z0-9][a-zA-Z0-9-_]+\\(\\.\\|\\[\\.\\]\\)[a-zA-Z]\\{2,11\\}\\)")
@@ -264,8 +267,9 @@ Return a list of installed packages or nil for every skipped package."
 ;; (when (not (memq window-system '(mac ns)))
 ;;   (setq-default explicit-shell-file-name "/usr/bin/bash"))
 
-;; (when (memq window-system '(mac ns))
-;; (setq-default explicit-shell-file-name "/usr/local/bin/bash"))
+
+(when (memq window-system '(mac ns))
+(setq-default explicit-shell-file-name "/bin/bash"))
 
 ;; Enable mouse support
 (unless window-system
@@ -529,6 +533,7 @@ Return a list of installed packages or nil for every skipped package."
 (global-set-key (kbd "C-x j") 'kill-this-buffer)
 (global-set-key (kbd "ESC M-RET") 'browse-url-firefox)
 
+
 (setq helm-mini-default-sources 
       '(helm-source-buffers-list 
         helm-source-bookmarks 
@@ -668,7 +673,7 @@ information."))))
 
 (setq mail-user-agent 'gnus-user-agent)
 
-(defun todo (text &optional body) 
+(defun todo (text &optional body)
   (interactive "sTodo: ")
   (compose-mail-other-window "noonker@pm.me" text)
   (mail-text)
@@ -812,7 +817,7 @@ information."))))
 (setq
  slack-message-im-notification-title-format-function
  (lambda (_team room threadp)
-   (concat (if threadp "Thread in %s") 
+   (concat (if threadp "Thread in %s")
            (endless/-cleanup-room-name room))))
 
 (defun slk ()
@@ -832,7 +837,7 @@ information."))))
 
 ;; EMMS Streams
 (setq emms-stream-default-list
-      (append 
+      (append
        '(("SomaFM: Dubstep" "http://somafm.com/dubstep130.pls" 1 streamlist)
 	 ("SomaFM: Goa" "http://somafm.com/suburbsofgoa130.pls" 1 streamlist)
 	 ("SomaDM: The Trip" "http://somafm.com/thetrip130.pls" 1 streamlist)
@@ -942,17 +947,47 @@ information."))))
 
 (global-set-key (kbd "C-'") 'ace-window)
 
-;; (defun processing-mode-init ()
-;;   (make-local-variable 'ac-sources)
-;;   (setq ac-sources '(ac-source-dictionary ac-source-yasnippet))
-;;   (make-local-variable 'ac-user-dictionary)
-;;   (setq ac-user-dictionary (append processing-functions
-;;                                    processing-builtins
-;;                                    processing-constants)))
+(defun processing-mode-init ()
+  (make-local-variable 'ac-sources)
+  (setq ac-sources '(ac-source-dictionary ac-source-yasnippet))
+  (make-local-variable 'ac-user-dictionary)
+  (setq ac-user-dictionary (append processing-functions
+                                   processing-builtins
+                                   processing-constants)))
 
-;; (add-to-list 'ac-modes 'processing-mode)
-;; (add-hook 'processing-mode-hook 'processing-mode-init)
+(add-to-list 'ac-modes 'processing-mode)
+(add-hook 'processing-mode-hook 'processing-mode-init)
 
+;; C/C++ & PlatformIO Mode:
+(add-hook 'c++-mode-hook 'irony-mode)
+(add-hook 'c-mode-hook 'irony-mode)
+(add-hook 'objc-mode-hook 'irony-mode)
+
+(add-hook 'irony-mode-hook 'irony-cdb-autosetup-compile-options)
+
+;; Add the required company backend.
+(add-to-list 'company-backends 'company-irony)
+
+;; Enable irony for all c++ files, and platformio-mode only
+;; when needed (platformio.ini present in project root).
+(add-hook 'c++-mode-hook (lambda ()
+                           (irony-mode)
+                           (irony-eldoc)
+                           (platformio-conditionally-enable)))
+
+;; Use irony's completion functions.
+(add-hook 'irony-mode-hook
+          (lambda ()
+            (define-key irony-mode-map [remap completion-at-point]
+              'irony-completion-at-point-async)
+
+            (define-key irony-mode-map [remap complete-symbol]
+              'irony-completion-at-point-async)
+
+            (irony-cdb-autosetup-compile-options)))
+
+;; Setup irony for flycheck.
+(add-hook 'flycheck-mode-hook 'flycheck-irony-setup)
 
 (global-set-key (kbd "<f9>") 'spray-mode)
 (global-set-key (kbd "<f12>") 'helm-pass)

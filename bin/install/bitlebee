@@ -1,0 +1,3 @@
+sudo apt-get update && sudo apt-get install bitlbee bitlbee-dev autotools-dec autoconf autogen autoconf libtool
+git clone https://github.com/sm00th/bitlbee-discord.git
+cd bitlebee-discord && ./autogen.sh && ./configure && make && sudo make install
