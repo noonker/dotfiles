@@ -65,7 +65,6 @@ Return a list of installed packages or nil for every skipped package."
                           'restclient
                           'exec-path-from-shell
                           'excorporate
-                          'xclip
                           'mediawiki
                           'erc-colorize
                           'mingus
@@ -138,12 +137,15 @@ Return a list of installed packages or nil for every skipped package."
 			  'mastodon
 			  'company-jedi
 			  'evil
+        'doom-modeline
                           )
 
 (ac-config-default)
 (require 'cl)
 (require 'epg-config)
 (require 'mediawiki)
+(require 'doom-modeline)
+(doom-modeline-mode 1)
 
 (setq org-babel-python-command "python3")
 
@@ -298,7 +300,7 @@ Return a list of installed packages or nil for every skipped package."
         (insert (format "\n%s" "```"))
         )))
 
-(xclip-mode 1)
+;; (xclip-mode 1)
 
 (progn
  ;; Make whitespace-mode with very basic background coloring for whitespaces.
@@ -354,7 +356,8 @@ Return a list of installed packages or nil for every skipped package."
    (restclient . t)
    (plantuml . t)
    (shell . t)
-   (gnuplot . t)))
+   (gnuplot . t)
+   (ein . t)))
 
 (setq org-plantuml-jar-path
       (expand-file-name "~/Documents/plantuml.jar"))
@@ -995,5 +998,5 @@ information."))))
 (setq reb-re-syntax 'string)
 (global-set-key (kbd "C-s-c C-s-c") 'mc/edit-lines)
 
-
+(setq org-startup-align-all-table t)
 (load-theme 'monokai t)
