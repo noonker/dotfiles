@@ -997,6 +997,8 @@ information."))))
 
 (setq reb-re-syntax 'string)
 (global-set-key (kbd "C-s-c C-s-c") 'mc/edit-lines)
-
+(require 'org-bullets)
+(add-hook 'org-mode-hook (lambda () (org-bullets-mode 1)))
+(global-prettify-symbols-mode +1)
 (setq org-startup-align-all-table t)
 (load-theme 'monokai t)
