@@ -1001,4 +1001,19 @@ information."))))
 (add-hook 'org-mode-hook (lambda () (org-bullets-mode 1)))
 (global-prettify-symbols-mode +1)
 (setq org-startup-align-all-table t)
+
+(defun image-to-text ()
+  (interactive)
+  (if buffer-file-name
+    (progn
+      ;; Convert the file to a tif file for tesseract consumption.
+      (shell-command (concat "convert " buffer-file-name " -resize 400% -type Grayscale " buffer-file-name ".tif"))
+      ;; Convert the file from tif to txt using tesseract.
+      (shell-command (concat "tesseract -l eng " buffer-file-name ".tif " buffer-file-name))
+      ;; Delete the tif file artifact.
+      (shell-command (concat "rm " buffer-file-name ".tif"))
+      ;; Open the text file in buffer, this should be the text found in the image converted.
+      (find-file (concat buffer-file-name ".txt")))))
+
+
 (load-theme 'monokai t)
