@@ -138,6 +138,7 @@ Return a list of installed packages or nil for every skipped package."
 			  'company-jedi
 			  'evil
         'doom-modeline
+        'org-bullets
                           )
 
 (ac-config-default)
@@ -205,7 +206,7 @@ Return a list of installed packages or nil for every skipped package."
 
 (setq projectile-completion-system 'helm)
 (setq projectile-enable-caching t)
-(helm-projectile-on)
+;; (helm-projectile-on)
 (setq linum-format "%d ")
 
 (set-face-attribute 'flycheck-warning nil
