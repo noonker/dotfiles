@@ -141,6 +141,7 @@ Return a list of installed packages or nil for every skipped package."
 			  'elpy
 			  'ob-sql-mode
 			  'yafolding
+			  'org-bullets
                           )
 
 (setq doom-modeline-height 16)
@@ -209,7 +210,7 @@ Return a list of installed packages or nil for every skipped package."
 
 (setq projectile-completion-system 'helm)
 (setq projectile-enable-caching t)
-(helm-projectile-on)
+;; (helm-projectile-on)
 (setq linum-format "%d ")
 
 (set-face-attribute 'flycheck-warning nil
