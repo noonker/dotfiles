@@ -63,6 +63,7 @@ Return a list of installed packages or nil for every skipped package."
                           'dumb-jump
                           'es-mode
                           'restclient
+			  'cyberpunk-theme
                           'exec-path-from-shell
                           'excorporate
                           'mediawiki
@@ -1151,4 +1152,31 @@ information."))))
 %FACE[twitter-divider]{                                                                                                                                                                                  }
 "))
 
-(load-theme 'monokai t)
+(defun character-below ()
+  (save-excursion
+    (next-line)
+    (string (char-after (point)))))
+
+
+(defun replace-below (cur rep bel)
+  (interactive)
+  (let ((pos 1)
+	(tmp))
+    (while (< pos (point-max))
+      (if (equal cur (string (char-after pos)))
+	  (if (equal bel (character-above))
+	      (progn (delete-char 1) (insert rep))
+	      ))
+      (setq pos (+ 1 pos))
+      (goto-char pos)
+    )))
+
+
+(custom-set-faces
+ ;; custom-set-faces was added by Custom.
+ ;; If you edit it by hand, you could mess it up, so be careful.
+ ;; Your init file should contain only one such instance.
+ ;; If there is more than one, they won't work right.
+ '(default ((t (:height 120 :family "Hack")))))
+
+(load-theme 'cyberpunk t)
