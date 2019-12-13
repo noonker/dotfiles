@@ -9,6 +9,8 @@
 ;; (setq request-message-level 'info)
 ;; (setq request-log-level 'debug)
 ;; (setq tramp-verbose 10)
+;; (setq request-log-level (quote blather))
+;; (setq request-message-level (quote blather))
 ;;; Notes:
 ;;
 ;; This is probably not the best place for notes
@@ -169,7 +171,8 @@ Return a list of installed packages or nil for every skipped package."
 ;;(require 'emms-setup)
 ;;(emms-all)
 ;; (emms-default-players)
-
+(require 'ein-jupyter)
+(require 'helm)
 (global-flycheck-mode)
 (global-company-mode)
 
@@ -864,7 +867,8 @@ information."))))
 	 ("SomaDM: SF1033" "http://somafm.com/sf1033130.pls" 1 streamlist)
 	 ("SomaDM: DS1" "http://somafm.com/deepspaceone130.pls" 1 streamlist)
 	 ("SomaDM: Jazz" "http://somafm.com/sonicuniverse130.pls" 1 streamlist))
-       emms-stream-default-list))
+       ;;emms-stream-default-list
+       ))  
 
  (setq emms-directory "~/org/emms"
 	emms-stream-default-action "play"
