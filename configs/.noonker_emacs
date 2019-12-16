@@ -1184,12 +1184,39 @@ information."))))
       (goto-char pos)
     )))
 
+(add-hook 'prog-mode-hook
+            (lambda ()
+              (push '("<=" . ?≤) prettify-symbols-alist)
+	      (push '(">=" . ?≥) prettify-symbols-alist)
+	      (push '("map" . ?↦) prettify-symbols-alist)
+	      (push '("!=" . ?≠) prettify-symbols-alist)
+	      (push '("==" . ?≡) prettify-symbols-alist)
+	      (push '("None" . ?Ø) prettify-symbols-alist)
+	      (push '("->" . ?→) prettify-symbols-alist)
+	      (push '("<-" . ?←) prettify-symbols-alist)
+	      (push '("->>" . ?⇉) prettify-symbols-alist)
+	      (push '("not" . ?¬) prettify-symbols-alist)
+	      (push '("union" . ?⋃) prettify-symbols-alist)
+	      (push '("intersection" . ?⋂) prettify-symbols-alist)
+	      ))
+
+(add-hook 'clojure-mode-hook
+	  (lambda ()
+	    (push '("let" . ?⊢) prettify-symbols-alist)
+	    (push '("defn" . ?ƒ) prettify-symbols-alist)
+	    (push '("fn" . ?λ) prettify-symbols-alist)
+	    (push '("doseq" . ?∀) prettify-symbols-alist)
+	    (push '("comp" . ?∘) prettify-symbols-alist)
+	    (push '("partial" . ?Ƥ) prettify-symbols-alist)
+	    (push '("not=" . ?≠) prettify-symbols-alist)
+	    )
+ )
 
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
- '(default ((t (:height 120 :family "Hack")))))
+ '(default ((t (:height 111 :family "Hack")))))
 
 (load-theme 'cyberpunk t)
