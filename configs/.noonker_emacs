@@ -158,11 +158,11 @@ Return a list of installed packages or nil for every skipped package."
 
 (setq org-babel-python-command "python3")
 
-(when (not (memq window-system '(mac ns)))
-  (setenv "QUBES_GPG_DOMAIN" "gpg-server")
-  (customize-set-variable 'epg-gpg-program "/usr/bin/qubes-gpg-client-wrapper")
-  (push (cons 'OpenPGP (epg-config--make-gpg-configuration epg-gpg-program))
-        epg--configurations))
+;; (when (not (memq window-system '(mac ns)))
+;;   (setenv "QUBES_GPG_DOMAIN" "gpg-server")
+;;   (customize-set-variable 'epg-gpg-program "/usr/bin/qubes-gpg-client-wrapper")
+;;   (push (cons 'OpenPGP (epg-config--make-gpg-configuration epg-gpg-program))
+;;        epg--configurations))
 
 ;; (when (and (executable-find "fish")
 ;;            (require 'fish-completion nil t))
