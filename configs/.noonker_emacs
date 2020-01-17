@@ -148,6 +148,7 @@ Return a list of installed packages or nil for every skipped package."
 			  'paredit
 			  'notmuch
 			  'yasnippet-snippets
+			  'expand-region
                           )
 
 (setq doom-modeline-height 16)
@@ -159,7 +160,7 @@ Return a list of installed packages or nil for every skipped package."
 (doom-modeline-mode 1)
 
 (setq org-babel-python-command "python3")
-
+(global-set-key (kbd "C-=") 'er/expand-region)
 ;; (when (not (memq window-system '(mac ns)))
 ;;   (setenv "QUBES_GPG_DOMAIN" "gpg-server")
 ;;   (customize-set-variable 'epg-gpg-program "/usr/bin/qubes-gpg-client-wrapper")
