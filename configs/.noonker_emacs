@@ -146,6 +146,7 @@ Return a list of installed packages or nil for every skipped package."
 			  'yafolding
 			  'org-bullets
 			  'paredit
+			  'notmuch
                           )
 
 (setq doom-modeline-height 16)
