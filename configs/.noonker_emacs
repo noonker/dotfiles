@@ -1212,8 +1212,31 @@ information."))))
 	    (push '("comp" . ?∘) prettify-symbols-alist)
 	    (push '("partial" . ?Ƥ) prettify-symbols-alist)
 	    (push '("not=" . ?≠) prettify-symbols-alist)
-	    )
- )
+	    ))
+
+(add-hook 'org-mode-hook
+	  (lambda ()
+	    (push '("#+begin_src" . "ƒ") prettify-symbols-alist)
+	    (push '("#+end_src" . "\\ƒ") prettify-symbols-alist)
+	    (push '("#+BEGIN_SRC" . "ƒ") prettify-symbols-alist)
+	    (push '("#+END_SRC" . "\\ƒ") prettify-symbols-alist)
+	    (push '("#+begin_quote" . "「") prettify-symbols-alist)
+	    (push '("#+BEGIN_QUOTE" . "「") prettify-symbols-alist)
+	    (push '("#+end_quote" . "」") prettify-symbols-alist)
+	    (push '("#+END_QUOTE" . "」") prettify-symbols-alist)
+	    ))
+
+(defun rand-w3m-view-this-url-background-session ()
+  (interactive)
+  (let ((in-background-state w3m-new-session-in-background))
+    (setq w3m-new-session-in-background t)
+    (w3m-view-this-url-new-session)
+    (setq w3m-new-session-in-background in-background-state)))
+
+(defun my-w3m-bindings ()
+  (define-key w3m-mode-map (kbd "C-<return>") 'rand-w3m-view-this-url-background-session))
+
+(add-hook 'w3m-mode-hook 'my-w3m-bindings)
 
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
