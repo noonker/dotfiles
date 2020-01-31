@@ -902,6 +902,11 @@ information."))))
 (setq inferior-lisp-program "/usr/local/bin/sbcl")
 (setq slime-contribs '(slime-fancy))
 
+(defun yt-dl-it (url)
+  "Downloads the URL in an async shell"
+  (let ((default-directory "~/Videos"))
+    (async-shell-command (format "youtube-dl %s" url))))
+
 (require 'elfeed)
 (defun elfeed-mail-todo (&optional use-generic-p)
   "Mail this to myself for later reading"
@@ -947,10 +952,23 @@ information."))))
     (mapc #'elfeed-search-update-entry entries)
     (unless (use-region-p) (forward-line))))
 
+(defun elfeed-youtube-dl (&optional use-generic-p)
+  "open with eww"
+  (interactive "P")
+  (let ((entries (elfeed-search-selected)))
+    (cl-loop for entry in entries
+             do (elfeed-untag entry 'unread)
+             when (elfeed-entry-link entry)
+             do (yt-dl-it it))
+    (mapc #'elfeed-search-update-entry entries)
+    (unless (use-region-p) (forward-line))))
+
 (define-key elfeed-search-mode-map (kbd "m") 'elfeed-mail-todo)
 (define-key elfeed-search-mode-map (kbd "t") 'elfeed-w3m-open)
 (define-key elfeed-search-mode-map (kbd "w") 'elfeed-eww-open)
 (define-key elfeed-search-mode-map (kbd "f") 'elfeed-firefox-open)
+(define-key elfeed-search-mode-map (kbd "d") 'elfeed-youtube-dl)
+
 
 
 (setq org-jira-jira-status-to-org-keyword-alist
