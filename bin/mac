@@ -58,7 +58,6 @@ git_urls=(
     'https://github.com:noonker/dotfiles.git'
     'https://github.com/lysyi3m/osx-terminal-themes.git'
     'https://github.com/MISP/misp-galaxy.git'
-    #'git@git.arbor.net:jperson/stuff.git'
     )
 
 cd ~/git
