@@ -145,6 +145,7 @@ Return a list of installed packages or nil for every skipped package."
 			  'ob-sql-mode
 			  'yafolding
 			  'org-bullets
+			  'dockerfile-mode
 			  'paredit
 			  'notmuch
 			  'yasnippet-snippets
@@ -1050,10 +1051,6 @@ information."))))
       (find-file (concat buffer-file-name ".txt")))))
 
 
-
-
-
-
 (with-eval-after-load 'twittering-mode 
   (defun *twittering-generate-format-table (status-sym prefix-sym)
     `(("%" . "%")
@@ -1243,6 +1240,78 @@ information."))))
 	    (push '("#+end_quote" . "」") prettify-symbols-alist)
 	    (push '("#+END_QUOTE" . "」") prettify-symbols-alist)
 	    ))
+
+(defun sudo ()
+  "Use TRAMP to `sudo' the current buffer"
+  (interactive)
+  (when buffer-file-name
+    (find-alternate-file
+     (concat "/sudo:root@localhost:"
+             buffer-file-name))))
+
+
+(defun what-is-my-ip ()
+  (interactive)
+  (message "IP: %s"
+           (with-current-buffer (url-retrieve-synchronously "https://api.ipify.org")
+             (buffer-substring (+ 1 url-http-end-of-headers) (point-max)))))
+
+(setq visible-bell 1)
+
+
+;; Eshell
+(defun git-prompt-eshell ()
+  "Git a git prompt"
+ (let (beg dir git-branch git-dirty end)
+   (if (eshell-git-prompt--git-root-dir)
+       (progn
+	 (setq eshell-git-prompt-branch-name (eshell-git-prompt--branch-name))
+	 (setq git-branch
+	       (concat
+		(with-face "git:(" 'eshell-git-prompt-robyrussell-git-face)
+		(with-face (eshell-git-prompt--readable-branch-name) 'eshell-git-prompt-robyrussell-branch-face)
+		(with-face ")" 'eshell-git-prompt-robyrussell-git-face)))
+	 (setq git-dirty
+	       (when (eshell-git-prompt--collect-status)
+		 (with-face "✗" 'eshell-git-prompt-robyrussell-git-dirty-face)))
+	 (concat git-branch git-dirty)) "☭" )))
+
+(setq eshell-prompt-function
+      (lambda ()
+        (concat
+         (propertize "┌─[" 'face 'org-level-4)
+         (propertize (user-login-name) 'face 'org-level-1)
+         (propertize "@" 'face 'org-level-4)
+         (propertize (system-name) 'face 'org-level-3)
+         (propertize "]──[" 'face 'org-level-4)
+         (propertize (format-time-string "%H:%M" (current-time)) 'face 'org-level-2)
+         (propertize "]──[" 'face 'org-level-4)
+         (propertize (concat (eshell/pwd)) 'face `(:foreground "white"))
+	 (propertize "]──[" 'face 'org-level-4)
+	 (propertize (git-prompt-eshell) 'face 'org-level-6)
+         (propertize "]\n" 'face 'org-level-4)
+         (propertize "└─>" 'face 'org-level-4)
+         (propertize (if (= (user-uid) 0) " # " " $ ") 'face 'org-level-4)
+         )))
+
+(setq eshell-visual-commands '("htop" "vi" "screen" "top" "less"
+                               "more" "lynx" "ncftp" "pine" "tin" "trn" "elm"
+                               "vim"))
+
+(setq eshell-visual-subcommands '("git" "log" "diff" "show" "ssh"))
+
+(setenv "PAGER" "cat")
+
+(defalias 'ff 'find-file)
+(defalias 'd 'dired)
+
+(defun eshell/clear ()
+  (let ((inhibit-read-only t))
+    (erase-buffer)))
+
+(defun eshell/gst (&rest args)
+    (magit-status (pop args) nil)
+    (eshell/echo))   ;; The echo command suppresses output
 
 (defun rand-w3m-view-this-url-background-session ()
   (interactive)
