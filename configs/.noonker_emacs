@@ -1325,6 +1325,80 @@ information."))))
 
 (add-hook 'w3m-mode-hook 'my-w3m-bindings)
 
+;; Org Mode Stuff
+(setq org-clock-in-switch-to-state "IN-PROGRESS")
+(setq org-clock-out-switch-to-state "TODO")
+(setq org-agenda-basedir "~/git/stuff/org")
+(setq org-refile-allow-creating-parent-nodes t)
+(setq org-refile-allow-creating-parent-nodes 'confirm)
+(setq org-refile-use-outline-path 'file)
+
+(defun  org-init-agenda ()
+  (interactive)
+  (let ((initial '(("backlog.org" nil)
+                   ("recurring.org" nil)
+		   ("today.org" nil)
+		   ("projects" t)
+		   ("archive" t)))
+        (todostr "#+TODO: TODO IN-PROGRESS | DONE WONTDO"))
+    (if (not (file-directory-p org-agenda-basedir)) 
+      (make-directory org-agenda-basedir))
+
+    (dolist (element initial) 
+      (let ((name  (nth 0 element))
+            (isdir (nth 1 element)))
+        ;; If the file doesn't exist and not flagged as dir
+        (if (and (not isdir)
+                 (not (file-directory-p (format "%s/%s" org-agenda-basedir name))))
+          (write-region todostr nil (format "%s/%s" org-agenda-basedir name)))
+
+        ;; If the file doesn't exist and is flagged as dir
+        (if (and isdir
+                 (not (file-directory-p (format "%s/%s" org-agenda-basedir name))))
+          (make-directory (format "%s/%s" org-agenda-basedir name)))))))
+
+
+(setq org-agenda-files (append (list (format "%s/backlog.org" org-agenda-basedir)
+				     (format "%s/recurring.org" org-agenda-basedir)
+				     (format "%s/today.org" org-agenda-basedir))
+			       (directory-files-recursively (format "%s/projects/" org-agenda-basedir) "^[0-9a-zA-Z\-_]*?\.org$")
+			       ))
+
+(setq org-archive-location (format "~/git/stuff/org/archive/%s.org::" (format-time-string "%Y-%m-%d")))
+
+(setq org-capture-templates
+      '(("b" "Backlog" entry (file+headline (format "%s/inbox.org" org-agenda-basedir) "Tasks")
+         "** TODO %?\n  %i\n  %a")
+        ("t" "Today" entry (file+headline (format "%s/today.org" org-agenda-basedir) "Tasks")
+         "** TODO %?\n SCHEDULED: %t")))
+
+(defun org-agenda-new-day ()
+       (interactive)
+       (with-current-buffer (find-file (format "%s/today.org" org-agenda-basedir))
+	 (mark-whole-buffer)
+	 (kill-region (mark) (point))
+	 (if (= (buffer-size) 0) (insert "#+TODO: TODO IN-PROGRESS | DONE WONTDO\n\n* Tasks\n* Thoughts\n")))
+(org-agenda))
+
+(setq org-refile-targets '((org-agenda-files :maxlevel . 3)))
+(setq org-outline-path-complete-in-steps nil)         ; Refile in a single go
+(setq org-refile-use-outline-path t)                  ; Show full paths for refiling
+
+(defun org-complex-tasks ()
+  (interactive)
+  (let ((tasks  (quote ("Create Jira Ticket" 
+                        "Documentation"
+                        "Close Jira Ticket"))))
+    (org-end-of-line)
+    (insert " [/]")
+    (org-insert-heading)
+    (org-demote-subtree)
+    (insert (car tasks))
+    (dolist (element (cdr tasks))
+      (org-insert-heading)      
+      (insert element))))
+
+
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
