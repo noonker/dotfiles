@@ -1398,7 +1398,52 @@ information."))))
       (org-insert-heading)      
       (insert element))))
 
+(defun set-complex ()
+  (interactive "P")
+  (let ((marker (or (org-get-at-bol 'org-hd-marker)
+                    (org-agenda-error))))
+    (org-with-point-at marker
+      (org-back-to-heading t)
+      (org-complex-tasks))))
 
+(defun org-agenda-copy ()
+  (interactive "P")
+  (let ((marker (or (org-get-at-bol 'org-hd-marker)
+                    (org-agenda-error))))
+    (org-with-point-at marker
+      (org-back-to-heading t)
+      (org-copy))))
+
+(defun kill-matching-org-clocks ()
+  (save-window-excursion
+    (save-excursion
+    (find-file (format "%s/today.org" org-agenda-basedir))
+    (beginning-of-buffer)
+    (while (< (point) (point-max))
+      (search-forward "CLOCK: [" ) ;; Get rid of this error at some poitn 
+      (if (string-match-p (format-time-string "%Y-%m-%d") (thing-at-point 'line t))
+	  (progn (beginning-of-line) (kill-line) (kill-line))))
+    )))
+
+(defun org-janky-copy ()
+  (interactive "P")
+  (let ((marker (or (org-get-at-bol 'org-hd-marker)
+                    (org-agenda-error))))
+    (org-with-point-at marker
+      (org-back-to-heading t)
+      (message (format "%s - point "(point)))
+      (message (format "%s - marker" marker))
+      (org-refile 3 nil (list "Tasks" (format "%s/today.org" org-agenda-basedir) nil (save-window-excursion
+  (save-excursion
+  (find-file (format "%s/today.org" org-agenda-basedir))
+   (org-find-exact-headline-in-buffer "Tasks")))) "Copy")
+      (kill-matching-org-clocks)
+      )))
+
+(save-window-excursion
+  (save-excursion
+  (find-file (format "%s/today.org" org-agenda-basedir))
+   (org-find-exact-headline-in-buffer "Tasks")))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
