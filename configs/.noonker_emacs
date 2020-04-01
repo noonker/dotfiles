@@ -547,7 +547,6 @@ Return a list of installed packages or nil for every skipped package."
 (global-set-key (kbd "C-c <left>") 'dumb-jump-back)
 (global-set-key (kbd "C-c <right>") 'dumb-jump-go)
 (global-set-key (kbd "C-c <down>") 'dumb-jump-quick-look)
-(global-set-key (kbd "C-c c") 'helm-mini)
 (global-set-key (kbd "C-2") 'helm-mini)
 (global-set-key (kbd "C-x j") 'kill-this-buffer)
 (global-set-key (kbd "ESC M-RET") 'browse-url-firefox)
@@ -777,7 +776,7 @@ information."))))
   (delete-region (point) (line-end-position)))
 
 (global-set-key (kbd "C-c k") 'ruthless-kill)
-(global-set-key (kbd "M-S") 'helm-slack)
+(global-set-key (kbd "M-S") 'slack-select-rooms)
 
 (setq erc-hide-list '("JOIN" "PART" "QUIT"))
 
@@ -1364,12 +1363,12 @@ information."))))
 			       (directory-files-recursively (format "%s/projects/" org-agenda-basedir) "^[0-9a-zA-Z\-_]*?\.org$")
 			       ))
 
-(setq org-archive-location (format "~/git/stuff/org/archive/%s.org::" (format-time-string "%Y-%m-%d")))
+(setq org-archive-location (format "%s/archive/%s.org::" org-agenda-basedir (format-time-string "%Y-%m-%d")))
 
 (setq org-capture-templates
-      '(("b" "Backlog" entry (file+headline (format "%s/inbox.org" org-agenda-basedir) "Tasks")
+      '(("b" "Backlog" entry (file+headline (lambda () (format "%s/backlog.org" org-agenda-basedir)) "Backlog")
          "** TODO %?\n  %i\n  %a")
-        ("t" "Today" entry (file+headline (format "%s/today.org" org-agenda-basedir) "Tasks")
+        ("t" "Today" entry (file+headline (lambda () (format "%s/today.org" org-agenda-basedir)) "Tasks")
          "** TODO %?\n SCHEDULED: %t")))
 
 (defun org-agenda-new-day ()
@@ -1386,9 +1385,9 @@ information."))))
 
 (defun org-complex-tasks ()
   (interactive)
-  (let ((tasks  (quote ("Create Jira Ticket" 
-                        "Documentation"
-                        "Close Jira Ticket"))))
+  (let ((tasks  (quote ("TODO Create Jira Ticket" 
+                        "TODO Documentation"
+                        "TODO Close Jira Ticket"))))
     (org-end-of-line)
     (insert " [/]")
     (org-insert-heading)
@@ -1420,7 +1419,7 @@ information."))))
     (find-file (format "%s/today.org" org-agenda-basedir))
     (beginning-of-buffer)
     (while (< (point) (point-max))
-      (search-forward "CLOCK: [" ) ;; Get rid of this error at some poitn 
+      (search-forward "CLOCK: [" ) ;; Get rid of this error at some point 
       (if (string-match-p (format-time-string "%Y-%m-%d") (thing-at-point 'line t))
 	  (progn (beginning-of-line) (kill-line) (kill-line))))
     )))
@@ -1439,6 +1438,10 @@ information."))))
    (org-find-exact-headline-in-buffer "Tasks")))) "Copy")
       (kill-matching-org-clocks)
       )))
+
+(global-set-key (kbd "C-c a") 'org-agenda)
+(global-set-key (kbd "C-c c") 'org-capture)
+(setq notmuch-search-oldest-first nil)
 
 (save-window-excursion
   (save-excursion
