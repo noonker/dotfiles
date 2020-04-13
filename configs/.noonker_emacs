@@ -150,6 +150,7 @@ Return a list of installed packages or nil for every skipped package."
 			  'notmuch
 			  'yasnippet-snippets
 			  'expand-region
+			  'kubernetes
                           )
 
 (setq doom-modeline-height 16)
@@ -168,9 +169,9 @@ Return a list of installed packages or nil for every skipped package."
 ;;   (push (cons 'OpenPGP (epg-config--make-gpg-configuration epg-gpg-program))
 ;;        epg--configurations))
 
-;; (when (and (executable-find "fish")
-;;            (require 'fish-completion nil t))
-;;   (global-fish-completion-mode))
+(when (and (executable-find "fish")
+           (require 'fish-completion nil t))
+  (global-fish-completion-mode))
 
 ;;(require 'emms-setup)
 ;;(emms-all)
@@ -285,7 +286,8 @@ Return a list of installed packages or nil for every skipped package."
 
 
 (when (memq window-system '(mac ns))
-(setq-default explicit-shell-file-name "/bin/bash"))
+;; (setq-default explicit-shell-file-name "/bin/bash")
+  )
 
 ;; Enable mouse support
 (unless window-system
@@ -343,7 +345,7 @@ Return a list of installed packages or nil for every skipped package."
 
   (setq interprogram-cut-function 'paste-to-osx)
   (setq interprogram-paste-function 'copy-from-osx)
-  (setenv "SHELL" "/bin/bash")
+;;  (setenv "SHELL" "/bin/bash")
   (exec-path-from-shell-initialize)
   (exec-path-from-shell-copy-envs
    '("PATH")))
@@ -1325,11 +1327,8 @@ information."))))
 
 (add-hook 'w3m-mode-hook 'my-w3m-bindings)
 
-(custom-set-faces
- ;; custom-set-faces was added by Custom.
- ;; If you edit it by hand, you could mess it up, so be careful.
- ;; Your init file should contain only one such instance.
- ;; If there is more than one, they won't work right.
- '(default ((t (:height 111 :family "Hack")))))
+(when (eq system-type 'darwin)
+  (setf epa-pinentry-mode 'loopback)
+  (set-face-attribute 'default nil :family "Monoid" :height 120))
 
 (load-theme 'cyberpunk t)
