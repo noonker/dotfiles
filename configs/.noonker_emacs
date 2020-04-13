@@ -549,7 +549,6 @@ Return a list of installed packages or nil for every skipped package."
 (global-set-key (kbd "C-c <left>") 'dumb-jump-back)
 (global-set-key (kbd "C-c <right>") 'dumb-jump-go)
 (global-set-key (kbd "C-c <down>") 'dumb-jump-quick-look)
-(global-set-key (kbd "C-c c") 'helm-mini)
 (global-set-key (kbd "C-2") 'helm-mini)
 (global-set-key (kbd "C-x j") 'kill-this-buffer)
 (global-set-key (kbd "ESC M-RET") 'browse-url-firefox)
@@ -779,7 +778,7 @@ information."))))
   (delete-region (point) (line-end-position)))
 
 (global-set-key (kbd "C-c k") 'ruthless-kill)
-(global-set-key (kbd "M-S") 'helm-slack)
+(global-set-key (kbd "M-S") 'slack-select-rooms)
 
 (setq erc-hide-list '("JOIN" "PART" "QUIT"))
 
@@ -1327,8 +1326,140 @@ information."))))
 
 (add-hook 'w3m-mode-hook 'my-w3m-bindings)
 
+
 (when (eq system-type 'darwin)
   (setf epa-pinentry-mode 'loopback)
   (set-face-attribute 'default nil :family "Monoid" :height 120))
+
+;; Org Mode Stuff
+(setq org-clock-in-switch-to-state "IN-PROGRESS")
+(setq org-clock-out-switch-to-state "TODO")
+(setq org-agenda-basedir "~/git/stuff/org")
+(setq org-refile-allow-creating-parent-nodes t)
+(setq org-refile-allow-creating-parent-nodes 'confirm)
+(setq org-refile-use-outline-path 'file)
+
+(defun  org-init-agenda ()
+  (interactive)
+  (let ((initial '(("backlog.org" nil)
+                   ("recurring.org" nil)
+		   ("today.org" nil)
+		   ("projects" t)
+		   ("archive" t)))
+        (todostr "#+TODO: TODO IN-PROGRESS | DONE WONTDO"))
+    (if (not (file-directory-p org-agenda-basedir)) 
+      (make-directory org-agenda-basedir))
+
+    (dolist (element initial) 
+      (let ((name  (nth 0 element))
+            (isdir (nth 1 element)))
+        ;; If the file doesn't exist and not flagged as dir
+        (if (and (not isdir)
+                 (not (file-directory-p (format "%s/%s" org-agenda-basedir name))))
+          (write-region todostr nil (format "%s/%s" org-agenda-basedir name)))
+
+        ;; If the file doesn't exist and is flagged as dir
+        (if (and isdir
+                 (not (file-directory-p (format "%s/%s" org-agenda-basedir name))))
+          (make-directory (format "%s/%s" org-agenda-basedir name)))))))
+
+
+(setq org-agenda-files (append (list (format "%s/backlog.org" org-agenda-basedir)
+				     (format "%s/recurring.org" org-agenda-basedir)
+				     (format "%s/today.org" org-agenda-basedir))
+			       (directory-files-recursively (format "%s/projects/" org-agenda-basedir) "^[0-9a-zA-Z\-_]*?\.org$")
+			       ))
+
+(setq org-archive-location (format "%s/archive/%s.org::" org-agenda-basedir (format-time-string "%Y-%m-%d")))
+
+(setq org-capture-templates
+      '(("b" "Backlog" entry (file+headline (lambda () (format "%s/backlog.org" org-agenda-basedir)) "Backlog")
+         "** TODO %?\n  %i\n  %a")
+        ("t" "Today" entry (file+headline (lambda () (format "%s/today.org" org-agenda-basedir)) "Tasks")
+         "** TODO %?\n SCHEDULED: %t")))
+
+(defun org-agenda-new-day ()
+       (interactive)
+       (with-current-buffer (find-file (format "%s/today.org" org-agenda-basedir))
+	 (mark-whole-buffer)
+	 (kill-region (mark) (point))
+	 (if (= (buffer-size) 0) (insert "#+TODO: TODO IN-PROGRESS | DONE WONTDO\n\n* Tasks\n* Thoughts\n")))
+(org-agenda))
+
+(setq org-refile-targets '((org-agenda-files :maxlevel . 3)))
+(setq org-outline-path-complete-in-steps nil)         ; Refile in a single go
+(setq org-refile-use-outline-path t)                  ; Show full paths for refiling
+
+(defun org-complex-tasks ()
+  (interactive)
+  (let ((tasks  (quote ("TODO Create Jira Ticket" 
+                        "TODO Documentation"
+                        "TODO Close Jira Ticket"))))
+    (org-end-of-line)
+    (insert " [/]")
+    (org-insert-heading)
+    (org-demote-subtree)
+    (insert (car tasks))
+    (dolist (element (cdr tasks))
+      (org-insert-heading)      
+      (insert element))))
+
+(defun set-complex ()
+  (interactive "P")
+  (let ((marker (or (org-get-at-bol 'org-hd-marker)
+                    (org-agenda-error))))
+    (org-with-point-at marker
+      (org-back-to-heading t)
+      (org-complex-tasks))))
+
+(defun org-agenda-copy ()
+  (interactive "P")
+  (let ((marker (or (org-get-at-bol 'org-hd-marker)
+                    (org-agenda-error))))
+    (org-with-point-at marker
+      (org-back-to-heading t)
+      (org-copy))))
+
+(defun kill-matching-org-clocks ()
+  (save-window-excursion
+    (save-excursion
+    (find-file (format "%s/today.org" org-agenda-basedir))
+    (beginning-of-buffer)
+    (while (< (point) (point-max))
+      (search-forward "CLOCK: [" ) ;; Get rid of this error at some point 
+      (if (string-match-p (format-time-string "%Y-%m-%d") (thing-at-point 'line t))
+	  (progn (beginning-of-line) (kill-line) (kill-line))))
+    )))
+
+(defun org-janky-copy ()
+  (interactive "P")
+  (let ((marker (or (org-get-at-bol 'org-hd-marker)
+                    (org-agenda-error))))
+    (org-with-point-at marker
+      (org-back-to-heading t)
+      (message (format "%s - point "(point)))
+      (message (format "%s - marker" marker))
+      (org-refile 3 nil (list "Tasks" (format "%s/today.org" org-agenda-basedir) nil (save-window-excursion
+  (save-excursion
+  (find-file (format "%s/today.org" org-agenda-basedir))
+   (org-find-exact-headline-in-buffer "Tasks")))) "Copy")
+      (kill-matching-org-clocks)
+      )))
+
+(global-set-key (kbd "C-c a") 'org-agenda)
+(global-set-key (kbd "C-c c") 'org-capture)
+(setq notmuch-search-oldest-first nil)
+
+(save-window-excursion
+  (save-excursion
+  (find-file (format "%s/today.org" org-agenda-basedir))
+   (org-find-exact-headline-in-buffer "Tasks")))
+(custom-set-faces
+ ;; custom-set-faces was added by Custom.
+ ;; If you edit it by hand, you could mess it up, so be careful.
+ ;; Your init file should contain only one such instance.
+ ;; If there is more than one, they won't work right.
+ '(default ((t (:height 111 :family "Hack")))))
+
 
 (load-theme 'cyberpunk t)
