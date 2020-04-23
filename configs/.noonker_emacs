@@ -1451,6 +1451,10 @@ information."))))
 (global-set-key (kbd "C-c c") 'org-capture)
 (setq notmuch-search-oldest-first nil)
 
+(defun fish-term ()
+  (interactive)
+  (comint-send-string (vterm "fish") "fish\nclear\n"))
+
 (save-window-excursion
   (save-excursion
   (find-file (format "%s/today.org" org-agenda-basedir))
