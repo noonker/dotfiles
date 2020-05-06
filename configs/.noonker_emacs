@@ -152,6 +152,7 @@ Return a list of installed packages or nil for every skipped package."
 			  'expand-region
 			  'haskell-mode
 			  'kubernetes
+			  'plantuml-mode
                           )
 
 (setq doom-modeline-height 16)
