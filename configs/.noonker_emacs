@@ -153,6 +153,9 @@ Return a list of installed packages or nil for every skipped package."
 			  'haskell-mode
 			  'kubernetes
 			  'plantuml-mode
+			  'ggtags
+			  'helm-gtags
+			  'company-c-headers
                           )
 
 (setq doom-modeline-height 16)
@@ -1329,9 +1332,10 @@ information."))))
 (add-hook 'w3m-mode-hook 'my-w3m-bindings)
 
 
-(when (eq system-type 'darwin)
-  (setf epa-pinentry-mode 'loopback)
-  (set-face-attribute 'default nil :family "Monoid" :height 120))
+;; (when (eq system-type 'darwin)
+(setf epa-pinentry-mode 'loopback)
+(set-face-attribute 'default nil :family "Monoid" :height 100)
+;;)
 
 ;; Org Mode Stuff
 (setq org-clock-in-switch-to-state "IN-PROGRESS")
@@ -1456,6 +1460,50 @@ information."))))
   (interactive)
   (comint-send-string (vterm "fish") "fish\nclear\n"))
 
+;; C Dev
+(require 'ggtags)
+(add-hook 'c-mode-common-hook
+          (lambda ()
+            (when (derived-mode-p 'c-mode 'c++-mode 'java-mode 'asm-mode)
+              (ggtags-mode 1))))
+
+(define-key ggtags-mode-map (kbd "C-c g s") 'ggtags-find-other-symbol)
+(define-key ggtags-mode-map (kbd "C-c g h") 'ggtags-view-tag-history)
+(define-key ggtags-mode-map (kbd "C-c g r") 'ggtags-find-reference)
+(define-key ggtags-mode-map (kbd "C-c g f") 'ggtags-find-file)
+(define-key ggtags-mode-map (kbd "C-c g c") 'ggtags-create-tags)
+(define-key ggtags-mode-map (kbd "C-c g u") 'ggtags-update-tags)
+
+(define-key ggtags-mode-map (kbd "M-,") 'pop-tag-mark)
+
+(setq
+ helm-gtags-ignore-case t
+ helm-gtags-auto-update t
+ helm-gtags-use-input-at-cursor t
+ helm-gtags-pulse-at-cursor t
+ helm-gtags-prefix-key "\C-cg"
+ helm-gtags-suggested-key-mapping t
+ )
+
+(require 'helm-gtags)
+;; Enable helm-gtags-mode
+(add-hook 'dired-mode-hook 'helm-gtags-mode)
+(add-hook 'eshell-mode-hook 'helm-gtags-mode)
+(add-hook 'c-mode-hook 'helm-gtags-mode)
+(add-hook 'c++-mode-hook 'helm-gtags-mode)
+(add-hook 'asm-mode-hook 'helm-gtags-mode)
+
+(define-key helm-gtags-mode-map (kbd "C-c g a") 'helm-gtags-tags-in-this-function)
+(define-key helm-gtags-mode-map (kbd "C-j") 'helm-gtags-select)
+(define-key helm-gtags-mode-map (kbd "M-.") 'helm-gtags-dwim)
+(define-key helm-gtags-mode-map (kbd "M-,") 'helm-gtags-pop-stack)
+(define-key helm-gtags-mode-map (kbd "C-c <") 'helm-gtags-previous-history)
+(define-key helm-gtags-mode-map (kbd "C-c >") 'helm-gtags-next-history)
+
+(setq-local imenu-create-index-function #'ggtags-build-imenu-index)
+
+(add-to-list 'company-backends 'company-c-headers)
+
 (save-window-excursion
   (save-excursion
   (find-file (format "%s/today.org" org-agenda-basedir))
@@ -1467,5 +1515,9 @@ information."))))
  ;; If there is more than one, they won't work right.
  '(default ((t (:height 111 :family "Hack")))))
 
+(defun no-fonts-pls ()
+  (interactive)
+  (let ((inhibit-read-only t))
+   (set-text-properties (point-min) (point-max) nil)))
 
 (load-theme 'cyberpunk t)
