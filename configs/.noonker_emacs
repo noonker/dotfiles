@@ -160,8 +160,13 @@ Return a list of installed packages or nil for every skipped package."
 			  'exwm
 			  'ox-reveal
 			  'ox-twbs
+			  'org-download
+			  'org-web-tools
+			  'pyenv-mode
+			  'dired-git-info
                           )
 
+(require 'ox-twbs)
 (setq doom-modeline-height 16)
 (ac-config-default)
 (require 'cl)
@@ -258,6 +263,8 @@ Return a list of installed packages or nil for every skipped package."
 
 ;; Twitter password shenanagans
 (setq twittering-use-master-password t)
+
+(elpy-enable)
 
 ;; Icicles mode
 ;; (icy-mode 1)
@@ -721,7 +728,7 @@ information."))))
 ;;    python-shell-interpreter-args "--simple-prompt -i")
 
 (defun my/python-mode-hook ()
-  (add-to-list 'company-backends 'company-jedi))
+  (add-to-list 'company-backends 'company-jedi 'elpy-mode))
 
 (add-hook 'python-mode-hook 'my/python-mode-hook)
 
@@ -979,10 +986,22 @@ information."))))
     (mapc #'elfeed-search-update-entry entries)
     (unless (use-region-p) (forward-line))))
 
+(defun elfeed-org-open (&optional use-generic-p)
+  "open with eww"
+  (interactive "P")
+  (let ((entries (elfeed-search-selected)))
+    (cl-loop for entry in entries
+             do (elfeed-untag entry 'unread)
+             when (elfeed-entry-link entry)
+             do (org-web-tools-read-url-as-org it))
+    (mapc #'elfeed-search-update-entry entries)
+    (unless (use-region-p) (forward-line))))
+
 (define-key elfeed-search-mode-map (kbd "m") 'elfeed-mail-todo)
 (define-key elfeed-search-mode-map (kbd "t") 'elfeed-w3m-open)
 (define-key elfeed-search-mode-map (kbd "w") 'elfeed-eww-open)
 (define-key elfeed-search-mode-map (kbd "f") 'elfeed-firefox-open)
+(define-key elfeed-search-mode-map (kbd "o") 'elfeed-org-open)
 (define-key elfeed-search-mode-map (kbd "d") 'elfeed-youtube-dl)
 
 
@@ -1473,6 +1492,8 @@ information."))))
 (setq-local imenu-create-index-function #'ggtags-build-imenu-index)
 
 (add-to-list 'company-backends 'company-c-headers)
+(setq wdired-allow-to-change-permissions t)
+
 
 (save-window-excursion
   (save-excursion
@@ -1492,7 +1513,7 @@ information."))))
 
 '(indent-tabs-mode nil)
 '(org-src-preserve-indentation nil)
-
+(setq org-archive-file-header-format nil)
 
 (defalias 'epa--decode-coding-string 'decode-coding-string)
 
