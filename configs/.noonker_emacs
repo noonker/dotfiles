@@ -61,7 +61,6 @@ Return a list of installed packages or nil for every skipped package."
                           'helm
                           'projectile
                           'company
-                          'autopair
                           'dumb-jump
                           'es-mode
                           'restclient
@@ -146,7 +145,6 @@ Return a list of installed packages or nil for every skipped package."
 			  'yafolding
 			  'org-bullets
 			  'dockerfile-mode
-			  'paredit
 			  'notmuch
 			  'yasnippet-snippets
 			  'expand-region
@@ -157,7 +155,7 @@ Return a list of installed packages or nil for every skipped package."
 			  'helm-gtags
 			  'company-c-headers
 			  'docker-tramp
-			  'exwm
+			  'lispy
                           )
 
 (setq doom-modeline-height 16)
@@ -169,7 +167,7 @@ Return a list of installed packages or nil for every skipped package."
 (doom-modeline-mode 1)
 
 (setq org-babel-python-command "python3")
-(global-set-key (kbd "C-=") 'er/expand-region)
+;;(global-set-key kbd ("C-=") 'er/expand-region)
 ;; (when (not (memq window-system '(mac ns)))
 ;;   (setenv "QUBES_GPG_DOMAIN" "gpg-server")
 ;;   (customize-set-variable 'epg-gpg-program "/usr/bin/qubes-gpg-client-wrapper")
@@ -245,7 +243,6 @@ Return a list of installed packages or nil for every skipped package."
 ;;(setq whitespace-style '(face empty tabs lines-tail trailing))
 ;;(global-whitespace-mode t)
 (projectile-global-mode)
-(autopair-global-mode 1)
 
 (add-hook 'prog-mode-hook 'rainbow-delimiters-mode)
 (add-hook 'prog-mode-hook 'rainbow-mode)
@@ -1183,14 +1180,6 @@ information."))))
 %FACE[twitter-divider]{                                                                                                                                                                                  }
 "))
 
-(autoload 'enable-paredit-mode "paredit"
-  "Turn on pseudo-structural editing of Lisp code."
-  t)
-(add-hook 'emacs-lisp-mode-hook       'enable-paredit-mode)
-(add-hook 'lisp-mode-hook             'enable-paredit-mode)
-(add-hook 'lisp-interaction-mode-hook 'enable-paredit-mode)
-(add-hook 'scheme-mode-hook           'enable-paredit-mode)
-
 (defun character-below ()
   (save-excursion
     (next-line)
@@ -1333,6 +1322,8 @@ information."))))
 
 (add-hook 'w3m-mode-hook 'my-w3m-bindings)
 
+(add-hook 'emacs-lisp-mode-hook (lambda () (lispy-mode 1)))
+(add-hook 'clojure-mode-hook (lambda () (lispy-mode 1)))
 
 ;; (when (eq system-type 'darwin)
 (setf epa-pinentry-mode 'loopback)
@@ -1523,3 +1514,6 @@ information."))))
    (set-text-properties (point-min) (point-max) nil)))
 
 (load-theme 'cyberpunk t)
+
+
+
