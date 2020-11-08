@@ -1508,6 +1508,7 @@ information."))))
 (setq org-archive-file-header-format nil)
 
 (defalias 'epa--decode-coding-string 'decode-coding-string)
+(setq projectile-current-project-on-switch 'keep)
 
 (load-theme 'cyberpunk t)
 
