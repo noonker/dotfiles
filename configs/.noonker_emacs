@@ -156,8 +156,16 @@ Return a list of installed packages or nil for every skipped package."
 			  'company-c-headers
 			  'docker-tramp
 			  'lispy
+			  'exwm
+			  'ox-reveal
+			  'ox-twbs
+			  'org-download
+			  'org-web-tools
+			  'pyenv-mode
+			  'dired-git-info
                           )
 
+(require 'ox-twbs)
 (setq doom-modeline-height 16)
 (ac-config-default)
 (require 'cl)
@@ -253,6 +261,8 @@ Return a list of installed packages or nil for every skipped package."
 
 ;; Twitter password shenanagans
 (setq twittering-use-master-password t)
+
+(elpy-enable)
 
 ;; Icicles mode
 ;; (icy-mode 1)
@@ -706,12 +716,17 @@ information."))))
   (message-send-and-exit)
   )
 
+
+(defun proxy (text &optional port)
+  (interactive "sHost: ")
+  (async-shell-command (format "ssh -D 1337 -C -q -N %s" text) (format "*proxy: %s*" text)))
+
 ;; ipython fix
 ;; (setq python-shell-interpreter "ipython"
 ;;    python-shell-interpreter-args "--simple-prompt -i")
 
 (defun my/python-mode-hook ()
-  (add-to-list 'company-backends 'company-jedi))
+  (add-to-list 'company-backends 'company-jedi 'elpy-mode))
 
 (add-hook 'python-mode-hook 'my/python-mode-hook)
 
@@ -969,10 +984,22 @@ information."))))
     (mapc #'elfeed-search-update-entry entries)
     (unless (use-region-p) (forward-line))))
 
+(defun elfeed-org-open (&optional use-generic-p)
+  "open with eww"
+  (interactive "P")
+  (let ((entries (elfeed-search-selected)))
+    (cl-loop for entry in entries
+             do (elfeed-untag entry 'unread)
+             when (elfeed-entry-link entry)
+             do (org-web-tools-read-url-as-org it))
+    (mapc #'elfeed-search-update-entry entries)
+    (unless (use-region-p) (forward-line))))
+
 (define-key elfeed-search-mode-map (kbd "m") 'elfeed-mail-todo)
 (define-key elfeed-search-mode-map (kbd "t") 'elfeed-w3m-open)
 (define-key elfeed-search-mode-map (kbd "w") 'elfeed-eww-open)
 (define-key elfeed-search-mode-map (kbd "f") 'elfeed-firefox-open)
+(define-key elfeed-search-mode-map (kbd "o") 'elfeed-org-open)
 (define-key elfeed-search-mode-map (kbd "d") 'elfeed-youtube-dl)
 
 
@@ -1375,7 +1402,10 @@ information."))))
       '(("b" "Backlog" entry (file+headline (lambda () (format "%s/backlog.org" org-agenda-basedir)) "Backlog")
          "** TODO %?\n  %i\n  %a")
         ("t" "Today" entry (file+headline (lambda () (format "%s/today.org" org-agenda-basedir)) "Tasks")
-         "** TODO %?\n SCHEDULED: %t")))
+         "** TODO %?\n SCHEDULED: %t")
+	("n" "Now" entry (file+headline (lambda () (format "%s/today.org" org-agenda-basedir)) "Tasks")
+         "** TODO %?\n SCHEDULED: %t" :clock-in t)
+	))
 
 (defun org-agenda-new-day ()
        (interactive)
@@ -1402,48 +1432,6 @@ information."))))
     (dolist (element (cdr tasks))
       (org-insert-heading)      
       (insert element))))
-
-(defun set-complex ()
-  (interactive "P")
-  (let ((marker (or (org-get-at-bol 'org-hd-marker)
-                    (org-agenda-error))))
-    (org-with-point-at marker
-      (org-back-to-heading t)
-      (org-complex-tasks))))
-
-(defun org-agenda-copy ()
-  (interactive "P")
-  (let ((marker (or (org-get-at-bol 'org-hd-marker)
-                    (org-agenda-error))))
-    (org-with-point-at marker
-      (org-back-to-heading t)
-      (org-copy))))
-
-(defun kill-matching-org-clocks ()
-  (save-window-excursion
-    (save-excursion
-    (find-file (format "%s/today.org" org-agenda-basedir))
-    (beginning-of-buffer)
-    (while (< (point) (point-max))
-      (search-forward "CLOCK: [" ) ;; Get rid of this error at some point 
-      (if (string-match-p (format-time-string "%Y-%m-%d") (thing-at-point 'line t))
-	  (progn (beginning-of-line) (kill-line) (kill-line))))
-    )))
-
-(defun org-janky-copy ()
-  (interactive "P")
-  (let ((marker (or (org-get-at-bol 'org-hd-marker)
-                    (org-agenda-error))))
-    (org-with-point-at marker
-      (org-back-to-heading t)
-      (message (format "%s - point "(point)))
-      (message (format "%s - marker" marker))
-      (org-refile 3 nil (list "Tasks" (format "%s/today.org" org-agenda-basedir) nil (save-window-excursion
-  (save-excursion
-  (find-file (format "%s/today.org" org-agenda-basedir))
-   (org-find-exact-headline-in-buffer "Tasks")))) "Copy")
-      (kill-matching-org-clocks)
-      )))
 
 (global-set-key (kbd "C-c a") 'org-agenda)
 (global-set-key (kbd "C-c c") 'org-capture)
@@ -1496,6 +1484,8 @@ information."))))
 (setq-local imenu-create-index-function #'ggtags-build-imenu-index)
 
 (add-to-list 'company-backends 'company-c-headers)
+(setq wdired-allow-to-change-permissions t)
+
 
 (save-window-excursion
   (save-excursion
@@ -1507,11 +1497,17 @@ information."))))
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
  '(default ((t (:height 111 :family "Hack")))))
-
+(require 'org-download)
 (defun no-fonts-pls ()
   (interactive)
   (let ((inhibit-read-only t))
    (set-text-properties (point-min) (point-max) nil)))
+
+'(indent-tabs-mode nil)
+'(org-src-preserve-indentation nil)
+(setq org-archive-file-header-format nil)
+
+(defalias 'epa--decode-coding-string 'decode-coding-string)
 
 (load-theme 'cyberpunk t)
 
