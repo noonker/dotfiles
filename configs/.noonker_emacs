@@ -625,14 +625,6 @@ Return a list of installed packages or nil for every skipped package."
 				  (nnimap-stream starttls)))
 
 
-(add-to-list 'gnus-secondary-select-methods
-             '(nnimap "work"
-                      (nnimap-address "outlook.office365.com")
-                      (nnimap-server-port 993)
-                      (nnimap-stream ssl)
-                      (nnir-search-engine imap)
-                      ))
-
 (setq mail-sources '((imap :server "127.0.0.1"
                             :user "noonker@pm.me"
 			   )))
@@ -1298,7 +1290,7 @@ information."))))
 	 (setq git-dirty
 	       (when (eshell-git-prompt--collect-status)
 		 (with-face "✗" 'eshell-git-prompt-robyrussell-git-dirty-face)))
-	 (concat git-branch git-dirty)) "☭" )))
+	 (concat git-branch git-dirty)) "☮" )))
 
 (setq eshell-prompt-function
       (lambda ()
@@ -1509,7 +1501,7 @@ information."))))
 
 (defalias 'epa--decode-coding-string 'decode-coding-string)
 (setq projectile-current-project-on-switch 'keep)
-
+(yas-global-mode 1)
 (load-theme 'cyberpunk t)
 
 
