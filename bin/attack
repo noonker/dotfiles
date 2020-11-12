@@ -1,0 +1,6 @@
+#!/usr/bin/env python3
+from pyattck import Attck
+a = Attck(nested_subtechniques=False)
+
+for x in a.enterprise.techniques:
+    print(x.id + "|" + x.name)
