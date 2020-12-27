@@ -1365,7 +1365,7 @@ information."))))
 		   ("projects" t)
 		   ("archive" t)))
         (todostr "#+TODO: TODO IN-PROGRESS | DONE WONTDO"))
-    (if (not (file-directory-p org-agenda-basedir)) 
+    (if (notepa-file-encrypt-to (file-directory-p org-agenda-basedir)) 
       (make-directory org-agenda-basedir))
 
     (dolist (element initial) 
