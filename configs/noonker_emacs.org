@@ -1,3 +1,8 @@
+;; Local Variables: 
+;; eval: (add-hook 'after-save-hook (lambda ()(if (y-or-n-p "Reload?")(load-file user-init-file))) nil t) 
+;; eval: (add-hook 'after-save-hook (lambda ()(if (y-or-n-p "Tangle?")(org-babel-tangle))) nil t) 
+;; End:
+
 #+title: Noonker's Config
 
 Below is my configuration for Emacs. It is a literate config that can be installed by running =org-babel-tangle= or by using the hotkey =C-c C-v C-t=.
@@ -11,8 +16,7 @@ It is broken up into several sections:
 
 * TODOs [0/3]
 ** TODO CC + LSP
-** TODO Spelling Modes
-** TODO On Save Tangle
+** Org-msg
 
 * Bootstrap Straight.el
 
@@ -620,7 +624,7 @@ Email client for emacs
    :type built-in)
   :commands (mu4e)
   :config
-    (setq +mu4e-backend 'offlineimap)
+    (setq mu4e-backend 'offlineimap)
     (setq mu4e-update-interval 120))
 #+end_src
 
@@ -877,10 +881,14 @@ Lispy mode makes lisp-mode editing significantly more efficent
 Common Lisp configs
 
 #+begin_src emacs-lisp :tangle ~/.emacs
-  (setq slime-contribs '(slime-fancy))
-  (load (expand-file-name "~/.roswell/helper.el"))
-  (setq inferior-lisp-program "ros -Q run")
+	(setq slime-contribs '(slime-fancy))
+	(if (file-exists-p "~/.roswell/helper.el")
+	    (load (expand-file-name "~/.roswell/helper.el")))
+	(setq inferior-lisp-program "ros -Q run")
 #+end_src
+
+#+RESULTS:
+: ros -Q run
 
 ** C/C++ / Platformio
 #+begin_src emacs-lisp :tangle ~/.emacs
@@ -1053,6 +1061,7 @@ Clojure + LSP
 ** Json
 #+begin_src emacs-lisp :tangle ~/.emacs
   (use-package json)
+  (use-package json-mode)
   (use-package counsel-jq) ;; Query json file with jq + counsel
 #+end_src
 
@@ -1114,6 +1123,7 @@ Clojure + LSP
   (setq org-fontify-whole-heading-line t)
 
   (setq org-directory "~/org")
+  (setq org-agenda-basedir "~/org/tasks")
 
   (add-hook 'org-mode-hook (lambda () (org-bullets-mode 1))) ;; Add special bullets
   (setq org-startup-align-all-tables t) ;; Aligns tables when a file is opened
@@ -1226,8 +1236,6 @@ Clojure + LSP
 
 *** Org Agenda
 #+begin_src emacs-lisp :tangle ~/.emacs
-  (setq org-agenda-basedir "~/org/tasks")
-
   (setq org-archive-file-header-format nil)
 
   (defun  org-init-agenda ()
@@ -1412,6 +1420,35 @@ Clojure + LSP
   (use-package ox-twbs)
   (use-package ox-json)
 #+end_src
+
+** Markdown
+#+begin_src emacs-lisp :tangle ~/.emacs
+  (use-package markdown-mode)
+#+end_src
+** Flyspell
+#+begin_src emacs-lisp :tangle ~/.emacs
+  (use-package flyspell
+    :config
+    (dolist (hook '(text-mode-hook))
+    (add-hook hook (lambda () (flyspell-mode 1))))
+    (add-hook 'python-mode-hook
+    (lambda ()
+    (flyspell-prog-mode)
+    ))
+    )
+#+end_src
+
+** Languagetool
+
+Run =brew install languagetool= to install on mac
+
+#+begin_src emacs-lisp :tangle ~/.emacs
+  (use-package langtool
+   :config
+   (setq langtool-bin "/usr/local/bin/languagetool")
+    )
+#+end_src
+
 
 * Custom Functions
 ** Mac Open
