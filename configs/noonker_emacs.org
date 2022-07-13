@@ -14,9 +14,6 @@ It is broken up into several sections:
  - Text - Any packages which are used primarily for writing of text (mostly org-mode)
  - Custom Functions - Any simple functions I've added to enrich my emacs life
 
-* TODOs [0/3]
-** Org-msg
-
 * Bootstrap Straight.el
 
 This section sets up [[https://github.com/radian-software/straight.el][straight.el]] with [[https://github.com/jwiegley/use-package][use-package]] to simplify setup of emacs. These packages allow me to control how the packages are installed, when they are loaded, and which configurations should be run with them.
