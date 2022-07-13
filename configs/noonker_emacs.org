@@ -7,7 +7,7 @@
 
 Below is my configuration for Emacs. It is a literate config that can be installed by running =org-babel-tangle= or by using the hotkey =C-c C-v C-t=.
 It is broken up into several sections:
- - Bootstrap - Code that instatiates the package manager
+ - Bootstrap - Code that instantiates the package manager
  - Behavior - Packages & tweaks to the behavior of emacs
  - Tools - Any packages which modify the behavior of emacs
  - Programming - Packages & tweaks to programming modes
@@ -69,7 +69,7 @@ Anything in this section can be described in one sentence.
 
 ** Helm
 
-[[https://github.com/emacs-helm/helm][Helm]] is an incremental completion framework. It makes things like M-x much easier to search. I have alse enabled =helm-mini= with the hotkey =C-2=. This is how I do most of my navigation within emacs.
+[[https://github.com/emacs-helm/helm][Helm]] is an incremental completion framework. It makes things like M-x much easier to search. I have else enabled =helm-mini= with the hotkey =C-2=. This is how I do most of my navigation within emacs.
 
 #+begin_src emacs-lisp :tangle ~/.emacs
   (use-package helm
@@ -111,43 +111,43 @@ These settings change certain terms into cooler looking symbols B-D
   (global-prettify-symbols-mode +1)
 
   (add-hook 'prog-mode-hook
-          (lambda ()
-            (push '("<=" . ?≤) prettify-symbols-alist)
-            (push '(">=" . ?≥) prettify-symbols-alist)
-            (push '("map" . ?↦) prettify-symbols-alist)
-            (push '("!=" . ?≠) prettify-symbols-alist)
-            (push '("==" . ?≡) prettify-symbols-alist)
-            (push '("None" . ?Ø) prettify-symbols-alist)
-            (push '("->" . ?→) prettify-symbols-alist)
-            (push '("<-" . ?←) prettify-symbols-alist)
-            (push '("->>" . ?⇉) prettify-symbols-alist)
-            (push '("not" . ?¬) prettify-symbols-alist)
-            (push '("union" . ?⋃) prettify-symbols-alist)
-            (push '("intersection" . ?⋂) prettify-symbols-alist)
-            ))
+	  (lambda ()
+	    (push '("<=" . ?≤) prettify-symbols-alist)
+	    (push '(">=" . ?≥) prettify-symbols-alist)
+	    (push '("map" . ?↦) prettify-symbols-alist)
+	    (push '("!=" . ?≠) prettify-symbols-alist)
+	    (push '("==" . ?≡) prettify-symbols-alist)
+	    (push '("None" . ?Ø) prettify-symbols-alist)
+	    (push '("->" . ?→) prettify-symbols-alist)
+	    (push '("<-" . ?←) prettify-symbols-alist)
+	    (push '("->>" . ?⇉) prettify-symbols-alist)
+	    (push '("not" . ?¬) prettify-symbols-alist)
+	    (push '("union" . ?⋃) prettify-symbols-alist)
+	    (push '("intersection" . ?⋂) prettify-symbols-alist)
+	    ))
 
     (add-hook 'clojure-mode-hook
-          (lambda ()
-            (push '("let" . ?⊢) prettify-symbols-alist)
-            (push '("defn" . ?ƒ) prettify-symbols-alist)
-            (push '("fn" . ?λ) prettify-symbols-alist)
-            (push '("doseq" . ?∀) prettify-symbols-alist)
-            (push '("comp" . ?∘) prettify-symbols-alist)
-            (push '("partial" . ?Ƥ) prettify-symbols-alist)
-            (push '("not=" . ?≠) prettify-symbols-alist)
-            ))
+	  (lambda ()
+	    (push '("let" . ?⊢) prettify-symbols-alist)
+	    (push '("defn" . ?ƒ) prettify-symbols-alist)
+	    (push '("fn" . ?λ) prettify-symbols-alist)
+	    (push '("doseq" . ?∀) prettify-symbols-alist)
+	    (push '("comp" . ?∘) prettify-symbols-alist)
+	    (push '("partial" . ?Ƥ) prettify-symbols-alist)
+	    (push '("not=" . ?≠) prettify-symbols-alist)
+	    ))
 
     (add-hook 'org-mode-hook
-          (lambda ()
-            (push '("#+begin_src" . "ƒ") prettify-symbols-alist)
-            (push '("#+end_src" . "\\ƒ") prettify-symbols-alist)
-            (push '("#+BEGIN_SRC" . "ƒ") prettify-symbols-alist)
-            (push '("#+END_SRC" . "\\ƒ") prettify-symbols-alist)
-            (push '("#+begin_quote" . "「") prettify-symbols-alist)
-            (push '("#+BEGIN_QUOTE" . "「") prettify-symbols-alist)
-            (push '("#+end_quote" . "」") prettify-symbols-alist)
-            (push '("#+END_QUOTE" . "」") prettify-symbols-alist)
-            ))
+	  (lambda ()
+	    (push '("#+begin_src" . "ƒ") prettify-symbols-alist)
+	    (push '("#+end_src" . "\\ƒ") prettify-symbols-alist)
+	    (push '("#+BEGIN_SRC" . "ƒ") prettify-symbols-alist)
+	    (push '("#+END_SRC" . "\\ƒ") prettify-symbols-alist)
+	    (push '("#+begin_quote" . "「") prettify-symbols-alist)
+	    (push '("#+BEGIN_QUOTE" . "「") prettify-symbols-alist)
+	    (push '("#+end_quote" . "」") prettify-symbols-alist)
+	    (push '("#+END_QUOTE" . "」") prettify-symbols-alist)
+	    ))
 #+end_src
 
 ** Global Config
@@ -624,8 +624,38 @@ Email client for emacs
    :type built-in)
   :commands (mu4e)
   :config
-    (setq mu4e-backend 'offlineimap)
-    (setq mu4e-update-interval 120))
+    (setq mu4e-get-mail-command "offlineimap -o")
+    (setq mu4e-update-interval 120)
+    (global-set-key (kbd "C-c m m") `mu4e)
+    (mu4e-alert-enable-mode-line-display)
+    )
+
+  (use-package mu4e-alert
+  :after mu4e
+  :init
+  (setq mu4e-alert-interesting-mail-query
+    (concat
+     "flag:unread maildir:/INBOX "
+     ))
+  (mu4e-alert-enable-mode-line-display)
+  (defun mu4e-alert-mode-line ()
+    (interactive)
+    (mu4e-proc-kill)
+    (mu4e-alert-enable-mode-line-display)
+    )
+  (run-with-timer 0 60 mu4e-alert-mode-line))
+
+  (use-package org-msg
+    :config
+    (setq mail-user-agent 'mu4e-user-agent)
+    (setq org-msg-options "html-postamble:nil H:5 num:nil ^:{} toc:nil author:nil email:nil \\n:t"
+	org-msg-startup "hidestars indent inlineimages"
+	org-msg-default-alternatives '((new		. (text html))
+				       (reply-to-html	. (text html))
+				       (reply-to-text	. (text)))
+	org-msg-convert-citation t)
+    (org-msg-mode)
+    )
 #+end_src
 
 ** Emacs Lisp Packages
@@ -1154,6 +1184,7 @@ Clojure + LSP
 
   (setq org-directory "~/org")
   (setq org-agenda-basedir "~/org/tasks")
+  (setq org-todo-keywords '("TODO" "STRT" "DONE" "WONTDO" "SCHEDULED" "BLOCKED"))
 
   (add-hook 'org-mode-hook (lambda () (org-bullets-mode 1))) ;; Add special bullets
   (setq org-startup-align-all-tables t) ;; Aligns tables when a file is opened
@@ -1166,7 +1197,7 @@ Clojure + LSP
   (setq org-src-fontify-natively t)
 
   (global-set-key (kbd "C-c a") 'org-agenda)
-  (global-set-key (kbd "C-c c") 'org-capture)
+  (global-set-key (kbd "C-c n n") 'org-capture)
   (global-set-key (kbd "C-c n r n") 'org-roam-capture)
   (global-set-key (kbd "C-c n r f") 'org-roam-node-find)
 
@@ -1275,7 +1306,7 @@ Clojure + LSP
                      ("today.org" nil)
                      ("projects" t)
                      ("archive" t)))
-          (todostr "#+TODO: TODO IN-PROGRESS | DONE WONTDO"))
+          (todostr "#+TODO: TODO STRT | DONE WONTDO"))
       (if (not (file-directory-p org-agenda-basedir))
           (make-directory org-agenda-basedir))
 
@@ -1355,41 +1386,43 @@ Clojure + LSP
 *** Org Capture
 #+begin_src emacs-lisp :tangle ~/.emacs
   (setq org-capture-templates
-        '(("b" "Backlog" entry (file+headline (lambda () (format "%s/backlog.org" org-agenda-basedir)) "Backlog")
-           "** TODO %?\n  %i\n  %a")
-          ("i" "Investigations" entry (file+headline (lambda () (format "%s/investigations/index.org" org-directory)) "Investigations")
-           "** %<%Y-%m-%d>-%?\n")
-          ("t" "Today" entry (file+headline (lambda () (format "%s/today.org" org-agenda-basedir)) "Tasks")
-           "** TODO %?\n SCHEDULED: %t")
-          ("n" "Now" entry (file+headline (lambda () (format "%s/today.org" org-agenda-basedir)) "Tasks")
-           "** TODO %?\n SCHEDULED: %t" :clock-in t)
-          ("c" "Cookbook" entry (file "~/org/cookbook.org")
-           "%(org-chef-get-recipe-from-url)"
-           :empty-lines 1)
-          ("m" "Manual Cookbook" entry (file "~/org/cookbook.org")
-           "* %^{Recipe title: }\n  :PROPERTIES:\n  :source-url:\n  :servings:\n  :prep-time:\n  :cook-time:\n  :ready-in:\n  :END:\n** Ingredients\n   %?\n** Directions\n\n")
-          ("p" "Protocol" entry (file+headline ,(concat org-directory "notes.org") "Inbox")
-           "* %^{Title}\nSource: %u, %c\n #+BEGIN_QUOTE\n%i\n#+END_QUOTE\n\n\n%?")
-          ("L" "Protocol Link" entry (file+headline ,(concat org-directory "notes.org") "Inbox")
-           "* %? [[%:link][%(transform-square-brackets-to-round-ones \"%:description\")]]\n")
-          ))
+	'(("b" "Backlog" entry (file+headline (lambda () (format "%s/backlog.org" org-agenda-basedir)) "Backlog")
+	   "** TODO %?\n  %i\n  %a")
+	  ("I" "Investigations" entry (file+headline (lambda () (format "%s/investigations/index.org" org-directory)) "Investigations")
+	   "** %<%Y-%m-%d>-%?\n")
+	  ("t" "Today" entry (file+headline (lambda () (format "%s/today.org" org-agenda-basedir)) "Tasks")
+	   "\n** TODO %?\n SCHEDULED: %t")
+	  ("n" "Now" entry (file+headline (lambda () (format "%s/today.org" org-agenda-basedir)) "Tasks")
+	   "\n** TODO %?\n SCHEDULED: %t" :clock-in t :clock-keep t)
+	  ("i" "Interrupt" entry (file+headline (lambda () (format "%s/today.org" org-agenda-basedir)) "Tasks")
+	   "\n** TODO %?\n SCHEDULED: %t" :clock-in t :clock-resume t)
+	  ("c" "Cookbook" entry (file "~/org/cookbook.org")
+	   "%(org-chef-get-recipe-from-url)"
+	   :empty-lines 1)
+	  ("m" "Manual Cookbook" entry (file "~/org/cookbook.org")
+	   "* %^{Recipe title: }\n  :PROPERTIES:\n  :source-url:\n  :servings:\n  :prep-time:\n  :cook-time:\n  :ready-in:\n  :END:\n** Ingredients\n   %?\n** Directions\n\n")
+	  ("p" "Protocol" entry (file+headline ,(concat org-directory "notes.org") "Inbox")
+	   "* %^{Title}\nSource: %u, %c\n #+BEGIN_QUOTE\n%i\n#+END_QUOTE\n\n\n%?")
+	  ("L" "Protocol Link" entry (file+headline ,(concat org-directory "notes.org") "Inbox")
+	   "* %? [[%:link][%(transform-square-brackets-to-round-ones \"%:description\")]]\n")
+	  ))
 
   (setq org-roam-capture-templates '(
-                                     ("n" "notes" plain "%?"
-                                      :target (file+head "notes/%<%Y%m%d%H%M%S>-${slug}.org"
-                                                         "#+title: ${title}\n#+ROAM_ALIAS:\n#+ROAM_TAGS: \n#+CREATED: %U\n#+LAST_MODIFIED: %U\n\n")
-                                      :unnarrowed t)
-                                     ("i" "investigations" plain (function org-roam--capture-get-point)
-                                      "%?"
-                                      :file-name "investigations/%<%Y%m%d%H%M%S>-${slug}"
-                                      :head "#+title: ${title}\n#+CREATED: %U\n#+LAST_MODIFIED: %U\n\n"
-                                      :unnarrowed t)
-                                     ("n" "new investigation" plain (function org-roam--capture-get-point)
-                                      "%?"
-                                      :file-name "investigations/${slug}"
-                                      :head "#+title: ${title}\n#+CREATED: %U\n#+LAST_MODIFIED: %U\n\n"
-                                      :unnarrowed t)
-                                     ))
+				     ("n" "notes" plain "%?"
+				      :target (file+head "notes/%<%Y%m%d%H%M%S>-${slug}.org"
+							 "#+title: ${title}\n#+ROAM_ALIAS:\n#+ROAM_TAGS: \n#+CREATED: %U\n#+LAST_MODIFIED: %U\n\n")
+				      :unnarrowed t)
+				     ("i" "investigations" plain (function org-roam--capture-get-point)
+				      "%?"
+				      :file-name "investigations/%<%Y%m%d%H%M%S>-${slug}"
+				      :head "#+title: ${title}\n#+CREATED: %U\n#+LAST_MODIFIED: %U\n\n"
+				      :unnarrowed t)
+				     ("n" "new investigation" plain (function org-roam--capture-get-point)
+				      "%?"
+				      :file-name "investigations/${slug}"
+				      :head "#+title: ${title}\n#+CREATED: %U\n#+LAST_MODIFIED: %U\n\n"
+				      :unnarrowed t)
+				     ))
 #+end_src
 
 *** Org Roam
