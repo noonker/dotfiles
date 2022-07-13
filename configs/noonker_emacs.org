@@ -1435,22 +1435,25 @@ Clojure + LSP
     ;;  :hook (after-init . org-roam-ui-mode)
     :config
     (setq org-roam-ui-sync-theme t
-          org-roam-ui-follow t
-          org-roam-ui-update-on-save t
-          org-roam-ui-open-on-start t))
+	  org-roam-ui-follow t
+	  org-roam-ui-update-on-save t
+	  org-roam-ui-open-on-start t
+	  ))
 
+  (org-roam-db-autosync-mode) ;; Automatically update the org roam database
+  
   ;; Deft Fix
   (advice-add 'deft-parse-title :override
-              (lambda (file contents)
-                (if deft-use-filename-as-title
-                    (deft-base-filename file)
-                  (let* ((case-fold-search 't)
-                         (begin (string-match "title: " contents))
-                         (end-of-begin (match-end 0))
-                         (end (string-match "\n" contents begin)))
-                    (if begin
-                        (substring contents end-of-begin end)
-                      (format "%s" file))))))
+	      (lambda (file contents)
+		(if deft-use-filename-as-title
+		    (deft-base-filename file)
+		  (let* ((case-fold-search 't)
+			 (begin (string-match "title: " contents))
+			 (end-of-begin (match-end 0))
+			 (end (string-match "\n" contents begin)))
+		    (if begin
+			(substring contents end-of-begin end)
+		      (format "%s" file))))))
 #+end_src
 
 *** Org Protocol
