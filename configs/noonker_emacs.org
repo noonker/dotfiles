@@ -15,7 +15,6 @@ It is broken up into several sections:
  - Custom Functions - Any simple functions I've added to enrich my emacs life
 
 * TODOs [0/3]
-** TODO CC + LSP
 ** Org-msg
 
 * Bootstrap Straight.el
@@ -301,7 +300,7 @@ Anything in this section can be described in one sentence.
 
 Emacs shell settings
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle ~/.emacs
   (eshell-git-prompt-use-theme 'robbyrussell) ;; Eshell theme
   (defun git-prompt-eshell ()
     "Git a git prompt"
@@ -887,84 +886,114 @@ Common Lisp configs
 	(setq inferior-lisp-program "ros -Q run")
 #+end_src
 
-#+RESULTS:
-: ros -Q run
 
-** C/C++ / Platformio
+** C/C++ / Platformio-DCMAKE_PREFIX_PATH=/usr/local/opt/llvm
+
+On MacOS you need to add =-DCMAKE_PREFIX_PATH=/usr/local/opt/llvm= after =cmake= to run =install-irony-server= per [[https://github.com/Sarcasm/irony-mode/issues/167][this]] git issue.
+
 #+begin_src emacs-lisp :tangle ~/.emacs
-  (add-hook 'c++-mode-hook 'irony-mode)
-  (add-hook 'c-mode-hook 'irony-mode)
-  (add-hook 'objc-mode-hook 'irony-mode)
+  ;; sample `helm' configuration use https://github.com/emacs-helm/helm/ for details
+  (use-package helm-xref)
+  (use-package dap-mode)
+  (use-package which-key)
+  (define-key global-map [remap find-file] #'helm-find-files)
+  (define-key global-map [remap execute-extended-command] #'helm-M-x)
+  (define-key global-map [remap switch-to-buffer] #'helm-mini)
 
-  (add-hook 'irony-mode-hook 'irony-cdb-autosetup-compile-options)
+  (add-hook 'c-mode-hook 'lsp)
+  (add-hook 'c++-mode-hook 'lsp)
 
-  (add-to-list 'company-backends 'company-irony) ;; Add the required company backend.
+  (setq gc-cons-threshold (* 100 1024 1024)
+	read-process-output-max (* 1024 1024)
+	treemacs-space-between-root-nodes nil
+	company-idle-delay 0.0
+	company-minimum-prefix-length 1
+	lsp-idle-delay 0.1)  ;; clangd is fast
 
-  ;; Enable irony for all c++ files, and platformio-mode only
-  ;; when needed (platformio.ini present in project root).
-  (add-hook 'c++-mode-hook (lambda ()
-                             (irony-mode)
-                             (irony-eldoc)
-                             (platformio-conditionally-enable)))
+  (add-hook 'c-mode-common-hook (lambda () (lsp) ))
 
-  ;; Use irony's completion functions.
-  (add-hook 'irony-mode-hook
-            (lambda ()
-              (define-key irony-mode-map [remap completion-at-point]
-                'irony-completion-at-point-async)
+  (with-eval-after-load 'lsp-mode
+    (add-hook 'lsp-mode-hook #'lsp-enable-which-key-integration)
+    (require 'dap-cpptools)
+    (yas-global-mode))
 
-              (define-key irony-mode-map [remap complete-symbol]
-                'irony-completion-at-point-async)
+    (use-package irony)
+      (add-hook 'c++-mode-hook 'irony-mode)
+	  (add-hook 'c-mode-hook 'irony-mode)
+	  (add-hook 'objc-mode-hook 'irony-mode)
 
-              (irony-cdb-autosetup-compile-options)))
+	  (add-hook 'irony-mode-hook 'irony-cdb-autosetup-compile-options)
 
-  ;; Setup irony for flycheck.
-  ;;  (add-hook 'flycheck-mode-hook 'flycheck-irony-setup)
+	  (add-to-list 'company-backends 'company-irony) ;; Add the required company backend.
 
-  (use-package ggtags)
-  (add-hook 'c-mode-common-hook
-            (lambda ()
-              (when (derived-mode-p 'c-mode 'c++-mode 'java-mode 'asm-mode)
-                (ggtags-mode 1))))
+	  ;; Enable irony for all c++ files, and platformio-mode only
+	  ;; when needed (platformio.ini present in project root).
+	  (add-hook 'c++-mode-hook (lambda ()
+				     (irony-mode)
+				     (irony-eldoc)
+				     (platformio-conditionally-enable)))
 
-  (define-key ggtags-mode-map (kbd "C-c g s") 'ggtags-find-other-symbol)
-  (define-key ggtags-mode-map (kbd "C-c g h") 'ggtags-view-tag-history)
-  (define-key ggtags-mode-map (kbd "C-c g r") 'ggtags-find-reference)
-  (define-key ggtags-mode-map (kbd "C-c g f") 'ggtags-find-file)
-  (define-key ggtags-mode-map (kbd "C-c g c") 'ggtags-create-tags)
-  (define-key ggtags-mode-map (kbd "C-c g u") 'ggtags-update-tags)
+	  ;; Use irony's completion functions.
+	  (add-hook 'irony-mode-hook
+		    (lambda ()
+		      (define-key irony-mode-map [remap completion-at-point]
+			'irony-completion-at-point-async)
 
-  (define-key ggtags-mode-map (kbd "M-,") 'pop-tag-mark)
-  (use-package helm-gtags)
+		      (define-key irony-mode-map [remap complete-symbol]
+			'irony-completion-at-point-async)
 
-  (setq
-   helm-gtags-ignore-case t
-   helm-gtags-auto-update t
-   helm-gtags-use-input-at-cursor t
-   helm-gtags-pulse-at-cursor t
-   helm-gtags-prefix-key "\C-cg"
-   helm-gtags-suggested-key-mapping t
-   )
+		      (irony-cdb-autosetup-compile-options)))
 
-  ;; Enable helm-gtags-mode
-  (add-hook 'dired-mode-hook 'helm-gtags-mode)
-  (add-hook 'eshell-mode-hook 'helm-gtags-mode)
-  (add-hook 'c-mode-hook 'helm-gtags-mode)
-  (add-hook 'c++-mode-hook 'helm-gtags-mode)
-  (add-hook 'asm-mode-hook 'helm-gtags-mode)
+	  ;; Setup irony for flycheck.
+	  ;;  (add-hook 'flycheck-mode-hook 'flycheck-irony-setup)
 
-  (define-key helm-gtags-mode-map (kbd "C-c g a") 'helm-gtags-tags-in-this-function)
-  (define-key helm-gtags-mode-map (kbd "C-j") 'helm-gtags-select)
-  (define-key helm-gtags-mode-map (kbd "M-.") 'helm-gtags-dwim)
-  (define-key helm-gtags-mode-map (kbd "M-,") 'helm-gtags-pop-stack)
-  (define-key helm-gtags-mode-map (kbd "C-c <") 'helm-gtags-previous-history)
-  (define-key helm-gtags-mode-map (kbd "C-c >") 'helm-gtags-next-history)
+	  (use-package ggtags)
+	  (add-hook 'c-mode-common-hook
+		    (lambda ()
+		      (when (derived-mode-p 'c-mode 'c++-mode 'java-mode 'asm-mode)
+			(ggtags-mode 1))))
 
-  (setq-local imenu-create-index-function #'ggtags-build-imenu-index)
+	  (define-key ggtags-mode-map (kbd "C-c g s") 'ggtags-find-other-symbol)
+	  (define-key ggtags-mode-map (kbd "C-c g h") 'ggtags-view-tag-history)
+	  (define-key ggtags-mode-map (kbd "C-c g r") 'ggtags-find-reference)
+	  (define-key ggtags-mode-map (kbd "C-c g f") 'ggtags-find-file)
+	  (define-key ggtags-mode-map (kbd "C-c g c") 'ggtags-create-tags)
+	  (define-key ggtags-mode-map (kbd "C-c g u") 'ggtags-update-tags)
 
-  (add-to-list 'company-backends 'company-c-headers)
-  (setq wdired-allow-to-change-permissions t)
+	  (define-key ggtags-mode-map (kbd "M-,") 'pop-tag-mark)
+	  (use-package helm-gtags)
+
+	  (setq
+	   helm-gtags-ignore-case t
+	   helm-gtags-auto-update t
+	   helm-gtags-use-input-at-cursor t
+	   helm-gtags-pulse-at-cursor t
+	   helm-gtags-prefix-key "\C-cg"
+	   helm-gtags-suggested-key-mapping t
+	   )
+
+	  ;; Enable helm-gtags-mode
+	  (add-hook 'dired-mode-hook 'helm-gtags-mode)
+	  (add-hook 'eshell-mode-hook 'helm-gtags-mode)
+	  (add-hook 'c-mode-hook 'helm-gtags-mode)
+	  (add-hook 'c++-mode-hook 'helm-gtags-mode)
+	  (add-hook 'asm-mode-hook 'helm-gtags-mode)
+
+	  (define-key helm-gtags-mode-map (kbd "C-c g a") 'helm-gtags-tags-in-this-function)
+	  (define-key helm-gtags-mode-map (kbd "C-j") 'helm-gtags-select)
+	  (define-key helm-gtags-mode-map (kbd "M-.") 'helm-gtags-dwim)
+	  (define-key helm-gtags-mode-map (kbd "M-,") 'helm-gtags-pop-stack)
+	  (define-key helm-gtags-mode-map (kbd "C-c <") 'helm-gtags-previous-history)
+	  (define-key helm-gtags-mode-map (kbd "C-c >") 'helm-gtags-next-history)
+
+	  (setq-local imenu-create-index-function #'ggtags-build-imenu-index)
+
+	  (add-to-list 'company-backends 'company-c-headers)
+	  (setq wdired-allow-to-change-permissions t)
 #+end_src
+
+#+RESULTS:
+: t
 
 ** Python
 
