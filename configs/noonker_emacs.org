@@ -73,14 +73,10 @@ Anything in this section can be described in one sentence.
     :config
     (setq helm-mini-default-sources
       '(helm-source-buffers-list
-        helm-source-bookmarks
-        helm-source-recentf
-        helm-source-grep-ag
-        helm-source-buffer-not-found))
-    (global-set-key (kbd "C-2") 'helm-mini)
-    (global-set-key (kbd "M-x") #'helm-M-x)
-    (global-set-key (kbd "C-x r b") #'helm-filtered-bookmarks)
-    (global-set-key (kbd "C-x C-f") #'helm-find-files)
+	helm-source-bookmarks
+	helm-source-recentf
+	helm-source-grep-ag
+	helm-source-buffer-not-found))
     (helm-mode 1))
 
   (use-package helm-ag
@@ -88,6 +84,11 @@ Anything in this section can be described in one sentence.
 
   (use-package helm-pass
       :after (pass))
+
+  (global-set-key (kbd "C-2") 'helm-mini)
+  (global-set-key (kbd "M-x") #'helm-M-x)
+  (global-set-key (kbd "C-x r b") #'helm-filtered-bookmarks)
+  (global-set-key (kbd "C-x C-f") #'helm-find-files)
 #+end_src
 
 ** Theme
@@ -97,7 +98,7 @@ Loads the [[https://github.com/fniessen/emacs-leuven-theme][Leuven]] theme and s
 #+begin_src emacs-lisp :tangle ~/.emacs
     (load-theme 'leuven t)
 
-    (set-face-attribute 'default nil :font "Monoid" :height 120)
+    (set-face-attribute 'default nil :font "Monoid" :height 100)
 #+end_src
 
 ** Pretty Symbols
@@ -634,13 +635,7 @@ Email client for emacs
     (concat
      "flag:unread maildir:/INBOX "
      ))
-  (mu4e-alert-enable-mode-line-display)
-  (defun mu4e-alert-mode-line ()
-    (interactive)
-    (mu4e-proc-kill)
-    (mu4e-alert-enable-mode-line-display)
-    )
-  (run-with-timer 0 60 mu4e-alert-mode-line))
+  (add-hook 'after-init-hook #'mu4e-alert-enable-mode-line-display))
 
   (use-package org-msg
     :config
