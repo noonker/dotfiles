@@ -1358,18 +1358,23 @@ Clojure + LSP
 
 *** Org Refile
 #+begin_src emacs-lisp :tangle ~/.emacs
-  (setq org-blogpost-directory (directory-files (format "%s/blog/content/posts" org-directory) t))
-  (setq org-investigations-directory (directory-files (format "%s/investigations" org-directory) t))
-  (setq org-cheatsheet-directory (directory-files (format "%s/cheatsheet" org-directory) t))
-  (setq org-notes-directory (directory-files (format "%s/notes" org-directory) t))
+  (defun directory-files-if-exists (dir)
+    (if (file-directory-p dir)
+	(directory-files dir t)
+      ""))
+
+  (setq org-blogpost-directory (directory-files-if-exists (format "%s/blog/content/posts" org-directory)))
+  (setq org-investigations-directory (directory-files-if-exists (format "%s/investigations" org-directory)))
+  (setq org-cheatsheet-directory (directory-files-if-exists (format "%s/cheatsheet" org-directory)))
+  (setq org-notes-directory (directory-files-if-exists (format "%s/notes" org-directory)))
   (setq org-refile-use-outline-path t)                  ; Show full paths for refiling
   (setq org-outline-path-complete-in-steps nil)         ; Refile in a single go
   (setq org-refile-targets '((org-agenda-files :maxlevel . 3)
-                             ;; (org-blogpost-directory :maxlevel . 1)
-                             (org-investigations-directory :maxlevel . 1)
-                             ;; (org-cheatsheet-directory :maxlevel . 1)
-                             ;; (org-notes-directory :maxlevel . 1)
-                             ))
+			     (org-blogpost-directory :maxlevel . 1)
+			     (org-investigations-directory :maxlevel . 1)
+			     (org-cheatsheet-directory :maxlevel . 1)
+			     (org-notes-directory :maxlevel . 1)
+			     ))
   (setq org-refile-allow-creating-parent-nodes t)
   (setq org-refile-allow-creating-parent-nodes 'confirm)
   (setq org-refile-use-outline-path 'file)
