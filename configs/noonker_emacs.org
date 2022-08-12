@@ -832,6 +832,10 @@ Twitter plus theming
 #+end_src
 
 
+** Counsel
+#+begin_src emacs-lisp :tangle ~/.emacs
+    (use-package counsel)
+#+end_src
 
 ** Spray Mode
 
@@ -1055,12 +1059,13 @@ Platformio is for programming embedded devices
 Typescript + LSP
 
 #+begin_src emacs-lisp :tangle ~/.emacs
-  (use-package tide
-    :ensure t
-    :after (typescript-mode company flycheck)
-    :hook ((typescript-mode . tide-setup)
-           (typescript-mode . tide-hl-identifier-mode)
-           (before-save . tide-format-before-save)))
+    (use-package tide
+      :ensure t
+      :after (typescript-mode company flycheck)
+      :hook ((typescript-mode . tide-setup)
+	     (typescript-mode . tide-hl-identifier-mode)
+	     ;; (before-save . tide-format-before-save)
+	     ))
 #+end_src
 
 ** Clojure
