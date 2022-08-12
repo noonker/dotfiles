@@ -211,7 +211,7 @@ This package reads the environment from the shell path even when launched from ,
 #+begin_src emacs-lisp :tangle ~/.emacs
   (use-package
     exec-path-from-shell
-    :config (defmacro with-system (type &rest body)
+    :init (defmacro with-system (type &rest body)
           "Evaluate BODY if `system-type' equals TYPE."
           (declare (indent defun))
           `(when
@@ -273,6 +273,11 @@ Emacs can nearly transparently use .gpg encrypted files in emacs. These settings
   (setq epa-file-encrypt-to "noonker@gmail.com") ;; Encrypt to my gpg key
   (setf epa-pinentry-mode 'loopback) ;; No UI popup. Ask for password in modeline
 #+end_src
+** Keycast
+#+begin_src emacs-lisp :tangle ~/.emacs
+  (use-package keycast)
+#+end_src
+
 * Tools
 ** One Liners
 
@@ -369,20 +374,21 @@ Tramp allows for nearly transparent editing of files on remote machines. Run =C-
   ;;; no vc in tramp
   (setq remote-file-name-inhibit-cache nil)
   (setq vc-ignore-dir-regexp
-        (format "\\(%s\\)\\|\\(%s\\)"
-                vc-ignore-dir-regexp
-                tramp-file-name-regexp))
+	(format "\\(%s\\)\\|\\(%s\\)"
+		vc-ignore-dir-regexp
+		tramp-file-name-regexp))
   (setq tramp-verbose 1)
   (defadvice projectile-on (around exlude-tramp activate)
     "This should disable projectile when visiting a remote file"
     (unless  (--any? (and it (file-remote-p it))
-                     (list
-                      (buffer-file-name)
-                      list-buffers-directory
-                      default-directory
-                      dired-directory))
+		     (list
+		      (buffer-file-name)
+		      list-buffers-directory
+		      default-directory
+		      dired-directory))
       ad-do-it))
   (setq projectile-mode-line "Projectile")
+  (add-to-list 'tramp-remote-path 'tramp-own-remote-path)
 #+end_src
 
 ** SMTP
@@ -621,7 +627,7 @@ Email client for emacs
   (:local-repo "/run/current-system/sw/share/emacs/site-lisp/mu4e"
    :type built-in)
   :commands (mu4e)
-  :config
+  :init
     (setq mu4e-get-mail-command "offlineimap -o")
     (setq mu4e-update-interval 120)
     (global-set-key (kbd "C-c m m") `mu4e)
@@ -638,7 +644,7 @@ Email client for emacs
   (add-hook 'after-init-hook #'mu4e-alert-enable-mode-line-display))
 
   (use-package org-msg
-    :config
+    :init
     (setq mail-user-agent 'mu4e-user-agent)
     (setq org-msg-options "html-postamble:nil H:5 num:nil ^:{} toc:nil author:nil email:nil \\n:t"
 	org-msg-startup "hidestars indent inlineimages"
@@ -864,7 +870,7 @@ Company is an autocomplete option framework for emacs
     :config
     (global-company-mode)
     (setq company-dabbrev-downcase 0)
-    (setq company-idle-delay 0.3)
+    (setq company-idle-delay 0.5)
     (setq company-minimum-prefix-length 2)
 
     (defun complete-or-indent ()
