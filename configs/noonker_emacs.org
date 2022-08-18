@@ -1196,6 +1196,7 @@ Clojure + LSP
   (setq org-clock-in-switch-to-state "STRT")
   (setq org-clock-out-switch-to-state "TODO")
   (setq org-clock-out-remove-zero-time-clocks nil)
+  (setq org-startup-indented t) ;; Indent content of blocks to visual indent
 
   (use-package hl-todo)
   (setq org-src-fontify-natively t)
