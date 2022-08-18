@@ -694,7 +694,8 @@ Magit is git porcelain for Emacs
 #+begin_src emacs-lisp :tangle ~/.emacs
   (use-package magit
     :config
-      (global-set-key (kbd "C-x g") 'magit-status))
+      (global-set-key (kbd "C-x g") 'magit-status)
+      (setq magit-save-repository-buffers nil))
 #+end_src
 
 ** Twitter
@@ -874,7 +875,7 @@ Company is an autocomplete option framework for emacs
     :config
     (global-company-mode)
     (setq company-dabbrev-downcase 0)
-    (setq company-idle-delay 0.5)
+    (setq company-idle-delay 0.3)
     (setq company-minimum-prefix-length 2)
 
     (defun complete-or-indent ()
