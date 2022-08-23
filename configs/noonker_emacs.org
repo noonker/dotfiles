@@ -826,7 +826,11 @@ Twitter plus theming
 #+end_src
 
 
+** Kubernetes
 
+#+begin_src emacs-lisp :tangle ~/.emacs
+  (use-package kubel)
+#+end_src
 ** Spray Mode
 
 Spray mode is a speed-reading mode
@@ -864,7 +868,7 @@ Company is an autocomplete option framework for emacs
     :config
     (global-company-mode)
     (setq company-dabbrev-downcase 0)
-    (setq company-idle-delay 0.3)
+    (setq company-idle-delay 0.5)
     (setq company-minimum-prefix-length 2)
 
     (defun complete-or-indent ()
@@ -1284,7 +1288,7 @@ Clojure + LSP
      (C . t)))
 
   (setq org-plantuml-jar-path
-        (expand-file-name  "/usr/local/Cellar/plantuml/1.2021.7/libexec/plantuml.jar"))
+        (expand-file-name  "/opt/homebrew/Cellar/plantuml/1.2022.6/libexec/plantuml.jar"))
 #+end_src
 
 *** Org Agenda
