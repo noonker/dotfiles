@@ -852,6 +852,11 @@ Spray mode is a speed-reading mode
   (global-set-key (kbd "<f9>") 'spray-mode)
 #+end_src
 * Programming
+** LSP
+#+begin_src emacs-lisp :tangle ~/.emacs
+(use-package lsp-ui)
+#+end_src
+
 ** Uncrustify
 
 #+begin_src emacs-lisp :tangle ~/.emacs
@@ -1220,7 +1225,10 @@ Clojure + LSP
 
 *** Org Download
 #+begin_src emacs-lisp :tangle ~/.emacs
-  (setq-default org-download-image-dir "~/org/resources/")
+  (use-package org-download
+    :init
+    (progn
+      (setq org-image-actual-width (list 400))))
 #+end_src
 
 *** Org Timestamps
@@ -1486,11 +1494,10 @@ Clojure + LSP
 
 *** Org Packages
 #+begin_src emacs-lisp :tangle ~/.emacs
-  (use-package org-bullets)
-  (use-package org-chef)
-  (use-package org-download)
-  (use-package websocket)
-  (use-package org-web-tools)
+    (use-package org-bullets)
+    (use-package org-chef)
+    (use-package websocket)
+    (use-package org-web-tools)
 #+end_src
 
 *** Org eXport
