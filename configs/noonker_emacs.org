@@ -854,7 +854,15 @@ Spray mode is a speed-reading mode
 * Programming
 ** LSP
 #+begin_src emacs-lisp :tangle ~/.emacs
-(use-package lsp-ui)
+  (use-package lsp-ui
+    :commands lsp-ui-mode
+    :config
+    (setq lsp-ui-doc-enable nil)
+    (setq lsp-ui-doc-header t)
+    (setq lsp-ui-doc-include-signature t)
+    (setq lsp-ui-doc-border (face-foreground 'default))
+    (setq lsp-ui-sideline-show-code-actions t)
+    (setq lsp-ui-sideline-delay 0.05))
 #+end_src
 
 ** Uncrustify
@@ -1508,6 +1516,12 @@ Clojure + LSP
   (use-package ox-twbs)
   (use-package ox-json)
 #+end_src
+
+** Org Transclusion
+#+begin_src emacs-lisp :tangle ~/.emacs
+  (use-package org-transclusion)
+#+end_src
+
 
 ** Markdown
 #+begin_src emacs-lisp :tangle ~/.emacs
