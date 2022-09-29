@@ -1222,6 +1222,11 @@ Clojure + LSP
 #+begin_src emacs-lisp :tangle ~/.emacs
   (setq-default org-download-image-dir "~/org/resources/")
 #+end_src
+*** Org Transclusion
+#+begin_src emacs-lisp :tangle ~/.emacs
+  (use-package org-transclusion
+  :after org)
+#+end_src
 
 *** Org Timestamps
 #+begin_src emacs-lisp :tangle ~/.emacs
