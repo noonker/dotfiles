@@ -165,7 +165,6 @@ Random global behavior configs
   (setq reb-re-syntax 'string) ;; Emacs re-mode uses string syntax
   (setq recentf-auto-cleanup 'never) ;; disable before we start recentf!
   (recentf-mode 1) ;; Remember which files I've recently used
-  (setq tab-width 2 indent-tabs-mode nil) ;; Spaces, not tabs
   (setq backup-directory-alist '(("." . "~/.emacs.d/backups"))) ;;; Move backups
   (setq delete-old-versions -1) ;; Never delete backups
   (setq version-control t) ;; Honestly... don't remember but I'm sure I want this
@@ -863,14 +862,6 @@ Spray mode is a speed-reading mode
     (setq lsp-ui-doc-border (face-foreground 'default))
     (setq lsp-ui-sideline-show-code-actions t)
     (setq lsp-ui-sideline-delay 0.05))
-#+end_src
-
-** Uncrustify
-
-#+begin_src emacs-lisp :tangle ~/.emacs
-(use-package uncrustify-mode
-  :config
-    (add-hook 'prog-mode-hook 'uncrustify-mode))
 #+end_src
 
 ** Flycheck
