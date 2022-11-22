@@ -884,7 +884,7 @@ Company is an autocomplete option framework for emacs
     :config
     (global-company-mode)
     (setq company-dabbrev-downcase 0)
-    (setq company-idle-delay 0.5)
+    (setq company-idle-delay 0.38)
     (setq company-minimum-prefix-length 2)
 
     (defun complete-or-indent ()
@@ -1042,6 +1042,9 @@ On MacOS you need to add =-DCMAKE_PREFIX_PATH=/usr/local/opt/llvm= after =cmake=
 Python + LSP
 
 #+begin_src emacs-lisp :tangle ~/.emacs
+  (use-package python
+    :bind (("C-c C-c" . python-shell-send-region)))
+ 
   (use-package elpy
     :ensure t
     :init
@@ -1132,14 +1135,14 @@ Clojure + LSP
 
 ** Json
 #+begin_src emacs-lisp :tangle ~/.emacs
-  (use-package json)
-  (use-package json-mode)
-  (use-package counsel-jq) ;; Query json file with jq + counsel
+(use-package json)
+(use-package json-mode)
+(use-package counsel-jq) ;; Query json file with jq + counsel
 #+end_src
 
 ** Yaml
 #+begin_src emacs-lisp :tangle ~/.emacs
-  (use-package yaml)
+(use-package yaml)
 #+end_src
 
 ** CSV
@@ -1149,76 +1152,78 @@ Clojure + LSP
 
 ** SQL
 #+begin_src emacs-lisp :tangle ~/.emacs
-    (use-package ejc-sql
-      :commands
-      (ejc-create-connection ejc-connect ejc-set-column-width-limit)
-      :init
-      (setq ejc-set-rows-limit 1000
-        ejc-result-table-impl 'orgtbl-mode ;; 'ejc-result-mode
-        ejc-use-flx t
-        ejc-flx-threshold 3
-        nrepl-sync-request-timeout 30)
-      ;; enable auto complete
-      (add-hook 'ejc-sql-minor-mode-hook
-        (lambda ()
-          (auto-complete-mode t)
-          (ejc-ac-setup)))
-      :config
-      (setq clomacs-httpd-default-port 8090)
-      (add-hook 'ejc-sql-minor-mode-hook
-        (lambda ()
-          (auto-complete-mode t)
-          (ejc-ac-setup)))
-      (setq ejc-use-flx t)
-      (setq ejc-flx-threshold 2)
-      (require 'ejc-company)
-      (push 'ejc-company-backend company-backends)
-      (add-hook 'ejc-sql-minor-mode-hook
-        (lambda ()
-          (company-mode t)))
-      (company-quickhelp-mode)
-      (add-hook 'ejc-sql-minor-mode-hook
-        (lambda ()
-          (ejc-eldoc-setup)))
-      (add-hook 'ejc-sql-connected-hook
-        (lambda ()
-          (ejc-set-fetch-size 50)
-          (ejc-set-max-rows 50)
-          (ejc-set-show-too-many-rows-message t)
-          (ejc-set-column-width-limit 25)))
-      )
+(use-package ejc-sql
+  :commands
+  (ejc-create-connection ejc-connect ejc-set-column-width-limit)
+  :init
+  (setq ejc-set-rows-limit 1000
+    ejc-result-table-impl 'orgtbl-mode ;; 'ejc-result-mode
+    ejc-use-flx t
+    ejc-flx-threshold 3
+    nrepl-sync-request-timeout 30)
+  ;; enable auto complete
+  (add-hook 'ejc-sql-minor-mode-hook
+    (lambda ()
+      (auto-complete-mode t)
+      (ejc-ac-setup)))
+  :config
+  (setq clomacs-httpd-default-port 8090)
+  (add-hook 'ejc-sql-minor-mode-hook
+    (lambda ()
+      (auto-complete-mode t)
+      (ejc-ac-setup)))
+  (setq ejc-use-flx t)
+  (setq ejc-flx-threshold 2)
+  (require 'ejc-company)
+  (push 'ejc-company-backend company-backends)
+  (add-hook 'ejc-sql-minor-mode-hook
+    (lambda ()
+      (company-mode t)))
+  (company-quickhelp-mode)
+  (add-hook 'ejc-sql-minor-mode-hook
+    (lambda ()
+      (ejc-eldoc-setup)))
+  (add-hook 'ejc-sql-connected-hook
+    (lambda ()
+      (ejc-set-fetch-size 50)
+      (ejc-set-max-rows 50)
+      (ejc-set-show-too-many-rows-message t)
+      (ejc-set-column-width-limit 25)))
+  )
 #+end_src
 * Text
 ** Org Mode
 *** Org One Liners
 #+begin_src emacs-lisp :tangle ~/.emacs
-  (setq org-fontify-whole-heading-line t)
+(setq org-fontify-whole-heading-line t)
 
-  (setq org-directory "~/org")
-  (setq org-agenda-basedir "~/org/tasks")
-  (setq org-todo-keywords '("TODO" "STRT" "DONE" "WONTDO" "SCHEDULED" "BLOCKED"))
+(setq org-directory "~/org")
+(setq org-agenda-basedir "~/org/tasks")
+(setq org-todo-keywords '("TODO" "STRT" "DONE" "WONTDO" "SCHEDULED" "BLOCKED"))
 
-  (add-hook 'org-mode-hook (lambda () (org-bullets-mode 1))) ;; Add special bullets
-  (setq org-startup-align-all-tables t) ;; Aligns tables when a file is opened
-  (setq org-startup-shrink-all-tables t) ;; Shrinks tables according to <x> tags in the column headers
-  (setq org-clock-in-switch-to-state "STRT")
-  (setq org-clock-out-switch-to-state "TODO")
-  (setq org-clock-out-remove-zero-time-clocks nil)
-  (setq org-startup-indented t) ;; Indent content of blocks to visual indent
+(add-hook 'org-mode-hook (lambda () (org-bullets-mode 1))) ;; Add special bullets
+(setq org-startup-align-all-tables t) ;; Aligns tables when a file is opened
+(setq org-startup-shrink-all-tables t) ;; Shrinks tables according to <x> tags in the column headers
+(setq org-clock-in-switch-to-state "STRT")
+(setq org-clock-out-switch-to-state "TODO")
+(setq org-clock-out-remove-zero-time-clocks nil)
+(setq org-startup-indented t) ;; Indent content of blocks to visual indent
+(setq org-edit-src-content-indentation 0)
 
-  (use-package hl-todo)
-  (setq org-src-fontify-natively t)
 
-  (global-set-key (kbd "C-c a") 'org-agenda)
-  (global-set-key (kbd "C-c n n") 'org-capture)
-  (global-set-key (kbd "C-c n r n") 'org-roam-capture)
-  (global-set-key (kbd "C-c n r f") 'org-roam-node-find)
+(use-package hl-todo)
+(setq org-src-fontify-natively t)
 
-  (defun org-today-update-day ()
-      (interactive)
-      (setq org-archive-location (format "%s/archive/%s.org::" org-agenda-basedir (format-time-string "%Y-%m-%d"))))
+(global-set-key (kbd "C-c a") 'org-agenda)
+(global-set-key (kbd "C-c n n") 'org-capture)
+(global-set-key (kbd "C-c n r n") 'org-roam-capture)
+(global-set-key (kbd "C-c n r f") 'org-roam-node-find)
 
-  (org-today-update-day)
+(defun org-today-update-day ()
+    (interactive)
+    (setq org-archive-location (format "%s/archive/%s.org::" org-agenda-basedir (format-time-string "%Y-%m-%d"))))
+
+(org-today-update-day)
 #+end_src
 
 *** Org Download
@@ -1300,20 +1305,22 @@ Clojure + LSP
 
 *** Org Babel
 #+begin_src emacs-lisp :tangle ~/.emacs
-  (org-babel-do-load-languages
-   'org-babel-load-languages
-   '((dot . t)
-     (python . t)
-     (restclient . t)
-     (plantuml . t)
-     (shell . t)
-     (sql . t)
-     (sqlite . t)
-     (gnuplot . t)
-     (C . t)))
+(org-babel-do-load-languages
+ 'org-babel-load-languages
+ '((dot . t)
+   (python . t)
+   (restclient . t)
+   (plantuml . t)
+   (shell . t)
+   (sql . t)
+   (sqlite . t)
+   (gnuplot . t)
+   (C . t)))
 
-  (setq org-plantuml-jar-path
-        (expand-file-name  "/opt/homebrew/Cellar/plantuml/1.2022.6/libexec/plantuml.jar"))
+(setq org-plantuml-jar-path
+      (expand-file-name  "/opt/homebrew/Cellar/plantuml/1.2022.6/libexec/plantuml.jar"))
+
+(setq org-confirm-babel-evaluate nil)
 #+end_src
 
 *** Org Agenda
