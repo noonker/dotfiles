@@ -1084,6 +1084,7 @@ Clojure + LSP
 (global-set-key (kbd "C-c n n") 'org-capture)
 (global-set-key (kbd "C-c n r n") 'org-roam-capture)
 (global-set-key (kbd "C-c n r f") 'org-roam-node-find)
+(global-set-key (kbd "C-c n r i") 'org-roam-node-insert)
 
 (defun org-today-update-day ()
     (interactive)
