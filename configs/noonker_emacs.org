@@ -621,30 +621,9 @@ IRC for Emacs
 Email client for emacs
 
 #+begin_src emacs-lisp :tangle ~/.emacs
-  (use-package mu4e
-  :straight
-  (:local-repo "/run/current-system/sw/share/emacs/site-lisp/mu4e"
-   :type built-in)
-  :commands (mu4e)
-  :init
-    (setq mu4e-get-mail-command "offlineimap -o")
-    (setq mu4e-update-interval 120)
-    (global-set-key (kbd "C-c m m") `mu4e)
-    (mu4e-alert-enable-mode-line-display)
-    )
-
-  (use-package mu4e-alert
-  :after mu4e
-  :init
-  (setq mu4e-alert-interesting-mail-query
-    (concat
-     "flag:unread maildir:/INBOX "
-     ))
-  (add-hook 'after-init-hook #'mu4e-alert-enable-mode-line-display))
-
   (use-package org-msg
     :init
-    (setq mail-user-agent 'mu4e-user-agent)
+    (setq mail-user-agent 'message-user-agent)
     (setq org-msg-options "html-postamble:nil H:5 num:nil ^:{} toc:nil author:nil email:nil \\n:t"
 	org-msg-startup "hidestars indent inlineimages"
 	org-msg-default-alternatives '((new		. (text html))
