@@ -46,22 +46,25 @@ This section sets up [[https://github.com/radian-software/straight.el][straight.
 Anything in this section can be described in one sentence.
 
 #+begin_src emacs-lisp :tangle ~/.emacs
-  (use-package all-the-icons) ;; Installs fancy icons for emacs
-  (use-package auto-complete) ;; Auto complete dropdowns
-  (use-package iedit) ;; Find and edit multiple occurances
-  (use-package undo-tree) ;; Respresent undo and redo history as a tree
-  (use-package ibuffer) ;; Advanced buffer list
-  (use-package expand-region
-    :config
-    (global-set-key (kbd "C-=") 'er/expand-region)
-    ) ;; Highligh progressively larger regions
-  (use-package
-    emojify
-    :config (global-emojify-mode)) ;; Emojis enabled
-  (use-package
-    dired-git-info
-    :bind (:map dired-mode-map
-    (")" . dired-git-info-mode))) ;; Show git information in dired mode
+(use-package all-the-icons) ;; Installs fancy icons for emacs
+(use-package auto-complete) ;; Auto complete dropdowns
+(use-package iedit) ;; Find and edit multiple occurances
+(use-package undo-tree) ;; Respresent undo and redo history as a tree
+(use-package ibuffer) ;; Advanced buffer list
+(use-package magit)
+(use-package org)
+(use-package transient)
+(use-package expand-region
+  :config
+  (global-set-key (kbd "C-=") 'er/expand-region)
+  ) ;; Highligh progressively larger regions
+(use-package
+  emojify
+  :config (global-emojify-mode)) ;; Emojis enabled
+(use-package
+  dired-git-info
+  :bind (:map dired-mode-map
+  (")" . dired-git-info-mode))) ;; Show git information in dired mode
 #+end_src
 
 ** Helm
@@ -621,17 +624,44 @@ IRC for Emacs
 Email client for emacs
 
 #+begin_src emacs-lisp :tangle ~/.emacs
-  (use-package org-msg
-    :init
-    (setq mail-user-agent 'message-user-agent)
-    (setq org-msg-options "html-postamble:nil H:5 num:nil ^:{} toc:nil author:nil email:nil \\n:t"
-	org-msg-startup "hidestars indent inlineimages"
-	org-msg-default-alternatives '((new		. (text html))
-				       (reply-to-html	. (text html))
-				       (reply-to-text	. (text)))
-	org-msg-convert-citation t)
-    (org-msg-mode)
-    )
+(use-package mu4e
+:straight
+(:local-repo "/run/current-system/sw/share/emacs/site-lisp/mu4e"
+ :type built-in)
+:commands (mu4e)
+:init
+  (setq mu4e-get-mail-command "offlineimap -o")
+  (setq mu4e-update-interval 120)
+  (global-set-key (kbd "C-c m m") `mu4e)
+  )
+
+(use-package mu4e-alert
+:after mu4e
+:init
+(mu4e-alert-enable-mode-line-display)
+(setq mu4e-alert-interesting-mail-query
+  (concat
+   "flag:unread maildir:/INBOX "
+   ))
+(add-hook 'after-init-hook #'mu4e-alert-enable-mode-line-display))
+
+(use-package org-msg
+  :init
+  (setq mail-user-agent 'mu4e-user-agent)
+  (setq org-msg-options "html-postamble:nil H:5 num:nil ^:{} toc:nil author:nil email:nil \\n:t"
+      org-msg-startup "hidestars indent inlineimages"
+      org-msg-default-alternatives '((new		. (text html))
+				     (reply-to-html	. (text html))
+				     (reply-to-text	. (text)))
+      org-msg-convert-citation t)
+  (org-msg-mode)
+ )
+#+end_src
+
+** Excorporate
+
+#+begin_src emacs-lisp :tangle ~/.emacs
+(use-package excorporate)
 #+end_src
 
 ** Emacs Lisp Packages
