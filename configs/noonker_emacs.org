@@ -661,7 +661,8 @@ Email client for emacs
 ** Excorporate
 
 #+begin_src emacs-lisp :tangle ~/.emacs
-(use-package excorporate)
+(use-package excorporate
+  :init (setq org-agenda-include-diary t))
 #+end_src
 
 ** Emacs Lisp Packages
