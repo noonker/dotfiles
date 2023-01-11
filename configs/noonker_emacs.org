@@ -656,13 +656,19 @@ Email client for emacs
       org-msg-convert-citation t)
   (org-msg-mode)
  )
+
+(defun unstuck-offlineimap ()
+  (interactive)
+  (async-shell-command "pgrep -fl offlineimap | cut -d" " -f1 | xargs -I % kill -9 %"))
 #+end_src
 
 ** Excorporate
 
 #+begin_src emacs-lisp :tangle ~/.emacs
 (use-package excorporate
-  :init (setq org-agenda-include-diary t))
+  :init
+  (setq org-agenda-include-diary t)
+  (global-set-key (kbd "C-c e") #'calendar))
 #+end_src
 
 ** Emacs Lisp Packages
@@ -723,8 +729,12 @@ Magit is git porcelain for Emacs
 Spray mode is a speed-reading mode
 
 #+begin_src emacs-lisp :tangle ~/.emacs
-  (use-package spray)
-  (global-set-key (kbd "<f9>") 'spray-mode)
+(use-package spray)
+(defun no-properties-pls ()
+  (interactive)
+  (let ((inhibit-read-only t))
+  (set-text-properties (point-min) (point-max) nil)))
+(global-set-key (kbd "<f9>") 'spray-mode)
 #+end_src
 * Programming
 ** LSP
