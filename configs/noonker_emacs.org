@@ -786,6 +786,15 @@ Company is an autocomplete option framework for emacs
     (indent-according-to-mode))))
 #+end_src
 
+** Java
+#+begin_src emacs-lisp :tangle ~/.emacs
+(use-package lsp-java :config (add-hook 'java-mode-hook 'lsp))
+(use-package dap-mode :after lsp-mode :config (dap-auto-configure-mode))
+;; (use-package dap-java :ensure nil)
+(use-package lsp-treemacs)
+#+end_src
+
+
 ** Lispy
 
 Lispy mode makes lisp-mode editing significantly more efficent
@@ -1185,7 +1194,6 @@ Clojure + LSP
 
 *** Org Babel Packages
 #+begin_src emacs-lisp :tangle ~/.emacs
-  (use-package ob-async)
   (use-package ob-restclient)
   (use-package ob-sql-mode)
 #+end_src
