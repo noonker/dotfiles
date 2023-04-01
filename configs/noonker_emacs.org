@@ -67,6 +67,16 @@ Anything in this section can be described in one sentence.
   (")" . dired-git-info-mode))) ;; Show git information in dired mode
 #+end_src
 
+** Ace
+
+#+begin_src emacs-lisp :tangle ~/.emacs
+(use-package ace-window
+  :init (global-set-key (kbd "M-o") 'ace-window))       
+
+(use-package ace-jump-mode
+  :init (define-key global-map (kbd "M-p") 'ace-jump-mode))
+#+end_src
+
 ** Helm
 
 [[https://github.com/emacs-helm/helm][Helm]] is an incremental completion framework. It makes things like M-x much easier to search. I have else enabled =helm-mini= with the hotkey =C-2=. This is how I do most of my navigation within emacs.
@@ -156,26 +166,27 @@ These settings change certain terms into cooler looking symbols B-D
 Random global behavior configs
 
 #+begin_src emacs-lisp :tangle ~/.emacs
-  (global-display-line-numbers-mode) ;; Enable line numbers
-  (custom-set-variables '(linum-format 'dynamic)) ;; Automatically align line numbers
-  (global-hl-line-mode) ;; Highlight the current line
-  (tool-bar-mode -1) ;; Don't show the ugly emacs toolbar
-  (display-time-mode 1) ;; Show a clock in the modeline
-  (setq dired-dwim-target t) ;; When moving a file assume I want to move it to the other dired buffer first
-  (winner-mode 1) ;; Undo recent buffer configurations
-  (defalias 'yes-or-no-p 'y-or-n-p) ;; Shorten yes and no
-  (global-subword-mode 1) ;; Makes emacs understand CamelCase words as two words
-  (setq reb-re-syntax 'string) ;; Emacs re-mode uses string syntax
-  (setq recentf-auto-cleanup 'never) ;; disable before we start recentf!
-  (recentf-mode 1) ;; Remember which files I've recently used
-  (setq backup-directory-alist '(("." . "~/.emacs.d/backups"))) ;;; Move backups
-  (setq delete-old-versions -1) ;; Never delete backups
-  (setq version-control t) ;; Honestly... don't remember but I'm sure I want this
-  (setq vc-make-backup-files t) ;; Also make backup files for version controller files
-  (setq auto-save-file-name-transforms '((".*" "~/.emacs.d/auto-save-list/" t))) ;; Store autosaves in this folder instead of next to the file
-  (setq x-select-enable-clipboard t) ;; Use the mac clipboard
-  (setq x-select-enable-primary t) ;; Use the mac clipboard as primary clipboard
-  (setq inhibit-startup-screen t) ;; Don't show the starup screen
+(global-display-line-numbers-mode) ;; Enable line numbers
+(custom-set-variables '(linum-format 'dynamic)) ;; Automatically align line numbers
+(global-hl-line-mode) ;; Highlight the current line
+(tool-bar-mode -1) ;; Don't show the ugly emacs toolbar
+(display-time-mode 1) ;; Show a clock in the modeline
+(setq dired-dwim-target t) ;; When moving a file assume I want to move it to the other dired buffer first
+(winner-mode 1) ;; Undo recent buffer configurations
+(defalias 'yes-or-no-p 'y-or-n-p) ;; Shorten yes and no
+(global-subword-mode 1) ;; Makes emacs understand CamelCase words as two words
+(setq reb-re-syntax 'string) ;; Emacs re-mode uses string syntax
+(setq recentf-auto-cleanup 'never) ;; disable before we start recentf!
+(recentf-mode 1) ;; Remember which files I've recently used
+(setq backup-directory-alist '(("." . "~/.emacs.d/backups"))) ;;; Move backups
+(setq delete-old-versions -1) ;; Never delete backups
+(setq version-control t) ;; Honestly... don't remember but I'm sure I want this
+(setq vc-make-backup-files t) ;; Also make backup files for version controller files
+(setq auto-save-file-name-transforms '((".*" "~/.emacs.d/auto-save-list/" t))) ;; Store autosaves in this folder instead of next to the file
+(setq x-select-enable-clipboard t) ;; Use the mac clipboard
+(setq x-select-enable-primary t) ;; Use the mac clipboard as primary clipboard
+(setq inhibit-startup-screen t) ;; Don't show the starup screen
+(global-so-long-mode 1)
 #+end_src
 
 ** Registers
@@ -659,7 +670,7 @@ Email client for emacs
 
 (defun unstuck-offlineimap ()
   (interactive)
-  (async-shell-command "pgrep -fl offlineimap | cut -d" " -f1 | xargs -I % kill -9 %"))
+  (async-shell-command "pkill -f \"offlineimap\""))
 #+end_src
 
 ** Excorporate
@@ -702,6 +713,63 @@ Shell configurations for emacs. Largely based around [[https://fishshell.com][Fi
     (setq vterm-shell "/opt/homebrew/bin/fish")) ;; Fish is my shell
 #+end_src
 
+** Mobile
+
+Functions and mobile gadgets
+
+#+begin_src emacs-lisp :tangle ~/.emacs
+(defun copy-app-to-desktop (bundle-id)
+  (let ((command (format "adb pull $(adb shell pm path %s | cut -d \":\" -f2) %s/%s.apk" bundle-id "$HOME/Desktop/" bundle-id)))
+    (shell-command command)
+    )
+  )
+
+(defun start-iproxy ()
+  (interactive)
+  (async-shell-command "iproxy 2222 22" "*iproxy*"))
+
+(defun iphone-screenshot ()
+  (interactive)
+  (let  ((screenshot-name (nth 3 (split-string
+				  (shell-command-to-string "cd /tmp/ && idevicescreenshot")))))
+    (find-file (format "/tmp/%s" screenshot-name))
+    )
+  )
+
+(defun get-android-apk ()
+  (interactive)
+  (helm :sources
+        (helm-build-sync-source "Android Apps"
+          :candidates (split-string (shell-command-to-string "adb shell pm list packages -3 | sed \"s/package://g\""))
+          :fuzzy-match t
+          :action (lambda (x) (copy-app-to-desktop x)))))
+
+(defun start-simulator ()
+  (interactive)
+  (helm :sources
+        (helm-build-sync-source "Simulators"
+          :candidates (split-string (shell-command-to-string "xcrun simctl list | grep Shutdown") "\n")
+          :fuzzy-match t
+          :action (lambda (sim-option) (let ((udid nil))
+					 (and (string-match "\\([0-9a-fA-F]\\{8\\}-[0-9a-fA-F]\\{4\\}-[0-9a-fA-F]\\{4\\}-[0-9a-fA-F]\\{4\\}-[0-9a-fA-F]\\{12\\}\\)" sim-option)
+					      (setq udid (match-string 1 sim-option)))
+					 (if udid
+					     (shell-command (format "open -a Simulator --args -CurrentDeviceUDID %s" udid))
+					   )
+					 )))))
+
+(defun android-start-emulator ()
+  (interactive)
+  (helm :sources
+        (helm-build-sync-source "Emulators"
+          :candidates (split-string (shell-command-to-string "$HOME/Library/Android/sdk/emulator/emulator -list-avds") "\n")
+          :fuzzy-match t
+          :action (lambda (avd) (if avd
+				    (shell-command (format "$HOME/Library/Android/sdk/emulator/emulator -avd %s -netdelay none -netspeed full &" avd)))))))
+
+#+end_src
+
+
 ** Magit
 
 Magit is git porcelain for Emacs
@@ -737,6 +805,249 @@ Spray mode is a speed-reading mode
 (global-set-key (kbd "<f9>") 'spray-mode)
 #+end_src
 * Programming
+
+** Baksmali
+#+begin_src emacs-lisp :tangle ~/.emacs
+  ;;; smali-mode.el --- Major mode for editing Smali/Baksmali files
+;;
+;; This file is free software; you can redistribute it and/or modify
+;; it under the terms of the GNU General Public License as published by
+;; the Free Software Foundation; either version 3, or (at your option)
+;; any later version.
+
+;; This file is distributed in the hope that it will be useful,
+;; but WITHOUT ANY WARRANTY; without even the implied warranty of
+;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+;; GNU General Public License for more details.
+
+;; You should have received a copy of the GNU General Public License
+;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
+;;
+;; Filename: smali-mode.el
+;; Description:
+;; Author: Tim Strazzere <strazz@gmail.com> <diff@protonmail.com>
+;; Maintainer:
+;; Copyright (C) 2015-219, Tim Strazzere, all rights reserved.
+;; Created:
+;; Version:
+;; Last-Updated:
+;;           By:
+;;     Update #: 0
+;; URL:
+;; Keywords: languages smali
+;; Compatibility:
+;;
+;; Features that might be required by this library:
+;;
+;;   None
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;;; Commentary:
+;;
+;;
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;;; Change log:
+;;
+;;
+;;; Code:
+
+(require 'generic)
+
+;;;###autoload
+(define-generic-mode
+  'smali-mode
+  ;; comments
+  '(
+    ;; actual compilable smali comments
+    "#"
+    ;; personal branch compiles these, public branch won't so beware
+    "//"
+   )
+
+  ;; keywords we can't or won't regex
+  '(
+     "goto" "nop" "return" "throw" "move" "const" "execute-inline" "array-length"
+   )
+
+  ;; everything we can regex (opcodes followed by the rest)
+  '(
+    ;; const opcodes with switches
+    (
+     "const\\(\/\\(4\\|16\\|32\\|high16\\)\\|-\\(clas\\(s\/jumbo\\|s\\)\\|wid\\(e\/\\(high16\\|16\\|32\\)\\|e\\)\\|strin\\(g\/jumbo\\|g\\)\\)\\)" . font-lock-keyword-face
+    )
+    ;; move opcodes with switches
+    (
+     "move\\(-\\(wid\\(e\/from16\\|e\/16\\|e\\)\\|objec\\(t\/from16\\|t\/16\\|t\\)\\|resul\\(t-\\(wide\\|object\\|exception\\)\\|t\\)\\|exception\\)\\|\/\\(16\\|from16\\)\\)" . font-lock-keyword-face
+    )
+    ;; goto opcodes with switches
+    (
+     "goto\/\\(16\\|32\\)" . font-lock-keyword-face
+    )
+    ;; get/put opcodes with switches
+    (
+     "\\(s\\|i\\|a\\)\\(get\\|put\\)-\\(wid\\(e-quick\\|e\/jumbo\\|e-volatile\/jumbo\\|e\\)\\|objec\\(t-quick\\|t-volatil\\|\\(e/jumbo\\|e\\)\\|t\\)\\|boolea\\(n\/jumbo\\|n\\)\\|byt\\(e\/jumbo\\|e\\)\\|cha\\(r\/jumbo\\|r\\)\\|shor\\(t\/jumbo\\|t\\)\\|quic\\(k\/jumbo\\|k\\)\\|volatile\/jumbo\\)" . font-lock-keyword-face
+    )
+    ;; get/put opcodes without switches
+    (
+     "\s\\(s\\|i\\|a\\)\\(get\\|put\\)" . font-lock-keyword-face
+    )
+    ;; return opcodes
+    (
+     "return-\\(voi\\(d-barrier\\|d\\)\\|wide\\|object\\)" . font-lock-keyword-face
+    )
+    ;; fill/ed opcodes
+    (
+     "fill\\(-array-data\\|ed-new-arra\\(y\/range\\|y\/jumbo\\|y\\)\\)" . font-lock-keyword-face
+    )
+    ;; new opcodes
+    (
+     "new-\\(arra\\(y\/jumbo\\|y\\)\\|instanc\\(e\/jumbo\\|e\\)\\)" . font-lock-keyword-face
+    )
+    ;; cast opcodes
+    (
+     "check-cas\\(t\/jumbo\\|t\\)" . font-lock-keyword-face
+    )
+    ;; instance-of opcodes
+    (
+     "instance-o\\(f\/jumbo\\|f\\)" . font-lock-keyword-face
+    )
+    ;; conditional statement, both positive and negative, opcodes
+    (
+     "if-\\(e\\(qz\\|q\\)\\|n\\(ez\\|e\\)\\|l\\(tz\\|ez\\|t\\|e\\)\\|g\\(tz\\|ez\\|t\\|e\\)\\)" . font-lock-keyword-face
+    )
+    ;; comparative statement opcodes
+    (
+     "cm\\(pl\\|pg\\|p\\)-\\(float\\|double\\|long\\)" . font-lock-keyword-face
+    )
+    ;; int/long/double/float operator opcodes with switches
+    (
+     "\\(add\\|sub\\|rsub\\|mul\\|div\\|rem\\|and\\|or\\|xor\\|shl\\|shr\\|ushr\\)-\\(int\\|long\\|float\\|double\\)\/\\(2addr\\|lit\\(8\\|16\\)\\)" . font-lock-keyword-face
+    )
+    ;; int/long/double/float operator opcodes without switches
+    (
+     "\\(add\\|sub\\|rsub\\|mul\\|div\\|rem\\|and\\|or\\|xor\\|shl\\|shr\\|ushr\\)-\\(int\\|long\\|float\\|double\\)"  . font-lock-keyword-face
+    )
+    ;; to (transformation) opcodes
+    (
+     "\\(int\\|long\\|float\\|double\\)-to-\\(int\\|long\\|float\\|double\\|char\\|byte\\|short\\)" . font-lock-keyword-face
+    )
+    ;; invoke opcodes
+    (
+     "invoke-\\(direc\\(t-empty\\|t\/range\\|t\/jumbo\\|t\\)\\|objec\\(t-ini\\(t\/jumbo\\|t\/range\\)\\|t\/jumbo\\)\\|stati\\(c\/range\\|j\/jumbo\\|c\\)\\|interfac\\(e\/range\\|e\/jumbo\\|e\\)\\|virtua\\(l-quic\\(k\/range\\|k\\)\\|l\/range\\|l\/jumbo\\|l\\)\\|supe\\(r-quic\\(k\/range\\|k\\)\\|r\/range\\|r\/jumbo\\|r\\)\\)" . font-lock-keyword-face
+    )
+    ;; monitor op-codes
+    (
+     "monitor-\\(enter\\|exit\\)" . font-lock-keyword-face
+    )
+    ;; negative and not opcodes
+    (
+     "\\(neg\\|not\\)-\\(int\\|long\\|float\\|double\\)" . font-lock-keyword-face
+    )
+
+    ;;
+    ;; everything else to colorize
+    ;;
+
+    ;; namespaces
+    (
+     "\[L[a-zA-Z\/0-9\_\\$]+;\\|L[a-zA-Z\/0-9\_\\$]+;" . font-lock-constant-face
+    )
+    ;; directives
+    (
+     "\\.\\(locals\\|local\\|class\\|super\\|implements\\|field\\|subannotation\\|annotation\\|enum\\|method\\|registers\\|array-data\\|packed-switch\\|sparse-switch\\|parameter\\|param\\|prologue\\|epilogue\\|source\\|restart\slocal\\|end\s\\(field\\|subannotation\\|annotation\\|method\\|array-data\\|packed-switch\\|sparse-switch\\|parameter\\|local\\)\\)" . font-lock-builtin-face
+    )
+    ;;packed switch opcodes need to be below this to properly work
+    (
+     "\\(packed\\|sparse\\)-switch" . font-lock-keyword-face
+    )
+    ;; tags
+    (
+     "\\(\\.\\|:\\)\\(\\(catc\\(h[0-9a-z\_]+\\|h\\)\\)\\|line\\|goto_[0-9a-z]+\\|cond_[0-9a-z]+\\|try[0-9a-z\_]+\\|\\(s\\|p\\)switch\\(_data_\\|_\\)[0-9a-z]+\\|array\\(_data_\\|_\\)[0-9a-z]+\\)" . font-lock-doc-face
+    )
+    ;; argument/line/hex numbers
+    (
+     "\s\\(\\(-0\\|0\\)x[0-9a-ftsL]+\\|[0-9]+\\)" . font-lock-constant-face
+    )
+    ;; annotations
+    (
+     "\\(accessFlags\\|name\\|values\\|system\\)\s" . font-lock-variable-name-face
+    )
+    ;; access
+    (
+     "\\(public\\|private\\|protected\\|static\\|final\\|synchronized\\|bridge\\|varargs\\|native\\|abstract\\|strictfp\\|synthetic\\|constructor\\|declared-synchronized\\|interface\\|enum\\|annotation\\|volatile\\|transient\\)\s" . font-lock-builtin-face
+    )
+    ;; random things to color before others function
+    (
+     "\-\>\\|=\\|\{\\|\}\\|\s..\s\\|,\\|:" . font-lock-keyword-face
+    )
+    ;; functions
+    (
+     "\<\\(clinit\\|init\\)\>\\|[\_a-zA-Z\$0-9]+\(\\|\(\\|\)" . font-lock-function-name-face
+    )
+    ;; odex specific functions, vtable/field lookups, inlines
+    (
+     "\\(vtable\\|field\\|inline\\)\@[0-9a-zA-Z]+" . font-lock-function-name-face
+    )
+    ;; instance field names
+    (
+     "\s\\([a-zA-Z0-9\$\_\-]+\\)" . font-lock-variable-name-face
+    )
+    ;; array/non-array qualified types including return values and parameters
+    (
+     "\\[+[BVZSCIJFD]" . font-lock-variable-name-face
+    )
+    ;; member variables, registers and parameters
+    (
+     "[a-zA-Z0-9\$\_\-]+" . font-lock-variable-name-face
+    )
+    ;; const-strings
+    (
+     "\\"[*]+\\"" . font-lock-string-face
+    )
+    ;; boolean values
+    (
+     "true" . font-lock-variable-name-face
+    )
+   )
+
+  '(
+    "\\.smali$"
+   )
+
+  (list
+   (function
+    (lambda ()
+      (setq imenu-generic-expression
+	    '(("Method" "^\\.method.* \\(.*\\)(" 1)
+	      ("Annotation" "^\\.annotation.* \\(.*\\);$" 1)
+	      ("Field" "^\\.field.* \\([^ :]+\\)[:;]" 1)
+	      ))
+      (set-syntax-table
+       (let ((table (make-syntax-table)))
+	 (modify-syntax-entry ?< "." table)
+	 (modify-syntax-entry ?> "." table)
+	 table))
+      )))
+
+   "A mode for smali files"
+)
+
+(add-to-list 'auto-mode-alist '(".smali$" . smali-mode))
+
+(provide 'smali-mode)
+;;; smali-mode.el ends here
+#+end_src
+
+** Artist Mode
+
+#+begin_src emacs-lisp :tangle ~/.emacs
+(add-hook 'artist-mode-hook (lambda () (setq indent-tabs-mode nil)))  
+#+end_src
+
+
 ** LSP
 #+begin_src emacs-lisp :tangle ~/.emacs
   (use-package lsp-ui
@@ -937,20 +1248,22 @@ On MacOS you need to add =-DCMAKE_PREFIX_PATH=/usr/local/opt/llvm= after =cmake=
 Python + LSP
 
 #+begin_src emacs-lisp :tangle ~/.emacs
-  (use-package python
-    :bind (("C-c C-c" . python-shell-send-region)))
- 
-  (use-package elpy
-    :ensure t
-    :init
-    (elpy-enable))
+(use-package python
+  :bind (("C-c C-c" . python-shell-send-region)))
 
-  (use-package lsp-python-ms
-      :ensure t
-      :init (setq lsp-python-ms-auto-install-server t)
-      :hook (python-mode . (lambda ()
-                 (require 'lsp-python-ms)
-                 (lsp))))  ; or lsp-deferred
+(use-package elpy
+  :ensure t
+  :init
+  (elpy-enable))
+
+(use-package lsp-python-ms
+    :ensure t
+    :init (setq lsp-python-ms-auto-install-server t)
+    :hook (python-mode . (lambda ()
+               (require 'lsp-python-ms)
+               (lsp))))  ; or lsp-deferred
+
+(pyvenv-workon "p310")
 #+end_src
 
 ** Platformio
@@ -1300,12 +1613,7 @@ Clojure + LSP
   (setq org-notes-directory (directory-files-if-exists (format "%s/notes" org-directory)))
   (setq org-refile-use-outline-path t)                  ; Show full paths for refiling
   (setq org-outline-path-complete-in-steps nil)         ; Refile in a single go
-  (setq org-refile-targets '((org-agenda-files :maxlevel . 3)
-			     (org-blogpost-directory :maxlevel . 1)
-			     (org-investigations-directory :maxlevel . 1)
-			     (org-cheatsheet-directory :maxlevel . 1)
-			     (org-notes-directory :maxlevel . 1)
-			     ))
+  (setq org-refile-targets '((org-agenda-files :maxlevel . 3)))
   (setq org-refile-allow-creating-parent-nodes t)
   (setq org-refile-allow-creating-parent-nodes 'confirm)
   (setq org-refile-use-outline-path 'file)
