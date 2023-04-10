@@ -1519,8 +1519,9 @@ Clojure + LSP
 
 *** Org Babel Packages
 #+begin_src emacs-lisp :tangle ~/.emacs
-  (use-package ob-restclient)
-  (use-package ob-sql-mode)
+(use-package ob-restclient)
+(use-package ob-sql-mode)
+(use-package ob-typescript)
 #+end_src
 
 *** Org Babel
@@ -1535,6 +1536,7 @@ Clojure + LSP
    (sql . t)
    (sqlite . t)
    (gnuplot . t)
+   (typescript . t)
    (C . t)))
 
 (setq org-plantuml-jar-path
@@ -1727,11 +1729,19 @@ Clojure + LSP
 
 *** Org eXport
 #+begin_src emacs-lisp :tangle ~/.emacs
-  (use-package ox-reveal
-    :config
-    (setq org-reveal-root "file:///home/user/git/reveal.js"))
-  (use-package ox-twbs)
-  (use-package ox-json)
+(use-package ox-reveal
+  :config
+  (setq org-reveal-root "file:///home/user/git/reveal.js"))
+(use-package ox-twbs)
+(use-package ox-json)
+
+(setq org-src-fontify-natively t)
+(setq org-latex-listings 'minted
+      org-latex-packages-alist '(("" "minted"))
+      org-latex-pdf-process
+      '("pdflatex -shell-escape -interaction nonstopmode -output-directory %o %f"
+        "pdflatex -shell-escape -interaction nonstopmode -output-directory %o %f"))
+
 #+end_src
 
 ** Org Transclusion
