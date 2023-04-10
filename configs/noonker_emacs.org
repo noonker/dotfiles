@@ -77,32 +77,80 @@ Anything in this section can be described in one sentence.
   :init (define-key global-map (kbd "M-p") 'ace-jump-mode))
 #+end_src
 
-** Helm
-
-[[https://github.com/emacs-helm/helm][Helm]] is an incremental completion framework. It makes things like M-x much easier to search. I have else enabled =helm-mini= with the hotkey =C-2=. This is how I do most of my navigation within emacs.
+** Vertico
 
 #+begin_src emacs-lisp :tangle ~/.emacs
-  (use-package helm
-    :config
-    (setq helm-mini-default-sources
-      '(helm-source-buffers-list
-	helm-source-bookmarks
-	helm-source-recentf
-	helm-source-grep-ag
-	helm-source-buffer-not-found))
-    (helm-mode 1))
+;; Enable vertico
 
-  (use-package helm-ag
-      :after (helm))
+(use-package vertico
+  :ensure t
+  :bind (:map vertico-map
+              ("C-j" . vertico-next)
+              ("C-k" . vertico-previous)
+              ("C-f" . vertico-exit)
+              :map minibuffer-local-map
+              ("M-h" . backward-kill-word))
+  :init
+  (vertico-mode)
 
-  (use-package helm-pass
-      :after (pass))
+  ;; Different scroll margin
+  ;; (setq vertico-scroll-margin 0)
 
-  (global-set-key (kbd "C-2") 'helm-mini)
-  (global-set-key (kbd "M-x") #'helm-M-x)
-  (global-set-key (kbd "C-x r b") #'helm-filtered-bookmarks)
-  (global-set-key (kbd "C-x C-f") #'helm-find-files)
+  ;; Show more candidates
+  ;; (setq vertico-count 20)
+
+  ;; Grow and shrink the Vertico minibuffer
+  ;; (setq vertico-resize t)
+
+  ;; Optionally enable cycling for `vertico-next' and `vertico-previous'.
+  ;; (setq vertico-cycle t)
+  )
+
+
+
+;; Persist history over Emacs restarts. Vertico sorts by history position.
+(use-package savehist
+  :init
+  (savehist-mode))
+
+;; A few more useful configurations...
+(use-package emacs
+  :init
+  ;; Add prompt indicator to `completing-read-multiple'.
+  ;; We display [CRM<separator>], e.g., [CRM,] if the separator is a comma.
+  (defun crm-indicator (args)
+    (cons (format "[CRM%s] %s"
+                  (replace-regexp-in-string
+                   "\\`\\[.*?]\\*\\|\\[.*?]\\*\\'" ""
+                   crm-separator)
+                  (car args))
+          (cdr args)))
+  (advice-add #'completing-read-multiple :filter-args #'crm-indicator)
+
+  ;; Do not allow the cursor in the minibuffer prompt
+  (setq minibuffer-prompt-properties
+        '(read-only t cursor-intangible t face minibuffer-prompt))
+  (add-hook 'minibuffer-setup-hook #'cursor-intangible-mode)
+
+  ;; Emacs 28: Hide commands in M-x which do not work in the current mode.
+  ;; Vertico commands are hidden in normal buffers.
+  ;; (setq read-extended-command-predicate
+  ;;       #'command-completion-default-include-p)
+
+  ;; Enable recursive minibuffers
+  (setq enable-recursive-minibuffers t))
+
+;; Optionally use the `orderless' completion style.
+(use-package orderless
+  :init
+  ;; Configure a custom style dispatcher (see the Consult wiki)
+  ;; (setq orderless-style-dispatchers '(+orderless-consult-dispatch orderless-affix-dispatch)
+  ;;       orderless-component-separator #'orderless-escapable-split-on-space)
+  (setq completion-styles '(orderless basic)
+        completion-category-defaults nil
+        completion-category-overrides '((file (styles partial-completion)))))
 #+end_src
+
 
 ** Theme
 
@@ -248,12 +296,8 @@ Projectile enriches Emacs's ability to understand git projects
     :config (projectile-global-mode)
     (setq projectile-current-project-on-switch 'keep)
     (define-key projectile-mode-map (kbd "s-p") 'projectile-command-map)
-    (define-key projectile-mode-map (kbd "C-c p") 'projectile-command-map))
-
-  (use-package
-    helm-projectile
-    :config (global-set-key (kbd "C-c l") 'helm-projectile-switch-to-buffer)
-        (projectile-mode +1))
+    (define-key projectile-mode-map (kbd "C-c p") 'projectile-command-map)
+    (projectile-mode +1))
 #+end_src
 
 ** 🌈 things
@@ -286,6 +330,7 @@ Emacs can nearly transparently use .gpg encrypted files in emacs. These settings
   (setq epa-file-encrypt-to "noonker@gmail.com") ;; Encrypt to my gpg key
   (setf epa-pinentry-mode 'loopback) ;; No UI popup. Ask for password in modeline
 #+end_src
+
 ** Keycast
 #+begin_src emacs-lisp :tangle ~/.emacs
   (use-package keycast)
@@ -300,7 +345,7 @@ Anything in this section can be described in one sentence.
   (use-package ag) ;; the-silver-searcher for emacs
   (use-package chess) ;; Chess - the ultimate tool
   (use-package pass
-    :config (global-set-key (kbd "<f12>") 'helm-pass)) ;; Password Store
+    :config (global-set-key (kbd "<f12>") 'password-store-copy)) ;; Password Store
   (use-package offlineimap) ;; Sync mailboxes
   (use-package plantuml-mode) ;; Define graphs in code
   (use-package restclient) ;; Query HTTP Endpoints
@@ -401,7 +446,6 @@ Tramp allows for nearly transparent editing of files on remote machines. Run =C-
 		      dired-directory))
       ad-do-it))
   (setq projectile-mode-line "Projectile")
-  (add-to-list 'tramp-remote-path 'tramp-own-remote-path)
 #+end_src
 
 ** SMTP
@@ -738,35 +782,32 @@ Functions and mobile gadgets
 
 (defun get-android-apk ()
   (interactive)
-  (helm :sources
-        (helm-build-sync-source "Android Apps"
-          :candidates (split-string (shell-command-to-string "adb shell pm list packages -3 | sed \"s/package://g\""))
-          :fuzzy-match t
-          :action (lambda (x) (copy-app-to-desktop x)))))
+  (copy-app-to-desktop
+   (completing-read
+    "Copy App: "
+    (split-string (shell-command-to-string "adb shell pm list packages -3 | sed \"s/package://g\"")))))
 
 (defun start-simulator ()
   (interactive)
-  (helm :sources
-        (helm-build-sync-source "Simulators"
-          :candidates (split-string (shell-command-to-string "xcrun simctl list | grep Shutdown") "\n")
-          :fuzzy-match t
-          :action (lambda (sim-option) (let ((udid nil))
-					 (and (string-match "\\([0-9a-fA-F]\\{8\\}-[0-9a-fA-F]\\{4\\}-[0-9a-fA-F]\\{4\\}-[0-9a-fA-F]\\{4\\}-[0-9a-fA-F]\\{12\\}\\)" sim-option)
-					      (setq udid (match-string 1 sim-option)))
-					 (if udid
-					     (shell-command (format "open -a Simulator --args -CurrentDeviceUDID %s" udid))
-					   )
-					 )))))
+  (let ((udid nil)
+	(sim-option (completing-read
+		     "Start Simulator: "
+		     (split-string (shell-command-to-string "xcrun simctl list | grep Shutdown") "\n"))))
+    (and (string-match "\\([0-9a-fA-F]\\{8\\}-[0-9a-fA-F]\\{4\\}-[0-9a-fA-F]\\{4\\}-[0-9a-fA-F]\\{4\\}-[0-9a-fA-F]\\{12\\}\\)" sim-option)
+	 (setq udid (match-string 1 sim-option)))
+    (if udid
+	(shell-command (format "open -a Simulator --args -CurrentDeviceUDID %s" udid)))))
 
 (defun android-start-emulator ()
   (interactive)
-  (helm :sources
-        (helm-build-sync-source "Emulators"
-          :candidates (split-string (shell-command-to-string "$HOME/Library/Android/sdk/emulator/emulator -list-avds") "\n")
-          :fuzzy-match t
-          :action (lambda (avd) (if avd
-				    (shell-command (format "$HOME/Library/Android/sdk/emulator/emulator -avd %s -netdelay none -netspeed full &" avd)))))))
-
+  
+  (let ((avd (completing-read
+	      "Emulator: "
+	      (split-string
+	       (shell-command-to-string "$HOME/Library/Android/sdk/emulator/emulator -list-avds") "\n"))))
+    (if avd
+      (shell-command (format "$HOME/Library/Android/sdk/emulator/emulator -avd %s -netdelay none -netspeed full &" avd)))
+    ))
 #+end_src
 
 
@@ -1113,8 +1154,7 @@ Lispy mode makes lisp-mode editing significantly more efficent
 #+begin_src emacs-lisp :tangle ~/.emacs
   (use-package lispy
     :bind
-    (("C-2" . helm-mini)
-     ("C-4" . lispy-arglist-inline))
+    (("C-4" . lispy-arglist-inline))
     :init
     (progn
       (add-hook 'emacs-lisp-mode-hook (lambda ()(lispy-mode 1)))
@@ -1141,13 +1181,8 @@ Common Lisp configs
 On MacOS you need to add =-DCMAKE_PREFIX_PATH=/usr/local/opt/llvm= after =cmake= to run =install-irony-server= per [[https://github.com/Sarcasm/irony-mode/issues/167][this]] git issue.
 
 #+begin_src emacs-lisp :tangle ~/.emacs
-  ;; sample `helm' configuration use https://github.com/emacs-helm/helm/ for details
-  (use-package helm-xref)
   (use-package dap-mode)
   (use-package which-key)
-  (define-key global-map [remap find-file] #'helm-find-files)
-  (define-key global-map [remap execute-extended-command] #'helm-M-x)
-  (define-key global-map [remap switch-to-buffer] #'helm-mini)
 
   (add-hook 'c-mode-hook 'lsp)
   (add-hook 'c++-mode-hook 'lsp)
@@ -1209,30 +1244,6 @@ On MacOS you need to add =-DCMAKE_PREFIX_PATH=/usr/local/opt/llvm= after =cmake=
 	  (define-key ggtags-mode-map (kbd "C-c g u") 'ggtags-update-tags)
 
 	  (define-key ggtags-mode-map (kbd "M-,") 'pop-tag-mark)
-	  (use-package helm-gtags)
-
-	  (setq
-	   helm-gtags-ignore-case t
-	   helm-gtags-auto-update t
-	   helm-gtags-use-input-at-cursor t
-	   helm-gtags-pulse-at-cursor t
-	   helm-gtags-prefix-key "\C-cg"
-	   helm-gtags-suggested-key-mapping t
-	   )
-
-	  ;; Enable helm-gtags-mode
-	  (add-hook 'dired-mode-hook 'helm-gtags-mode)
-	  (add-hook 'eshell-mode-hook 'helm-gtags-mode)
-	  (add-hook 'c-mode-hook 'helm-gtags-mode)
-	  (add-hook 'c++-mode-hook 'helm-gtags-mode)
-	  (add-hook 'asm-mode-hook 'helm-gtags-mode)
-
-	  (define-key helm-gtags-mode-map (kbd "C-c g a") 'helm-gtags-tags-in-this-function)
-	  (define-key helm-gtags-mode-map (kbd "C-j") 'helm-gtags-select)
-	  (define-key helm-gtags-mode-map (kbd "M-.") 'helm-gtags-dwim)
-	  (define-key helm-gtags-mode-map (kbd "M-,") 'helm-gtags-pop-stack)
-	  (define-key helm-gtags-mode-map (kbd "C-c <") 'helm-gtags-previous-history)
-	  (define-key helm-gtags-mode-map (kbd "C-c >") 'helm-gtags-next-history)
 
 	  (setq-local imenu-create-index-function #'ggtags-build-imenu-index)
 
@@ -1264,6 +1275,7 @@ Python + LSP
                (lsp))))  ; or lsp-deferred
 
 (pyvenv-workon "p310")
+(setq python-shell-interpreter "python")
 #+end_src
 
 ** Platformio
@@ -1763,15 +1775,14 @@ Run =brew install languagetool= to install on mac
 Replace spotlight with emacs
 
 #+begin_src emacs-lisp :tangle ~/.emacs
-  (defun mac-open ()
-    "Open a mac application... In Emacs.... why not"
-    (interactive)
-    (helm :sources
-      (helm-build-sync-source "Mac Apps"
-        :candidates (directory-files "/Applications")
-        :fuzzy-match t
-        :action (lambda (x) (call-process-shell-command (format " open /Applications/%s" x)))
-        )))
+(defun mac-open ()
+  "Open a mac application... In Emacs.... why not"
+  (interactive)
+  (call-process-shell-command
+   (format " open /Applications/%s"
+	   (completing-read
+	    "Mac Open: "
+	    (directory-files "/Applications")))))
 #+end_src
 
 ** Youtube Download
@@ -2064,4 +2075,40 @@ These functions are helpers and should be self explanitory
       (insert body))
       (message-send-and-exit)
       )
+#+end_src
+
+* AI
+
+** ChatGPT
+#+begin_src emacs-lisp :tangle ~/.emacs
+(use-package gptel
+  :straight (:host github :repo "karthink/gptel" :files ("dist" "*.el"))
+  :config (setq gptel-api-key (password-store-get "openai")))
+#+end_src
+
+#+begin_src emacs-lisp :tangle ~/.emacs
+(use-package org-ai
+  :ensure
+  :commands (org-ai-mode)
+  :custom
+  (org-ai-openai-api-token (password-store-get "openai"))
+  :init
+  (add-hook 'org-mode-hook #'org-ai-mode)
+  :config
+  ;; if you are on the gpt-4 beta:
+  ;; (setq org-ai-default-chat-model "gpt-4")
+  ;; if you are using yasnippet and want `ai` snippets
+  (org-ai-install-yasnippets))  
+#+end_src
+
+** Copilot
+
+
+#+begin_src emacs-lisp :tangle ~/.emacs
+(use-package copilot
+  :straight (:host github :repo "zerolfx/copilot.el" :files ("dist" "*.el"))
+  :ensure t
+  :bind (:map copilot-completion-map
+  ("C-c c c" . #'copilot-accept-completion)
+        ("C-c c n" .  #'copilot-next-completion)))  
 #+end_src
