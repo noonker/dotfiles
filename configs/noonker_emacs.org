@@ -149,6 +149,44 @@ Anything in this section can be described in one sentence.
   (setq completion-styles '(orderless basic)
         completion-category-defaults nil
         completion-category-overrides '((file (styles partial-completion)))))
+
+(use-package marginalia
+  :ensure t
+  :config
+  (marginalia-mode))
+
+(use-package embark
+  :ensure t
+
+  :bind
+  (("C-." . embark-act)         ;; pick some comfortable binding
+   ("C-;" . embark-dwim)        ;; good alternative: M-.
+   ("C-h B" . embark-bindings)) ;; alternative for `describe-bindings'
+
+  :init
+
+  ;; Optionally replace the key help with a completing-read interface
+  (setq prefix-help-command #'embark-prefix-help-command)
+
+  ;; Show the Embark target at point via Eldoc.  You may adjust the Eldoc
+  ;; strategy, if you want to see the documentation from multiple providers.
+  (add-hook 'eldoc-documentation-functions #'embark-eldoc-first-target)
+  ;; (setq eldoc-documentation-strategy #'eldoc-documentation-compose-eagerly)
+
+  :config
+
+  ;; Hide the mode line of the Embark live/completions buffers
+  (add-to-list 'display-buffer-alist
+               '("\\`\\*Embark Collect \\(Live\\|Completions\\)\\*"
+                 nil
+                 (window-parameters (mode-line-format . none)))))
+
+(use-package consult)
+(use-package embark-consult)
+(use-package consult-ag)
+(use-package consult-dir)
+(use-package consult-org-roam)
+(global-set-key (kbd "C-2") 'consult-buffer)
 #+end_src
 
 
@@ -685,7 +723,7 @@ Email client for emacs
  :type built-in)
 :commands (mu4e)
 :init
-  (setq mu4e-get-mail-command "offlineimap -o")
+  (setq mu4e-get-mail-command "mbsync -q exchange")
   (setq mu4e-update-interval 120)
   (global-set-key (kbd "C-c m m") `mu4e)
   )
@@ -711,10 +749,6 @@ Email client for emacs
       org-msg-convert-citation t)
   (org-msg-mode)
  )
-
-(defun unstuck-offlineimap ()
-  (interactive)
-  (async-shell-command "pkill -f \"offlineimap\""))
 #+end_src
 
 ** Excorporate
@@ -1291,13 +1325,15 @@ Platformio is for programming embedded devices
 Typescript + LSP
 
 #+begin_src emacs-lisp :tangle ~/.emacs
-    (use-package tide
-      :ensure t
-      :after (typescript-mode company flycheck)
-      :hook ((typescript-mode . tide-setup)
-	     (typescript-mode . tide-hl-identifier-mode)
-	     ;; (before-save . tide-format-before-save)
-	     ))
+(use-package typescript-mode)
+
+(use-package tide
+  :ensure t
+  :after (typescript-mode company flycheck)
+  :hook ((typescript-mode . tide-setup)
+	 (typescript-mode . tide-hl-identifier-mode)
+	 ;; (before-save . tide-format-before-save)
+	 ))
 #+end_src
 
 ** Clojure
@@ -1749,6 +1785,15 @@ Clojure + LSP
   (use-package org-transclusion)
 #+end_src
 
+** TODO Easydraw
+
+#+begin_src emacs-lisp
+(use-package edraw-org
+  :straight (:host github :repo "misohena/el-easydraw" :files ("dist" "*.el"))
+  :config (with-eval-after-load 'org
+	    (require 'edraw-org)
+	    (edraw-org-setup-default)))
+#+end_src
 
 ** Markdown
 #+begin_src emacs-lisp :tangle ~/.emacs
