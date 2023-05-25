@@ -462,6 +462,14 @@ Emacs shell settings
 
 #+end_src
 
+** GhostText
+
+#+begin_src emacs-lisp :tangle ~/.emacs
+(use-package atomic-chrome
+  :init (atomic-chrome-start-server))  
+#+end_src
+
+
 ** Tramp
 
 Tramp allows for nearly transparent editing of files on remote machines. Run =C-x C-f= and preface your url with =/ssh:user@host:= to connect to a remote hose and select a file.
