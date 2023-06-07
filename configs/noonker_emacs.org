@@ -149,6 +149,44 @@ Anything in this section can be described in one sentence.
   (setq completion-styles '(orderless basic)
         completion-category-defaults nil
         completion-category-overrides '((file (styles partial-completion)))))
+
+(use-package marginalia
+  :ensure t
+  :config
+  (marginalia-mode))
+
+(use-package embark
+  :ensure t
+
+  :bind
+  (("C-." . embark-act)         ;; pick some comfortable binding
+   ("C-;" . embark-dwim)        ;; good alternative: M-.
+   ("C-h B" . embark-bindings)) ;; alternative for `describe-bindings'
+
+  :init
+
+  ;; Optionally replace the key help with a completing-read interface
+  (setq prefix-help-command #'embark-prefix-help-command)
+
+  ;; Show the Embark target at point via Eldoc.  You may adjust the Eldoc
+  ;; strategy, if you want to see the documentation from multiple providers.
+  (add-hook 'eldoc-documentation-functions #'embark-eldoc-first-target)
+  ;; (setq eldoc-documentation-strategy #'eldoc-documentation-compose-eagerly)
+
+  :config
+
+  ;; Hide the mode line of the Embark live/completions buffers
+  (add-to-list 'display-buffer-alist
+               '("\\`\\*Embark Collect \\(Live\\|Completions\\)\\*"
+                 nil
+                 (window-parameters (mode-line-format . none)))))
+
+(use-package consult)
+(use-package embark-consult)
+(use-package consult-ag)
+(use-package consult-dir)
+(use-package consult-org-roam)
+(global-set-key (kbd "C-2") 'consult-buffer)
 #+end_src
 
 
@@ -424,6 +462,14 @@ Emacs shell settings
 
 #+end_src
 
+** GhostText
+
+#+begin_src emacs-lisp :tangle ~/.emacs
+(use-package atomic-chrome
+  :init (atomic-chrome-start-server))  
+#+end_src
+
+
 ** Tramp
 
 Tramp allows for nearly transparent editing of files on remote machines. Run =C-x C-f= and preface your url with =/ssh:user@host:= to connect to a remote hose and select a file.
@@ -685,7 +731,7 @@ Email client for emacs
  :type built-in)
 :commands (mu4e)
 :init
-  (setq mu4e-get-mail-command "offlineimap -o")
+  (setq mu4e-get-mail-command "mbsync -q exchange")
   (setq mu4e-update-interval 120)
   (global-set-key (kbd "C-c m m") `mu4e)
   )
@@ -711,10 +757,6 @@ Email client for emacs
       org-msg-convert-citation t)
   (org-msg-mode)
  )
-
-(defun unstuck-offlineimap ()
-  (interactive)
-  (async-shell-command "pkill -f \"offlineimap\""))
 #+end_src
 
 ** Excorporate
@@ -1291,13 +1333,15 @@ Platformio is for programming embedded devices
 Typescript + LSP
 
 #+begin_src emacs-lisp :tangle ~/.emacs
-    (use-package tide
-      :ensure t
-      :after (typescript-mode company flycheck)
-      :hook ((typescript-mode . tide-setup)
-	     (typescript-mode . tide-hl-identifier-mode)
-	     ;; (before-save . tide-format-before-save)
-	     ))
+(use-package typescript-mode)
+
+(use-package tide
+  :ensure t
+  :after (typescript-mode company flycheck)
+  :hook ((typescript-mode . tide-setup)
+	 (typescript-mode . tide-hl-identifier-mode)
+	 ;; (before-save . tide-format-before-save)
+	 ))
 #+end_src
 
 ** Clojure
@@ -1519,8 +1563,9 @@ Clojure + LSP
 
 *** Org Babel Packages
 #+begin_src emacs-lisp :tangle ~/.emacs
-  (use-package ob-restclient)
-  (use-package ob-sql-mode)
+(use-package ob-restclient)
+(use-package ob-sql-mode)
+(use-package ob-typescript)
 #+end_src
 
 *** Org Babel
@@ -1535,6 +1580,7 @@ Clojure + LSP
    (sql . t)
    (sqlite . t)
    (gnuplot . t)
+   (typescript . t)
    (C . t)))
 
 (setq org-plantuml-jar-path
@@ -1727,11 +1773,19 @@ Clojure + LSP
 
 *** Org eXport
 #+begin_src emacs-lisp :tangle ~/.emacs
-  (use-package ox-reveal
-    :config
-    (setq org-reveal-root "file:///home/user/git/reveal.js"))
-  (use-package ox-twbs)
-  (use-package ox-json)
+(use-package ox-reveal
+  :config
+  (setq org-reveal-root "file:///home/user/git/reveal.js"))
+(use-package ox-twbs)
+(use-package ox-json)
+
+(setq org-src-fontify-natively t)
+(setq org-latex-listings 'minted
+      org-latex-packages-alist '(("" "minted"))
+      org-latex-pdf-process
+      '("pdflatex -shell-escape -interaction nonstopmode -output-directory %o %f"
+        "pdflatex -shell-escape -interaction nonstopmode -output-directory %o %f"))
+
 #+end_src
 
 ** Org Transclusion
@@ -1739,6 +1793,15 @@ Clojure + LSP
   (use-package org-transclusion)
 #+end_src
 
+** TODO Easydraw
+
+#+begin_src emacs-lisp
+(use-package edraw-org
+  :straight (:host github :repo "misohena/el-easydraw" :files ("dist" "*.el"))
+  :config (with-eval-after-load 'org
+	    (require 'edraw-org)
+	    (edraw-org-setup-default)))
+#+end_src
 
 ** Markdown
 #+begin_src emacs-lisp :tangle ~/.emacs
