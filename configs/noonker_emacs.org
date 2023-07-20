@@ -269,8 +269,6 @@ Random global behavior configs
 (setq version-control t) ;; Honestly... don't remember but I'm sure I want this
 (setq vc-make-backup-files t) ;; Also make backup files for version controller files
 (setq auto-save-file-name-transforms '((".*" "~/.emacs.d/auto-save-list/" t))) ;; Store autosaves in this folder instead of next to the file
-(setq x-select-enable-clipboard t) ;; Use the mac clipboard
-(setq x-select-enable-primary t) ;; Use the mac clipboard as primary clipboard
 (setq inhibit-startup-screen t) ;; Don't show the starup screen
 (global-so-long-mode 1)
 #+end_src
@@ -622,6 +620,13 @@ W3m is an emacs web browser
     (add-hook 'w3m-mode-hook 'my-w3m-bindings))
 #+end_src
 
+** Hackernews
+
+#+begin_src emacs-lisp :tangle ~/.emacs
+(use-package hackernews)
+#+end_src
+
+
 ** ERC
 
 IRC for Emacs
@@ -848,7 +853,7 @@ Functions and mobile gadgets
 	      (split-string
 	       (shell-command-to-string "$HOME/Library/Android/sdk/emulator/emulator -list-avds") "\n"))))
     (if avd
-      (shell-command (format "$HOME/Library/Android/sdk/emulator/emulator -avd %s -netdelay none -netspeed full &" avd)))
+      (shell-command (format "$HOME/Library/Android/sdk/emulator/emulator -avd %s -netdelay none -netspeed full -no-snapshot-load&" avd)))
     ))
 #+end_src
 
