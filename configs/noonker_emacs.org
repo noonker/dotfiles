@@ -1489,6 +1489,14 @@ Clojure + LSP
 (global-set-key (kbd "C-c n r f") 'org-roam-node-find)
 (global-set-key (kbd "C-c n r i") 'org-roam-node-insert)
 
+(setq personal/node-types '(
+			    'ctf
+			    'investigation
+			    'demo
+			    'poetry
+			    'music
+			    'music-analysis))
+
 (defun org-today-update-day ()
     (interactive)
     (setq org-archive-location (format "%s/archive/%s.org::" org-agenda-basedir (format-time-string "%Y-%m-%d"))))
@@ -1503,6 +1511,7 @@ Clojure + LSP
     (progn
       (setq org-image-actual-width (list 400))))
 #+end_src
+
 *** Org Transclusion
 #+begin_src emacs-lisp :tangle ~/.emacs
   (use-package org-transclusion
@@ -1671,7 +1680,6 @@ Clojure + LSP
       ""))
 
   (setq org-blogpost-directory (directory-files-if-exists (format "%s/blog/content/posts" org-directory)))
-  (setq org-investigations-directory (directory-files-if-exists (format "%s/investigations" org-directory)))
   (setq org-cheatsheet-directory (directory-files-if-exists (format "%s/cheatsheet" org-directory)))
   (setq org-notes-directory (directory-files-if-exists (format "%s/notes" org-directory)))
   (setq org-refile-use-outline-path t)                  ; Show full paths for refiling
@@ -1684,44 +1692,40 @@ Clojure + LSP
 
 *** Org Capture
 #+begin_src emacs-lisp :tangle ~/.emacs
-  (setq org-capture-templates
-	'(("b" "Backlog" entry (file+headline (lambda () (format "%s/backlog.org" org-agenda-basedir)) "Backlog")
-	   "** TODO %?\n  %i\n  %a")
-	  ("I" "Investigations" entry (file+headline (lambda () (format "%s/investigations/index.org" org-directory)) "Investigations")
-	   "** %<%Y-%m-%d>-%?\n")
-	  ("t" "Today" entry (file+headline (lambda () (format "%s/today.org" org-agenda-basedir)) "Tasks")
-	   "\n** TODO %?\n SCHEDULED: %t")
-	  ("n" "Now" entry (file+headline (lambda () (format "%s/today.org" org-agenda-basedir)) "Tasks")
-	   "\n** TODO %?\n SCHEDULED: %t" :clock-in t :clock-keep t)
-	  ("i" "Interrupt" entry (file+headline (lambda () (format "%s/today.org" org-agenda-basedir)) "Tasks")
-	   "\n** TODO %?\n SCHEDULED: %t" :clock-in t :clock-resume t)
-	  ("c" "Cookbook" entry (file "~/org/cookbook.org")
-	   "%(org-chef-get-recipe-from-url)"
-	   :empty-lines 1)
-	  ("m" "Manual Cookbook" entry (file "~/org/cookbook.org")
-	   "* %^{Recipe title: }\n  :PROPERTIES:\n  :source-url:\n  :servings:\n  :prep-time:\n  :cook-time:\n  :ready-in:\n  :END:\n** Ingredients\n   %?\n** Directions\n\n")
-	  ("p" "Protocol" entry (file+headline ,(concat org-directory "notes.org") "Inbox")
-	   "* %^{Title}\nSource: %u, %c\n #+BEGIN_QUOTE\n%i\n#+END_QUOTE\n\n\n%?")
-	  ("L" "Protocol Link" entry (file+headline ,(concat org-directory "notes.org") "Inbox")
-	   "* %? [[%:link][%(transform-square-brackets-to-round-ones \"%:description\")]]\n")
-	  ))
+(setq org-capture-templates
+      `(("b" "Backlog" entry (file+headline (lambda () (format "%s/backlog.org" org-agenda-basedir)) "Backlog")
+	 "** TODO %?\n  %i\n  %a")
+	("t" "Today" entry (file+headline (lambda () (format "%s/today.org" org-agenda-basedir)) "Tasks")
+	 "\n** TODO %?\n SCHEDULED: %t")
+	("n" "Now" entry (file+headline (lambda () (format "%s/today.org" org-agenda-basedir)) "Tasks")
+	 "\n** TODO %?\n SCHEDULED: %t" :clock-in t :clock-keep t)
+	("i" "Interrupt" entry (file+headline (lambda () (format "%s/today.org" org-agenda-basedir)) "Tasks")
+	 "\n** TODO %?\n SCHEDULED: %t" :clock-in t :clock-resume t)
+	("c" "Cookbook" entry (file "~/org/cookbook.org")
+	 "%(org-chef-get-recipe-from-url)"
+	 :empty-lines 1)
+	("m" "Manual Cookbook" entry (file "~/org/cookbook.org")
+	 "* %^{Recipe title: }\n  :PROPERTIES:\n  :source-url:\n  :servings:\n  :prep-time:\n  :cook-time:\n  :ready-in:\n  :END:\n** Ingredients\n   %?\n** Directions\n\n")
+	("p" "Protocol" entry (file+headline ,(concat org-directory "notes.org") "Inbox")
+	 "* %^{Title}\nSource: %u, %c\n #+BEGIN_QUOTE\n%i\n#+END_QUOTE\n\n\n%?")
+	("L" "Protocol Link" entry (file+headline ,(concat org-directory "notes.org") "Inbox")
+	 "* %? [[%:link][%(transform-square-brackets-to-round-ones \"%:description\")]]\n")
+	("j" "Journal" entry (file+headline (lambda () (format "%s/journal/%s.org.gpg" org-directory (format-time-string "%Y-%m-%d"))) "Journal") "")
+	("B" "Blog Post" plain (file (lambda () (format "%s/blog/noonker/content/posts/%s-%s.org" org-directory (format-time-string "%Y-%m-%d") (read-string "Name: ")))) 
+	 ,(format "#+title: TITLE\n#+subtitle:\n#+date: %s\n#+tags[]: tech, emacs\n#+draft: false\n\n" (format-time-string "%Y-%m-%d")))
+	)
+)
 
-  (setq org-roam-capture-templates '(
-				     ("n" "notes" plain "%?"
-				      :target (file+head "notes/%<%Y%m%d%H%M%S>-${slug}.org"
-							 "#+title: ${title}\n#+ROAM_ALIAS:\n#+ROAM_TAGS: \n#+CREATED: %U\n#+LAST_MODIFIED: %U\n\n")
-				      :unnarrowed t)
-				     ("i" "investigations" plain (function org-roam--capture-get-point)
-				      "%?"
-				      :file-name "investigations/%<%Y%m%d%H%M%S>-${slug}"
-				      :head "#+title: ${title}\n#+CREATED: %U\n#+LAST_MODIFIED: %U\n\n"
-				      :unnarrowed t)
-				     ("n" "new investigation" plain (function org-roam--capture-get-point)
-				      "%?"
-				      :file-name "investigations/${slug}"
-				      :head "#+title: ${title}\n#+CREATED: %U\n#+LAST_MODIFIED: %U\n\n"
-				      :unnarrowed t)
-				     ))
+(setq org-roam-capture-templates '(
+				   ("n" "notes" plain "%?"
+				    :target (file+head "notes/%<%Y%m%d%H%M%S>-${slug}/${slug}.org"
+						       "#+title: ${title}\n#+ROAM_ALIAS:\n#+ROAM_TAGS: \n#+CREATED: %U\n#+LAST_MODIFIED: %U\n\n")
+				    :unnarrowed t)
+				   ("e" "encrypted notes" plain "%?"
+				    :target (file+head "notes/%<%Y%m%d%H%M%S>-${slug}/${slug}.org.gpg"
+						       "#+title: ${title}\n#+ROAM_ALIAS:\n#+ROAM_TAGS: \n#+CREATED: %U\n#+LAST_MODIFIED: %U\n\n")
+				    :unnarrowed t)
+				   ))
 #+end_src
 
 *** Org Roam
