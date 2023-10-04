@@ -1812,9 +1812,38 @@ Clojure + LSP
 
 #+end_src
 
-** Org Transclusion
+*** Org Transclusion
 #+begin_src emacs-lisp :tangle ~/.emacs
   (use-package org-transclusion)
+#+end_src
+
+
+*** Org + Hugo
+
+Blogging with hugo
+
+#+begin_src emacs-lisp :tangle ~/.emacs
+(use-package easy-hugo)
+
+(defun replace-regexp-entire-buffer (pattern replacement)
+  "Perform regular-expression replacement throughout buffer."
+  (interactive
+   (let ((args (query-replace-read-args "Replace" t)))
+     (setcdr (cdr args) nil)    ; remove third value returned from query---args
+     args))
+  (save-excursion
+    (goto-char (point-min))
+    (while (re-search-forward pattern nil t)
+      (replace-match replacement))))
+
+(defun blog-cleanup-buffer ()
+  (interactive)
+  (replace-regexp-entire-buffer "../../static" ""))
+
+(defun blog-push-to-git ()
+  (interactive)
+  (async-shell-command (format "cd %s/blog/noonker/public/ && git add . && git commit -m \"update\" && git push") "Blog-Update")
+  )
 #+end_src
 
 ** TODO Easydraw
