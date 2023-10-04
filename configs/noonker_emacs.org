@@ -1726,7 +1726,7 @@ Clojure + LSP
 	("L" "Protocol Link" entry (file+headline ,(concat org-directory "notes.org") "Inbox")
 	 "* %? [[%:link][%(transform-square-brackets-to-round-ones \"%:description\")]]\n")
 	("j" "Journal" entry (file+headline (lambda () (format "%s/journal/%s.org.gpg" org-directory (format-time-string "%Y-%m-%d"))) "Journal") "")
-	("B" "Blog Post" plain (file (lambda () (format "%s/blog/noonker/content/posts/%s-%s.org" org-directory (format-time-string "%Y-%m-%d") (read-string "Name: ")))) 
+	("B" "Blog Post" plain (file (lambda () (format "%s/blog/noonker/content/posts/%s-%s.org" org-directory (format-time-string "%Y-%m-%d") (replace-regexp-in-string " " "-" (downcase (read-string "Name: ")))))) 
 	 ,(format "#+title: TITLE\n#+subtitle:\n#+date: %s\n#+tags[]: tech, emacs\n#+draft: false\n\n" (format-time-string "%Y-%m-%d")))
 	)
 )
@@ -2180,7 +2180,7 @@ These functions are helpers and should be self explanitory
   :ensure
   :commands (org-ai-mode)
   :custom
-  (org-ai-openai-api-token (password-store-get "openai"))
+  (org-ai-openai-api-token (password-store-get "Internet/openai"))
   :init
   (add-hook 'org-mode-hook #'org-ai-mode)
   :config
