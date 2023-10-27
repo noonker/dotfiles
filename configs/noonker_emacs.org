@@ -501,10 +501,19 @@ Tramp allows for nearly transparent editing of files on remote machines. Run =C-
 This is my minimal SMTP setup for Protonmail Bridge
 
 #+begin_src emacs-lisp :tangle ~/.emacs
-  (setq message-send-mail-function 'smtpmail-send-it
-        smtpmail-auth-credentials "~/.authinfo"
+(setq user-mail-address "noonker@pm.me"
+    user-full-name  "Joshua Person")
+
+
+  (setq send-mail-function 'smtpmail-send-it
+        starttls-use-gnutls t
         smtpmail-smtp-server "127.0.0.1"
-        smtpmail-smtp-service 1025)
+        smtpmail-smtp-service 1025
+	    smtpmail-auth-credentials "~/.authinfo.gpg"
+        smtpmail-stream-type 'starttls
+        smtpmail-smtp-user "noonker@pm.me")
+
+  (setq mail-user-agent 'mu4e-user-agent)
 #+end_src
 
 ** Hugo
@@ -740,8 +749,14 @@ Email client for emacs
  :type built-in)
 :commands (mu4e)
 :init
-  (setq mu4e-get-mail-command "mbsync -q exchange")
-  (setq mu4e-update-interval 120)
+ (setq
+  mu4e-attachment-dir "~/Downloads"
+   mu4e-sent-folder   "/Sent"       ;; folder for sent messages
+   mu4e-drafts-folder "/Drafts"     ;; unfinished messages
+   mu4e-trash-folder  "/Trash"      ;; trashed messages
+   mu4e-refile-folder "/Archive")   ;; saved messages
+  (setq mu4e-get-mail-command "offlineimap -o")
+  (setq mu4e-update-interval 40)
   (global-set-key (kbd "C-c m m") `mu4e)
   )
 
@@ -1493,6 +1508,14 @@ Clojure + LSP
 (global-set-key (kbd "C-c n r f") 'org-roam-node-find)
 (global-set-key (kbd "C-c n r i") 'org-roam-node-insert)
 
+(setq personal/node-types '(
+			    'ctf
+			    'investigation
+			    'demo
+			    'poetry
+			    'music
+			    'music-analysis))
+
 (defun org-today-update-day ()
     (interactive)
     (setq org-archive-location (format "%s/archive/%s.org::" org-agenda-basedir (format-time-string "%Y-%m-%d"))))
@@ -1507,6 +1530,7 @@ Clojure + LSP
     (progn
       (setq org-image-actual-width (list 400))))
 #+end_src
+
 *** Org Transclusion
 #+begin_src emacs-lisp :tangle ~/.emacs
   (use-package org-transclusion
@@ -1676,7 +1700,6 @@ Clojure + LSP
       ""))
 
   (setq org-blogpost-directory (directory-files-if-exists (format "%s/blog/content/posts" org-directory)))
-  (setq org-investigations-directory (directory-files-if-exists (format "%s/investigations" org-directory)))
   (setq org-cheatsheet-directory (directory-files-if-exists (format "%s/cheatsheet" org-directory)))
   (setq org-notes-directory (directory-files-if-exists (format "%s/notes" org-directory)))
   (setq org-refile-use-outline-path t)                  ; Show full paths for refiling
@@ -1689,44 +1712,40 @@ Clojure + LSP
 
 *** Org Capture
 #+begin_src emacs-lisp :tangle ~/.emacs
-  (setq org-capture-templates
-	'(("b" "Backlog" entry (file+headline (lambda () (format "%s/backlog.org" org-agenda-basedir)) "Backlog")
-	   "** TODO %?\n  %i\n  %a")
-	  ("I" "Investigations" entry (file+headline (lambda () (format "%s/investigations/index.org" org-directory)) "Investigations")
-	   "** %<%Y-%m-%d>-%?\n")
-	  ("t" "Today" entry (file+headline (lambda () (format "%s/today.org" org-agenda-basedir)) "Tasks")
-	   "\n** TODO %?\n SCHEDULED: %t")
-	  ("n" "Now" entry (file+headline (lambda () (format "%s/today.org" org-agenda-basedir)) "Tasks")
-	   "\n** TODO %?\n SCHEDULED: %t" :clock-in t :clock-keep t)
-	  ("i" "Interrupt" entry (file+headline (lambda () (format "%s/today.org" org-agenda-basedir)) "Tasks")
-	   "\n** TODO %?\n SCHEDULED: %t" :clock-in t :clock-resume t)
-	  ("c" "Cookbook" entry (file "~/org/cookbook.org")
-	   "%(org-chef-get-recipe-from-url)"
-	   :empty-lines 1)
-	  ("m" "Manual Cookbook" entry (file "~/org/cookbook.org")
-	   "* %^{Recipe title: }\n  :PROPERTIES:\n  :source-url:\n  :servings:\n  :prep-time:\n  :cook-time:\n  :ready-in:\n  :END:\n** Ingredients\n   %?\n** Directions\n\n")
-	  ("p" "Protocol" entry (file+headline ,(concat org-directory "notes.org") "Inbox")
-	   "* %^{Title}\nSource: %u, %c\n #+BEGIN_QUOTE\n%i\n#+END_QUOTE\n\n\n%?")
-	  ("L" "Protocol Link" entry (file+headline ,(concat org-directory "notes.org") "Inbox")
-	   "* %? [[%:link][%(transform-square-brackets-to-round-ones \"%:description\")]]\n")
-	  ))
+(setq org-capture-templates
+      `(("b" "Backlog" entry (file+headline (lambda () (format "%s/backlog.org" org-agenda-basedir)) "Backlog")
+	 "** TODO %?\n  %i\n  %a")
+	("t" "Today" entry (file+headline (lambda () (format "%s/today.org" org-agenda-basedir)) "Tasks")
+	 "\n** TODO %?\n SCHEDULED: %t")
+	("n" "Now" entry (file+headline (lambda () (format "%s/today.org" org-agenda-basedir)) "Tasks")
+	 "\n** TODO %?\n SCHEDULED: %t" :clock-in t :clock-keep t)
+	("i" "Interrupt" entry (file+headline (lambda () (format "%s/today.org" org-agenda-basedir)) "Tasks")
+	 "\n** TODO %?\n SCHEDULED: %t" :clock-in t :clock-resume t)
+	("c" "Cookbook" entry (file "~/org/cookbook.org")
+	 "%(org-chef-get-recipe-from-url)"
+	 :empty-lines 1)
+	("m" "Manual Cookbook" entry (file "~/org/cookbook.org")
+	 "* %^{Recipe title: }\n  :PROPERTIES:\n  :source-url:\n  :servings:\n  :prep-time:\n  :cook-time:\n  :ready-in:\n  :END:\n** Ingredients\n   %?\n** Directions\n\n")
+	("p" "Protocol" entry (file+headline ,(concat org-directory "notes.org") "Inbox")
+	 "* %^{Title}\nSource: %u, %c\n #+BEGIN_QUOTE\n%i\n#+END_QUOTE\n\n\n%?")
+	("L" "Protocol Link" entry (file+headline ,(concat org-directory "notes.org") "Inbox")
+	 "* %? [[%:link][%(transform-square-brackets-to-round-ones \"%:description\")]]\n")
+	("j" "Journal" entry (file+headline (lambda () (format "%s/journal/%s.org.gpg" org-directory (format-time-string "%Y-%m-%d"))) "Journal") "")
+	("B" "Blog Post" plain (file (lambda () (format "%s/blog/noonker/content/posts/%s-%s.org" org-directory (format-time-string "%Y-%m-%d") (replace-regexp-in-string " " "-" (downcase (read-string "Name: ")))))) 
+	 ,(format "#+title: TITLE\n#+subtitle:\n#+date: %s\n#+tags[]: tech, emacs\n#+draft: false\n\n" (format-time-string "%Y-%m-%d")))
+	)
+)
 
-  (setq org-roam-capture-templates '(
-				     ("n" "notes" plain "%?"
-				      :target (file+head "notes/%<%Y%m%d%H%M%S>-${slug}.org"
-							 "#+title: ${title}\n#+ROAM_ALIAS:\n#+ROAM_TAGS: \n#+CREATED: %U\n#+LAST_MODIFIED: %U\n\n")
-				      :unnarrowed t)
-				     ("i" "investigations" plain (function org-roam--capture-get-point)
-				      "%?"
-				      :file-name "investigations/%<%Y%m%d%H%M%S>-${slug}"
-				      :head "#+title: ${title}\n#+CREATED: %U\n#+LAST_MODIFIED: %U\n\n"
-				      :unnarrowed t)
-				     ("n" "new investigation" plain (function org-roam--capture-get-point)
-				      "%?"
-				      :file-name "investigations/${slug}"
-				      :head "#+title: ${title}\n#+CREATED: %U\n#+LAST_MODIFIED: %U\n\n"
-				      :unnarrowed t)
-				     ))
+(setq org-roam-capture-templates '(
+				   ("n" "notes" plain "%?"
+				    :target (file+head "notes/%<%Y%m%d%H%M%S>-${slug}/${slug}.org"
+						       "#+title: ${title}\n#+ROAM_ALIAS:\n#+ROAM_TAGS: \n#+CREATED: %U\n#+LAST_MODIFIED: %U\n\n")
+				    :unnarrowed t)
+				   ("e" "encrypted notes" plain "%?"
+				    :target (file+head "notes/%<%Y%m%d%H%M%S>-${slug}/${slug}.org.gpg"
+						       "#+title: ${title}\n#+ROAM_ALIAS:\n#+ROAM_TAGS: \n#+CREATED: %U\n#+LAST_MODIFIED: %U\n\n")
+				    :unnarrowed t)
+				   ))
 #+end_src
 
 *** Org Roam
@@ -1798,9 +1817,38 @@ Clojure + LSP
 
 #+end_src
 
-** Org Transclusion
+*** Org Transclusion
 #+begin_src emacs-lisp :tangle ~/.emacs
   (use-package org-transclusion)
+#+end_src
+
+
+*** Org + Hugo
+
+Blogging with hugo
+
+#+begin_src emacs-lisp :tangle ~/.emacs
+(use-package easy-hugo)
+
+(defun replace-regexp-entire-buffer (pattern replacement)
+  "Perform regular-expression replacement throughout buffer."
+  (interactive
+   (let ((args (query-replace-read-args "Replace" t)))
+     (setcdr (cdr args) nil)    ; remove third value returned from query---args
+     args))
+  (save-excursion
+    (goto-char (point-min))
+    (while (re-search-forward pattern nil t)
+      (replace-match replacement))))
+
+(defun blog-cleanup-buffer ()
+  (interactive)
+  (replace-regexp-entire-buffer "../../static" ""))
+
+(defun blog-push-to-git ()
+  (interactive)
+  (async-shell-command (format "cd %s/blog/noonker/public/ && git add . && git commit -m \"update\" && git push") "Blog-Update")
+  )
 #+end_src
 
 ** TODO Easydraw
@@ -2038,116 +2086,118 @@ Functions taken from [[http://xahlee.info/emacs/emacs/elisp_delete-current-file.
 These functions are helpers and should be self explanitory
 
 #+begin_src emacs-lisp :tangle ~/.emacs
-    (defun is-tramp-window ()
-      (if (file-remote-p default-directory) t nil))
+(defun is-tramp-window ()
+  (if (file-remote-p default-directory) t nil))
 
-    (defun no-fonts-pls ()
-      (interactive)
-      (let ((inhibit-read-only t))
-    (set-text-properties (point-min) (point-max) nil)))
+(defun no-fonts-pls ()
+  (interactive)
+  (let ((inhibit-read-only t))
+(set-text-properties (point-min) (point-max) nil)))
 
-    (defun what-is-my-ip ()
-      (interactive)
-      (message "IP: %s"
-           (with-current-buffer (url-retrieve-synchronously "https://api.`ipify.org")
-         (buffer-substring (+ 1 url-http-end-of-headers) (point-max)))))
+(defun what-is-my-ip ()
+  (interactive)
+  (message "IP: %s"
+       (with-current-buffer (url-retrieve-synchronously "https://api.`ipify.org")
+     (buffer-substring (+ 1 url-http-end-of-headers) (point-max)))))
 
-    (defun character-below ()
-      (save-excursion
-    (next-line)
-    (string (char-after (point)))))
+(defun character-below ()
+  (save-excursion
+(next-line)
+(string (char-after (point)))))
 
-    (defun replace-below (cur rep bel)
-      (interactive)
-      (let ((pos 1)
-        (tmp))
-    (while (< pos (point-max))
-      (if (equal cur (string (char-after pos)))
-          (if (equal bel (character-above))
-          (progn (delete-char 1) (insert rep))
-        ))
-      (setq pos (+ 1 pos))
-      (goto-char pos)
-      )))
+(defun replace-below (cur rep bel)
+  (interactive)
+  (let ((pos 1)
+    (tmp))
+(while (< pos (point-max))
+  (if (equal cur (string (char-after pos)))
+      (if (equal bel (character-above))
+      (progn (delete-char 1) (insert rep))
+    ))
+  (setq pos (+ 1 pos))
+  (goto-char pos)
+  )))
 
-    (defun ruthless-kill ()
-      "Kill the line without copying it"
-      (interactive)
-      (delete-region (point) (line-end-position)))
+(defun ruthless-kill ()
+  "Kill the line without copying it"
+  (interactive)
+  (delete-region (point) (line-end-position)))
 
-    (global-set-key (kbd "C-x j") 'kill-this-buffer)
-    (global-set-key (kbd "C-c k") 'ruthless-kill)
+(global-set-key (kbd "C-x j") 'kill-this-buffer)
+(global-set-key (kbd "C-c k") 'ruthless-kill)
 
-    (defun insert-current-date ()
-      "Insert the current date"
-      (interactive)
-      (insert (shell-command-to-string "echo -n $(date +%Y-%m-%d)")))
+(defun insert-current-date ()
+  "Insert the current date"
+  (interactive)
+  (insert (shell-command-to-string "echo -n $(date +%Y-%m-%d)")))
 
-    (defun selenium()
-      (interactive)
-      (save-excursion
-    (async-shell-command "java -jar $HOME/Documents/selenium.jar")))
+(defun selenium()
+  (interactive)
+  (save-excursion
+(async-shell-command "java -jar $HOME/Documents/selenium.jar")))
 
-    (defun mopidy()
-      (interactive)
-      (save-excursion
-    (ansi-term "mopidy" "mopidy")))
+(defun mopidy()
+  (interactive)
+  (save-excursion
+(ansi-term "mopidy" "mopidy")))
 
-    (defun toggle-maximize-buffer ()
-      "Maximize buffer"
-       (interactive)
-       (if (= 1 (length (window-list)))
-           (jump-to-register '_)
-         (progn
-           (set-register '_ (list (current-window-configuration)))
-           (delete-other-windows))))
+(defun toggle-maximize-buffer ()
+  "Maximize buffer"
+   (interactive)
+   (if (= 1 (length (window-list)))
+       (jump-to-register '_)
+     (progn
+       (set-register '_ (list (current-window-configuration)))
+       (delete-other-windows))))
 
-    (defun untabify-buffer ()
-      (interactive)
-      (untabify (point-min) (point-max)))
+(defun untabify-buffer ()
+  (interactive)
+  (untabify (point-min) (point-max)))
 
-    (defun indent-buffer ()
-      (interactive)
-      (indent-region (point-min) (point-max)))
+(defun indent-buffer ()
+  (interactive)
+  (indent-region (point-min) (point-max)))
 
-    (defun cleanup-buffer ()
-      "Perform a bunch of operations on the whitespace content of a buffer."
-      (interactive)
-      (indent-buffer)
-      (untabify-buffer)
-      (delete-trailing-whitespace))
+(defun cleanup-buffer ()
+  "Perform a bunch of operations on the whitespace content of a buffer."
+  (interactive)
+  (indent-buffer)
+  (untabify-buffer)
+  (delete-trailing-whitespace))
 
-    ;; Easy window splitting
-    (defun split-maj-min (number)
-      (interactive "N")
-      "Function to split windows into one major window and multiple minor windows"
-      (split-window-horizontally)
-      (other-window 1)
-      (while (> number 1)
-    (setq number (+ -1 number))
-    (split-window-vertically))
-      (balance-windows))
+;; Easy window splitting
+(defun split-maj-min (number)
+  (interactive "N")
+  "Function to split windows into one major window and multiple minor windows"
+  (split-window-horizontally)
+  (other-window 1)
+  (while (> number 1)
+(setq number (+ -1 number))
+(split-window-vertically))
+  (balance-windows))
 
-    (defun sudo ()
-      "Use TRAMP to `sudo' the current buffer"
-      (interactive)
-      (when buffer-file-name
-    (find-alternate-file
-     (concat "/sudo:root@localhost:"
-         buffer-file-name))))
+(defun sudo ()
+  "Use TRAMP to `sudo' the current buffer"
+  (interactive)
+  (when buffer-file-name
+(find-alternate-file
+ (concat "/sudo:root@localhost:"
+     buffer-file-name))))
 
-    (defun proxy (text &optional port)
-      (interactive "sHost: ")
-      (async-shell-command (format "ssh -D 1337 -C -q -N %s" text) (format "*proxy: %s*" text)))
+(defun proxy (text &optional port)
+  (interactive "sHost: ")
+  (async-shell-command (format "ssh -D 1337 -C -q -N %s" text) (format "*proxy: %s*" text)))
 
-    (defun todo (text &optional body)
-      (interactive "sTodo: ")
-      (compose-mail-other-window "noonker@pm.me" text)
-      (mail-text)
-      (if body
-      (insert body))
-      (message-send-and-exit)
-      )
+(defun todo (text &optional body)
+  (interactive "sTodo: ")
+  (compose-mail-other-window "noonker@pm.me" text)
+  (mail-text)
+  (if body
+  (insert body))
+  (message-send-and-exit)
+  )
+
+(global-set-key (kbd "C-c C-t") 'todo)
 #+end_src
 
 * AI
@@ -2164,7 +2214,7 @@ These functions are helpers and should be self explanitory
   :ensure
   :commands (org-ai-mode)
   :custom
-  (org-ai-openai-api-token (password-store-get "openai"))
+  (org-ai-openai-api-token (password-store-get "Internet/openai"))
   :init
   (add-hook 'org-mode-hook #'org-ai-mode)
   :config
