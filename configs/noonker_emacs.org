@@ -195,9 +195,11 @@ Anything in this section can be described in one sentence.
 Loads the [[https://github.com/fniessen/emacs-leuven-theme][Leuven]] theme and sets the [[https://larsenwork.com/monoid/][Monoid]] font
 
 #+begin_src emacs-lisp :tangle ~/.emacs
-    (load-theme 'leuven t)
+;; (load-theme 'leuven t)
+(use-package cyberpunk-theme)
+(load-theme 'cyberpunk t)
 
-    (set-face-attribute 'default nil :font "Monoid" :height 100)
+(set-face-attribute 'default nil :font "Monoid" :height 120)
 #+end_src
 
 ** Pretty Symbols
@@ -378,19 +380,21 @@ Emacs can nearly transparently use .gpg encrypted files in emacs. These settings
 Anything in this section can be described in one sentence.
 
 #+begin_src emacs-lisp :tangle ~/.emacs
-  (use-package ag) ;; the-silver-searcher for emacs
-  (use-package chess) ;; Chess - the ultimate tool
-  (use-package pass
-    :config (global-set-key (kbd "<f12>") 'password-store-copy)) ;; Password Store
-  (use-package offlineimap) ;; Sync mailboxes
-  (use-package plantuml-mode) ;; Define graphs in code
-  (use-package restclient) ;; Query HTTP Endpoints
-  (use-package rfc-mode
-    :config
-    (setq rfc-mode-directory (expand-file-name "~/Documents/rfc/"))) ;; Read RFCs
-  (use-package speed-type) ;; Practice typing
-  (use-package yara-mode) ;; Syntax highlighting
-  (use-package password-generator) ;; Generate secure passwords
+(use-package ag) ;; the-silver-searcher for emacs
+(use-package chess) ;; Chess - the ultimate tool
+(use-package pass
+  :config (global-set-key (kbd "<f12>") 'password-store-copy)) ;; Password Store
+(use-package offlineimap) ;; Sync mailboxes
+(use-package plantuml-mode) ;; Define graphs in code
+(use-package d2-mode) ;; D2 Mode
+(use-package ob-d2) ;; Org D2
+(use-package restclient) ;; Query HTTP Endpoints
+(use-package rfc-mode
+  :config
+  (setq rfc-mode-directory (expand-file-name "~/Documents/rfc/"))) ;; Read RFCs
+(use-package speed-type) ;; Practice typing
+(use-package yara-mode) ;; Syntax highlighting
+(use-package password-generator) ;; Generate secure passwords
 #+end_src
 
 ** Eshell
@@ -1581,6 +1585,7 @@ Clojure + LSP
    (python . t)
    (restclient . t)
    (plantuml . t)
+   (d2 . t)
    (shell . t)
    (sql . t)
    (sqlite . t)
