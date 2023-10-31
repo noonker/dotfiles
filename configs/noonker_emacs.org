@@ -199,7 +199,7 @@ Loads the [[https://github.com/fniessen/emacs-leuven-theme][Leuven]] theme and s
 (use-package cyberpunk-theme)
 (load-theme 'cyberpunk t)
 
-(set-face-attribute 'default nil :font "Monoid" :height 120)
+(set-face-attribute 'default nil :font "Monoid" :height 100)
 #+end_src
 
 ** Pretty Symbols
@@ -272,7 +272,8 @@ Random global behavior configs
 (setq vc-make-backup-files t) ;; Also make backup files for version controller files
 (setq auto-save-file-name-transforms '((".*" "~/.emacs.d/auto-save-list/" t))) ;; Store autosaves in this folder instead of next to the file
 (setq inhibit-startup-screen t) ;; Don't show the starup screen
-(global-so-long-mode 1)
+(pixel-scroll-precision-mode 1) ;; Smooth Scrolling
+(global-so-long-mode 1) ;; Stop trying to syntax highlight absurdly long strings
 #+end_src
 
 ** Registers
@@ -1497,7 +1498,9 @@ Clojure + LSP
 (setq org-clock-out-remove-zero-time-clocks nil)
 (setq org-startup-indented t) ;; Indent content of blocks to visual indent
 (setq org-edit-src-content-indentation 0)
-
+(eval-after-load 'org
+  (add-hook 'org-babel-after-execute-hook 'org-redisplay-inline-images))
+(setq org-startup-with-inline-images t)
 
 (use-package hl-todo)
 (setq org-src-fontify-natively t)
@@ -1851,9 +1854,9 @@ Blogging with hugo
   )
 #+end_src
 
-** TODO Easydraw
+** Easydraw
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle ~/.emacs
 (use-package edraw-org
   :straight (:host github :repo "misohena/el-easydraw" :files ("dist" "*.el"))
   :config (with-eval-after-load 'org
