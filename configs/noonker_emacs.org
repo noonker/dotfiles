@@ -379,7 +379,7 @@ Allows for expansion of "snippets" by typing some short code and hitting =<TAB>=
 Emacs can nearly transparently use .gpg encrypted files in emacs. These settings enrich it slightly or make it less effort.
 
 #+begin_src emacs-lisp :tangle ~/.emacs
-(if (string-equals (current-platform) "android")
+(if (string-equal (current-platform) "android")
     (setq epg-gpg-program "okc-gpg")
     )
 (setq epa-file-encrypt-to "noonker@gmail.com") ;; Encrypt to my gpg key
@@ -2274,4 +2274,9 @@ These functions are helpers and should be self explanitory
 
 (add-hook 'prog-mode-hook #'copilot-mode)
 #+end_src
+
+* Finally
+Load my RSS feeds
+#+begin_src emacs-lisp :tangle ~/.emacs
+(load-file "~/git/things/dot/elfeed.el.gpg")  
 #+end_src
