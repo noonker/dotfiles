@@ -41,6 +41,20 @@ This section sets up [[https://github.com/radian-software/straight.el][straight.
 #+end_src
 
 * Behavior
+
+** Platform Check
+#+begin_src emacs-lisp :tangle ~/.emacs
+(defun current-platform ()
+  (interactive)
+  (cond
+   ((string-equal "Android\n" (shell-command-to-string "uname -o")) "android")
+   ((string-equal system-type "windows-nt") "windows")
+   ((string-equal system-type "darwin") "mac")
+   ((string-equal system-type "gnu/linux") "linux"))
+  )  
+#+end_src
+
+
 ** One Liners
 
 Anything in this section can be described in one sentence.
@@ -195,9 +209,7 @@ Anything in this section can be described in one sentence.
 Loads the [[https://github.com/fniessen/emacs-leuven-theme][Leuven]] theme and sets the [[https://larsenwork.com/monoid/][Monoid]] font
 
 #+begin_src emacs-lisp :tangle ~/.emacs
-;; (load-theme 'leuven t)
-(use-package cyberpunk-theme)
-(load-theme 'cyberpunk t)
+(load-theme 'leuven t)
 
 (set-face-attribute 'default nil :font "Monoid" :height 100)
 #+end_src
@@ -272,7 +284,8 @@ Random global behavior configs
 (setq vc-make-backup-files t) ;; Also make backup files for version controller files
 (setq auto-save-file-name-transforms '((".*" "~/.emacs.d/auto-save-list/" t))) ;; Store autosaves in this folder instead of next to the file
 (setq inhibit-startup-screen t) ;; Don't show the starup screen
-(pixel-scroll-precision-mode 1) ;; Smooth Scrolling
+(if (version< "29.0" emacs-version)
+  (pixel-scroll-precision-mode 1)) ;; Smooth Scrolling
 (global-so-long-mode 1) ;; Stop trying to syntax highlight absurdly long strings
 #+end_src
 
@@ -366,8 +379,11 @@ Allows for expansion of "snippets" by typing some short code and hitting =<TAB>=
 Emacs can nearly transparently use .gpg encrypted files in emacs. These settings enrich it slightly or make it less effort.
 
 #+begin_src emacs-lisp :tangle ~/.emacs
-  (setq epa-file-encrypt-to "noonker@gmail.com") ;; Encrypt to my gpg key
-  (setf epa-pinentry-mode 'loopback) ;; No UI popup. Ask for password in modeline
+(if (string-equals (current-platform) "android")
+    (setq epg-gpg-program "okc-gpg")
+    )
+(setq epa-file-encrypt-to "noonker@gmail.com") ;; Encrypt to my gpg key
+(setf epa-pinentry-mode 'loopback) ;; No UI popup. Ask for password in modeline
 #+end_src
 
 ** Keycast
@@ -510,7 +526,7 @@ This is my minimal SMTP setup for Protonmail Bridge
         starttls-use-gnutls t
         smtpmail-smtp-server "127.0.0.1"
         smtpmail-smtp-service 1025
-	    smtpmail-auth-credentials "~/.authinfo.gpg"
+        smtpmail-auth-credentials "~/.authinfo.gpg"
         smtpmail-stream-type 'starttls
         smtpmail-smtp-user "noonker@pm.me")
 
@@ -756,8 +772,8 @@ Email client for emacs
    mu4e-drafts-folder "/Drafts"     ;; unfinished messages
    mu4e-trash-folder  "/Trash"      ;; trashed messages
    mu4e-refile-folder "/Archive")   ;; saved messages
-  (setq mu4e-get-mail-command "offlineimap -o")
-  (setq mu4e-update-interval 40)
+  (setq mu4e-get-mail-command "mbsync pm-inbox")
+  (setq mu4e-update-interval 300)
   (global-set-key (kbd "C-c m m") `mu4e)
   )
 
@@ -809,19 +825,25 @@ that I'm requiring them outside of a package
 Shell configurations for emacs. Largely based around [[https://fishshell.com][Fish shell]]
 
 #+begin_src emacs-lisp :tangle ~/.emacs
-  (use-package eshell-git-prompt)
-  (use-package fish-completion
-    :config
-    (when (and (executable-find "fish")
-           (require 'fish-completion nil t))
-      (global-fish-completion-mode)))
-  (use-package fish-mode
-    :config
-      (setenv "SHELL" "/opt/homebrew/bin/fish") ;; Fish is my ENV
-    )
-  (use-package vterm
-    :config
-    (setq vterm-shell "/opt/homebrew/bin/fish")) ;; Fish is my shell
+(use-package eshell-git-prompt)
+(use-package fish-completion
+  :config
+  (when (and (executable-find "fish")
+         (require 'fish-completion nil t))
+    (global-fish-completion-mode)))
+(use-package fish-mode
+  :config
+  (if (string-equal "mac" (current-platform))
+      (setenv "SHELL" "/opt/homebrew/bin/fish")
+    (setenv "SHELL" "/usr/bin/fish")
+      )
+ ;; Fish is my ENV
+  )
+(use-package vterm
+  :config
+    (if (string-equal "mac" (current-platform))
+      (setq vterm-shell "/opt/homebrew/bin/fish")
+    (setq vterm-shell "/usr/bin/fish"))) ;; Fish is my shell
 #+end_src
 
 ** Mobile
@@ -898,6 +920,15 @@ Magit is git porcelain for Emacs
 
 #+begin_src emacs-lisp :tangle ~/.emacs
   (use-package kubel)
+#+end_src
+
+** Docker
+#+begin_src emacs-lisp :tangle ~/.emacs
+(use-package docker
+  :ensure t
+  :bind ("C-c d" . docker))
+
+(setq docker-run-as-root t)
 #+end_src
 
 ** Spray Mode
@@ -1158,15 +1189,15 @@ Spray mode is a speed-reading mode
 
 ** LSP
 #+begin_src emacs-lisp :tangle ~/.emacs
-  (use-package lsp-ui
-    :commands lsp-ui-mode
-    :config
-    (setq lsp-ui-doc-enable nil)
-    (setq lsp-ui-doc-header t)
-    (setq lsp-ui-doc-include-signature t)
-    (setq lsp-ui-doc-border (face-foreground 'default))
-    (setq lsp-ui-sideline-show-code-actions t)
-    (setq lsp-ui-sideline-delay 0.05))
+(use-package lsp-ui
+  :commands lsp-ui-mode
+  :config
+  (setq lsp-ui-doc-enable nil)
+  (setq lsp-ui-doc-header t)
+  (setq lsp-ui-doc-include-signature t)
+  (setq lsp-ui-doc-border (face-foreground 'default))
+  (setq lsp-ui-sideline-show-code-actions t)
+  (setq lsp-ui-sideline-delay 0.05))
 #+end_src
 
 ** Flycheck
@@ -1329,17 +1360,15 @@ Python + LSP
 (use-package python
   :bind (("C-c C-c" . python-shell-send-region)))
 
+(use-package lsp-pyright
+  :ensure t
+  :hook (python-mode . (lambda ()
+                          (require 'lsp-pyright)
+                          (lsp))))  ; or lsp-deferred
 (use-package elpy
   :ensure t
   :init
   (elpy-enable))
-
-(use-package lsp-python-ms
-    :ensure t
-    :init (setq lsp-python-ms-auto-install-server t)
-    :hook (python-mode . (lambda ()
-               (require 'lsp-python-ms)
-               (lsp))))  ; or lsp-deferred
 
 (pyvenv-workon "p310")
 (setq python-shell-interpreter "python")
@@ -1852,6 +1881,10 @@ Blogging with hugo
   (interactive)
   (async-shell-command (format "cd %s/blog/noonker/public/ && git add . && git commit -m \"update\" && git push") "Blog-Update")
   )
+
+(defun insert-blog-tag ()
+  (interactive)
+  (insert (completing-read "tag: " '("thoughts" "emacs" "tech" "hell" "accordion" "ctf" "security" "tools" "email" "privacy"))))
 #+end_src
 
 ** Easydraw
@@ -2235,6 +2268,10 @@ These functions are helpers and should be self explanitory
   :straight (:host github :repo "zerolfx/copilot.el" :files ("dist" "*.el"))
   :ensure t
   :bind (:map copilot-completion-map
-  ("C-c c c" . #'copilot-accept-completion)
-        ("C-c c n" .  #'copilot-next-completion)))  
+	("C-c c c" . #'copilot-accept-completion)
+        ("C-c c n" .  #'copilot-next-completion)))
+
+
+(add-hook 'prog-mode-hook #'copilot-mode)
+#+end_src
 #+end_src
