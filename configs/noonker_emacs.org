@@ -51,7 +51,11 @@ This section sets up [[https://github.com/radian-software/straight.el][straight.
    ((string-equal system-type "windows-nt") "windows")
    ((string-equal system-type "darwin") "mac")
    ((string-equal system-type "gnu/linux") "linux"))
-  )  
+  )
+
+(defcustom im-at-work t
+  "im-at-work can be used to conditionally disable code which may not be suitable for work environments. ChatGPT, copilot, etc"
+  :type '(boolean))
 #+end_src
 
 
@@ -284,6 +288,7 @@ Random global behavior configs
 (setq vc-make-backup-files t) ;; Also make backup files for version controller files
 (setq auto-save-file-name-transforms '((".*" "~/.emacs.d/auto-save-list/" t))) ;; Store autosaves in this folder instead of next to the file
 (setq inhibit-startup-screen t) ;; Don't show the starup screen
+(setq create-lockfiles nil) ;; I don't work on systems where multiple people are editing the same files with emacs.
 (if (version< "29.0" emacs-version)
   (pixel-scroll-precision-mode 1)) ;; Smooth Scrolling
 (global-so-long-mode 1) ;; Stop trying to syntax highlight absurdly long strings
@@ -2256,12 +2261,14 @@ These functions are helpers and should be self explanitory
 
 ** ChatGPT
 #+begin_src emacs-lisp :tangle ~/.emacs
-(use-package gptel
-  :straight (:host github :repo "karthink/gptel" :files ("dist" "*.el"))
-  :config (setq gptel-api-key (password-store-get "openai")))
+(if (not im-at-work)
+    (use-package gptel
+      :straight (:host github :repo "karthink/gptel" :files ("dist" "*.el"))
+      :config (setq gptel-api-key (password-store-get "openai"))))
 #+end_src
 
 #+begin_src emacs-lisp :tangle ~/.emacs
+(if (not im-at-work)
 (use-package org-ai
   :ensure
   :commands (org-ai-mode)
@@ -2273,26 +2280,39 @@ These functions are helpers and should be self explanitory
   ;; if you are on the gpt-4 beta:
   ;; (setq org-ai-default-chat-model "gpt-4")
   ;; if you are using yasnippet and want `ai` snippets
-  (org-ai-install-yasnippets))  
+  (org-ai-install-yasnippets)))
 #+end_src
 
 ** Copilot
 
-
 #+begin_src emacs-lisp :tangle ~/.emacs
-(use-package copilot
-  :straight (:host github :repo "zerolfx/copilot.el" :files ("dist" "*.el"))
-  :ensure t
-  :bind (:map copilot-completion-map
-	("C-c c c" . #'copilot-accept-completion)
-        ("C-c c n" .  #'copilot-next-completion)))
+(if (not im-at-work)
+
+    (use-package copilot
+      :straight (:host github :repo "zerolfx/copilot.el" :files ("dist" "*.el"))
+      :ensure t
+      :bind (:map copilot-completion-map
+		  ("C-c c c" . #'copilot-accept-completion)
+		  ("C-c c n" .  #'copilot-next-completion))
+      :init
+      (add-hook 'prog-mode-hook #'copilot-mode)
+      )
+  )
 
 
-(add-hook 'prog-mode-hook #'copilot-mode)
 #+end_src
 
 * Finally
 Load my RSS feeds
 #+begin_src emacs-lisp :tangle ~/.emacs
-(load-file "~/git/things/dot/elfeed.el.gpg")  
+(if (not im-at-work)
+  (load-file "~/git/things/dot/elfeed.el.gpg"))
+#+end_src
+
+* Work Config
+#+begin_src emacs-lisp :tangle ~/.emacs
+(if im-at-work
+(progn
+  (org-babel-lob-ingest "~/org/config.org")
+  (org-sbe work-config)))
 #+end_src
