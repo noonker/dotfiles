@@ -793,7 +793,7 @@ Email client for emacs
    mu4e-drafts-folder "/Drafts"     ;; unfinished messages
    mu4e-trash-folder  "/Trash"      ;; trashed messages
    mu4e-refile-folder "/Archive")   ;; saved messages
-  (setq mu4e-get-mail-command "mbsync pm-inbox")
+  (setq mu4e-get-mail-command "mbsync exchange")
   (setq mu4e-update-interval 300)
   (global-set-key (kbd "C-c m m") `mu4e)
   )
