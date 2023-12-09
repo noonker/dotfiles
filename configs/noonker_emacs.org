@@ -1646,6 +1646,8 @@ Clojure + LSP
 (use-package org-contrib
   :config (require 'ox-extra)
   (ox-extras-activate '(ignore-headlines)))
+
+(setq org-format-latex-options (plist-put org-format-latex-options :scale 2.0))
 #+end_src
 
 
