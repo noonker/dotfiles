@@ -79,11 +79,8 @@ Anything in this section can be described in one sentence.
 (use-package
   emojify
   :config (global-emojify-mode)) ;; Emojis enabled
-(use-package
-  dired-git-info
-  :bind (:map dired-mode-map
-  (")" . dired-git-info-mode))) ;; Show git information in dired mode
-(define-key dired-mode-map (kbd "s") 'find-name-dired) ;; Quick Search
+
+
 #+end_src
 
 ** Ace
@@ -104,9 +101,6 @@ Anything in this section can be described in one sentence.
 (use-package vertico
   :ensure t
   :bind (:map vertico-map
-              ("C-j" . vertico-next)
-              ("C-k" . vertico-previous)
-              ("C-f" . vertico-exit)
               :map minibuffer-local-map
               ("M-h" . backward-kill-word))
   :init
@@ -276,8 +270,6 @@ Random global behavior configs
 (global-hl-line-mode) ;; Highlight the current line
 (tool-bar-mode -1) ;; Don't show the ugly emacs toolbar
 (display-time-mode 1) ;; Show a clock in the modeline
-(setq dired-dwim-target t) ;; When moving a file assume I want to move it to the other dired buffer first
-(setq dired-mouse-drag-files t) ;; Drag files from dired emacs
 (winner-mode 1) ;; Undo recent buffer configurations
 (defalias 'yes-or-no-p 'y-or-n-p) ;; Shorten yes and no
 (global-subword-mode 1) ;; Makes emacs understand CamelCase words as two words
@@ -514,6 +506,7 @@ Tramp allows for nearly transparent editing of files on remote machines. Run =C-
 		      default-directory
 		      dired-directory))
     ad-do-it))
+
 (setq projectile-mode-line "Projectile")
 
 ;; By default lets be safe in tramp
@@ -522,6 +515,29 @@ Tramp allows for nearly transparent editing of files on remote machines. Run =C-
  (lambda ()
    (when (file-remote-p default-directory)
      (read-only-mode t))))
+#+end_src
+** Dired
+
+#+begin_src emacs-lisp  :tangle ~/.emacs
+(use-package dired-preview)
+(define-key dired-mode-map (kbd "[") 'dired-preview-mode)
+
+(with-eval-after-load 'dired
+  (require 'dired-x)
+  ;; Set dired-x global variables here.  For example:
+  ;; (setq dired-x-hands-off-my-keys nil)
+  )
+
+(setq dired-dwim-target t) ;; When moving a file assume I want to move it to the other dired buffer first
+(setq dired-mouse-drag-files t) ;; Drag files from dired emacs
+
+(define-key dired-mode-map (kbd "}") 'find-name-dired)
+(use-package
+  dired-git-info
+  :bind (:map dired-mode-map
+  (")" . dired-git-info-mode))) ;; Show git information in dired mode
+
+(define-key dired-mode-map (kbd "]") 'find-name-dired) ;; Quick Search
 #+end_src
 
 ** SMTP
