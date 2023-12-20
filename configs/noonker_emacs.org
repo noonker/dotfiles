@@ -521,6 +521,8 @@ Tramp allows for nearly transparent editing of files on remote machines. Run =C-
 #+begin_src emacs-lisp  :tangle ~/.emacs
 (use-package dired-preview)
 (define-key dired-mode-map (kbd "[") 'dired-preview-mode)
+(define-key dired-mode-map (kbd "]") 'image-dired) 
+
 
 (with-eval-after-load 'dired
   (require 'dired-x)
@@ -531,13 +533,15 @@ Tramp allows for nearly transparent editing of files on remote machines. Run =C-
 (setq dired-dwim-target t) ;; When moving a file assume I want to move it to the other dired buffer first
 (setq dired-mouse-drag-files t) ;; Drag files from dired emacs
 
-(define-key dired-mode-map (kbd "}") 'find-name-dired)
+(define-key dired-mode-map (kbd "}") 'wdired-change-to-wdired-mode)
+(define-key dired-mode-map (kbd "{") 'find-name-dired)  ;; Quick Search
+
 (use-package
   dired-git-info
   :bind (:map dired-mode-map
   (")" . dired-git-info-mode))) ;; Show git information in dired mode
 
-(define-key dired-mode-map (kbd "]") 'find-name-dired) ;; Quick Search
+
 #+end_src
 
 ** SMTP
