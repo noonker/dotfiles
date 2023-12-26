@@ -1770,6 +1770,7 @@ Clojure + LSP
 (use-package ob-restclient)
 (use-package ob-sql-mode)
 (use-package ob-typescript)
+(use-package ob-markdown)
 #+end_src
 
 *** Org Babel
@@ -1979,6 +1980,8 @@ Clojure + LSP
   (setq org-reveal-root "file:///home/user/git/reveal.js"))
 (use-package ox-twbs)
 (use-package ox-json)
+
+(setq org-export-with-drawers nil)
 
 (setq org-src-fontify-natively t)
 (setq org-latex-listings 'minted
