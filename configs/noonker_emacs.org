@@ -98,6 +98,23 @@ Anything in this section can be described in one sentence.
   :ensure t
   :config
   (evil-collection-init))
+
+  (dolist (mode '(calendar-mode
+                  ag-mode
+                  dired-mode
+                  eshell-mode
+                  flycheck-error-list-mode
+                  git-rebase-mode
+                  org-capture-mode
+                  ))
+    (evil-set-initial-state mode 'emacs))
+
+  (delete 'term-mode evil-insert-state-modes)
+  (delete 'eshell-mode evil-insert-state-modes)
+
+  ;; Use insert state in these additional modes.
+  (dolist (mode '(magit-log-edit-mode))
+    (add-to-list 'evil-insert-state-modes mode))
 #+end_src
 
 
@@ -107,8 +124,8 @@ Anything in this section can be described in one sentence.
 (use-package ace-window
   :init (global-set-key (kbd "M-o") 'ace-window))       
 
-(use-package ace-jump-mode
-  :init (define-key global-map (kbd "M-p") 'ace-jump-mode))
+(use-package avy
+  :init (define-key global-map (kbd "M-p") 'avy-goto-char-2))
 #+end_src
 
 ** Vertico
@@ -304,6 +321,7 @@ Random global behavior configs
 (if (version< "29.0" emacs-version)
   (pixel-scroll-precision-mode 1)) ;; Smooth Scrolling
 (global-so-long-mode 1) ;; Stop trying to syntax highlight absurdly long strings
+(global-set-key (kbd "C-s") 'swiper)
 #+end_src
 
 ** Registers
@@ -330,7 +348,7 @@ The doom modeline looks better than the stock emacs modeline.
 #+begin_src emacs-lisp :tangle ~/.emacs
   (use-package doom-modeline
     :config (doom-modeline-mode 1)
-    (setq doom-modeline-height 15)
+    (setq doom-modeline-height 20)
     )
 #+end_src
 
@@ -912,6 +930,16 @@ Shell configurations for emacs. Largely based around [[https://fishshell.com][Fi
     (if (string-equal "mac" (current-platform))
       (setq vterm-shell "/opt/homebrew/bin/fish")
     (setq vterm-shell "/usr/bin/fish"))) ;; Fish is my shell
+
+(straight-use-package
+ '(eat :type git
+       :host codeberg
+       :repo "akib/emacs-eat"
+       :files ("*.el" ("term" "term/*.el") "*.texi"
+               "*.ti" ("terminfo/e" "terminfo/e/*")
+               ("terminfo/65" "terminfo/65/*")
+               ("integration" "integration/*")
+               (:exclude ".dir-locals.el" "*-tests.el"))))
 #+end_src
 
 ** Mobile
@@ -1516,9 +1544,6 @@ Clojure + LSP
     nrepl-hide-special-buffers t
     cider-overlays-use-font-lock t)
   (cider-repl-toggle-pretty-printing))
-
-(org-defkey org-mode-map "\C-x\C-e" 'cider-eval-last-sexp)
-(org-defkey org-mode-map "\C-c\C-d" 'cider-doc)
 #+end_src
 
 ** Json
