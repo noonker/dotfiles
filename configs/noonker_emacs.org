@@ -1016,7 +1016,10 @@ Magit is git porcelain for Emacs
 
 #+begin_src emacs-lisp :tangle ~/.emacs
 (if (not im-at-work)
-  (use-package kubel))
+(use-package kubel
+  :after (vterm)
+  :config (kubel-vterm-setup))
+    )
 #+end_src
 
 ** Docker
@@ -1286,15 +1289,14 @@ Spray mode is a speed-reading mode
 
 ** LSP
 #+begin_src emacs-lisp :tangle ~/.emacs
-(use-package lsp-ui
-  :commands lsp-ui-mode
-  :config
-  (setq lsp-ui-doc-enable nil)
-  (setq lsp-ui-doc-header t)
-  (setq lsp-ui-doc-include-signature t)
-  (setq lsp-ui-doc-border (face-foreground 'default))
-  (setq lsp-ui-sideline-show-code-actions t)
-  (setq lsp-ui-sideline-delay 0.05))
+  (use-package lsp-ui
+    :commands lsp-ui-mode
+    :config
+    (setq lsp-ui-doc-enable nil)
+    (setq lsp-ui-doc-header t)
+    (setq lsp-ui-doc-include-signature t)
+    (setq lsp-ui-doc-border (face-foreground 'default))
+    )
 #+end_src
 
 ** Flycheck
@@ -1347,16 +1349,17 @@ Company is an autocomplete option framework for emacs
 Lispy mode makes lisp-mode editing significantly more efficent
 
 #+begin_src emacs-lisp :tangle ~/.emacs
-  (use-package lispy
-    :bind
-    (("C-4" . lispy-arglist-inline))
-    :init
-    (progn
+(use-package lispy
+  :bind
+  (("C-4" . lispy-arglist-inline))
+  :init
+  )
+
+(progn
       (add-hook 'emacs-lisp-mode-hook (lambda ()(lispy-mode 1)))
       (add-hook 'spacemacs-mode-hook (lambda () (lispy-mode 1)))
-      (add-hook 'clojure-mode-hook (lambda () (lispy-mode 1)))
       (add-hook 'scheme-mode-hook (lambda () (lispy-mode 1)))
-      (add-hook 'cider-repl-mode-hook (lambda () (lispy-mode 1)))))
+      (add-hook 'cider-repl-mode-hook (lambda () (lispy-mode 1))))
 #+end_src
 
 ** SBCL
@@ -1520,15 +1523,10 @@ Clojure + LSP
 (use-package clojure-mode
   :ensure t
   :mode (("\\.clj\\'" . clojure-mode)
-     ("\\.edn\\'" . clojure-mode))
-  :init
-  (add-hook 'clojure-mode-hook #'yas-minor-mode)
-  (add-hook 'clojure-mode-hook #'linum-mode)
-  (add-hook 'clojure-mode-hook #'subword-mode)
-  (add-hook 'clojure-mode-hook #'smartparens-mode)
-  (add-hook 'clojure-mode-hook #'rainbow-delimiters-mode)
-  (add-hook 'clojure-mode-hook #'eldoc-mode)
-  (add-hook 'clojure-mode-hook #'idle-highlight-mode))
+	 ("\\.edn\\'" . clojure-mode)
+
+
+  ))
 
 (use-package cider
   :ensure t
@@ -1537,13 +1535,20 @@ Clojure + LSP
   :diminish subword-mode
   :config
   (setq nrepl-log-messages t
-    cider-repl-display-in-current-window t
+   cider-repl-display-in-current-window t
     cider-repl-use-clojure-font-lock t
     cider-prompt-save-file-on-load 'always-save
     cider-font-lock-dynamically '(macro core function var)
     nrepl-hide-special-buffers t
     cider-overlays-use-font-lock t)
   (cider-repl-toggle-pretty-printing))
+
+(with-eval-after-load 'dap-mode
+  (require 'dap-chrome))
+
+  (add-hook 'clojure-mode-hook #'lispy-mode)
+  (add-hook 'clojure-mode-hook #'subword-mode)
+  (add-hook 'clojure-mode-hook #'eldoc-mode)
 #+end_src
 
 ** Json
@@ -2516,6 +2521,8 @@ These functions are helpers and should be self explanitory
     (use-package gptel
       :straight (:host github :repo "karthink/gptel" :files ("dist" "*.el"))
       :config (setq gptel-api-key (password-store-get "openai"))))
+
+(setq im-at-work nil)
 #+end_src
 
 #+begin_src emacs-lisp :tangle ~/.emacs
