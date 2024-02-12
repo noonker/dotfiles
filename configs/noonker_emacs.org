@@ -68,9 +68,14 @@ Anything in this section can be described in one sentence.
 (use-package auto-complete) ;; Auto complete dropdowns
 (use-package iedit) ;; Find and edit multiple occurances
 (use-package undo-tree) ;; Respresent undo and redo history as a tree
-(use-package ibuffer) ;; Advanced buffer list
+(use-package ibuffer
+  :config
+  (global-set-key (kbd "C-x C-b") 'ibuffer)
+  ) ;; Advanced buffer list
 (use-package magit)
-(use-package org)
+(use-package org
+  :mode ("\\.org\\'" . org-mode)
+  :config (define-key org-mode-map (kbd "C-c C-r") verb-command-map))
 (use-package transient)
 (use-package expand-region
   :config
@@ -437,7 +442,6 @@ Anything in this section can be described in one sentence.
 (use-package plantuml-mode) ;; Define graphs in code
 (use-package d2-mode) ;; D2 Mode
 (use-package ob-d2) ;; Org D2
-(use-package restclient) ;; Query HTTP Endpoints
 (use-package rfc-mode
   :config
   (setq rfc-mode-directory (expand-file-name "~/Documents/rfc/"))) ;; Read RFCs
@@ -551,6 +555,11 @@ Tramp allows for nearly transparent editing of files on remote machines. Run =C-
  (lambda ()
    (when (file-remote-p default-directory)
      (read-only-mode t))))
+
+;; Some more optimizations?
+(setq doom-modeline-project-detection nil)
+(setq projectile-auto-update-cache nil)
+(setq projectile-dynamic-mode-line nil)
 #+end_src
 ** Dired
 
@@ -993,6 +1002,18 @@ Functions and mobile gadgets
     (if avd
       (shell-command (format "$HOME/Library/Android/sdk/emulator/emulator -avd %s -netdelay none -netspeed full -no-snapshot-load&" avd)))
     ))
+
+(defun get-android-view ()
+  (interactive)
+  (let ((buffer-name "*ui-dump*"))
+    (with-current-buffer (get-buffer-create buffer-name)
+      (erase-buffer)
+      (shell-command "adb shell uiautomator dump")
+      (insert (shell-command-to-string "adb shell cat /sdcard/window_dump.xml"))
+      (xml-mode)
+      (sgml-pretty-print (point-min) (point-max))
+      (switch-to-buffer buffer-name)
+      )))
 #+end_src
 
 
@@ -1449,6 +1470,12 @@ On MacOS you need to add =-DCMAKE_PREFIX_PATH=/usr/local/opt/llvm= after =cmake=
 #+RESULTS:
 : t
 
+
+** Swift
+#+begin_src emacs-lisp :tangle ~/.emacs
+(use-package swift-mode)
+#+end_src
+
 ** Python
 
 Python + LSP
@@ -1697,6 +1724,11 @@ Clojure + LSP
 
 ** Org Mode
 
+*** Verb
+#+begin_src emacs-lisp :tangle ~/.emacs
+(use-package verb)
+#+end_src
+
 *** SVG Icons
 
 #+begin_src emacs-lisp :tangle ~/.emacs
@@ -1893,7 +1925,6 @@ Clojure + LSP
 
 *** Org Babel Packages
 #+begin_src emacs-lisp :tangle ~/.emacs
-(use-package ob-restclient)
 (use-package ob-sql-mode)
 (use-package ob-typescript)
 (use-package ob-markdown)
@@ -1905,7 +1936,7 @@ Clojure + LSP
  'org-babel-load-languages
  '((dot . t)
    (python . t)
-   (restclient . t)
+   (verb . t)
    (plantuml . t)
    (d2 . t)
    (shell . t)
