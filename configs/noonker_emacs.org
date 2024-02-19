@@ -1637,6 +1637,12 @@ Clojure + LSP
   )
 #+end_src
 * Text
+** Pandoc
+
+#+begin_src emacs-lisp :tangle ~/.emacs
+(use-package pandoc-mode)
+#+END_SRC
+
 ** \LaTeX
 #+begin_src emacs-lisp :tangle ~/.emacs
 (use-package tex
@@ -2227,12 +2233,13 @@ Blogging with hugo
 Run =brew install languagetool= to install on mac
 
 #+begin_src emacs-lisp :tangle ~/.emacs
-  (use-package langtool
-   :config
-   (setq langtool-bin "/usr/local/bin/languagetool")
-    )
+(use-package langtool
+ :config
+ (setq langtool-bin "/usr/local/bin/languagetool")
+ (setq langtool-http-server-host "localhost"
+      langtool-http-server-port 8081)
+  )
 #+end_src
-
 
 * Custom Functions
 ** Mac Open
