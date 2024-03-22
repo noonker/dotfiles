@@ -1,5 +1,0 @@
-# https://wiki.znc.in/Installation
-sudo apt-get update
-sudo apt-get install build-essential libssl-dev libperl-dev pkg-config swig3.0 libicu-dev
-sudo apt-get install znc znc-dev znc-perl znc-python znc-tcl
-znc --makeconf
