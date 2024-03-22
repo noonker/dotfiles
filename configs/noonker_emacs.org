@@ -201,14 +201,12 @@ Anything in this section can be described in one sentence.
 
 ** Theme
 
-Loads the Dracula theme and sets the [[https://larsenwork.com/monoid/][Monoid]] font (I'm him)
+Leuven Theme and Comic Mono
 
 #+begin_src emacs-lisp :tangle ~/.emacs
-(use-package dracula-theme)
+(load-theme 'leuven t)
 
-(load-theme 'dracula t)
-
-(set-face-attribute 'default nil :font "Monoid" :height 140)
+(set-face-attribute 'default nil :font "Comic Code" :height 100)
 #+end_src
 
 ** Global Config
@@ -1298,12 +1296,10 @@ Clojure + LSP
 
 (setq org-directory "~/org")
 (setq org-agenda-basedir "~/org/tasks")
-(setq org-todo-keywords '("TODO" "STRT" "DONE" "WONTDO" "SCHEDULED" "BLOCKED"))
 
 (add-hook 'org-mode-hook (lambda () (org-bullets-mode 1))) ;; Add special bullets
 (setq org-startup-align-all-tables t) ;; Aligns tables when a file is opened
 (setq org-startup-shrink-all-tables t) ;; Shrinks tables according to <x> tags in the column headers
-(setq org-clock-in-switch-to-state "STRT")
 (setq org-clock-out-switch-to-state "TODO")
 (setq org-clock-out-remove-zero-time-clocks nil)
 (setq org-startup-indented t) ;; Indent content of blocks to visual indent
@@ -1927,7 +1923,7 @@ The doom modeline looks better than the stock emacs modeline.
 #+begin_src emacs-lisp :tangle ~/.emacs
   (use-package doom-modeline
     :config (doom-modeline-mode 1)
-    (setq doom-modeline-height 40)
+    (setq doom-modeline-height 22)
     )
 
   ;; If non-nil, cause imenu to see `doom-modeline' declarations.
@@ -2206,6 +2202,26 @@ The doom modeline looks better than the stock emacs modeline.
       (add-hook 'prog-mode-hook #'copilot-mode)
       )
   )
+#+end_src
+
+* Evil (hiding the shame at the bottom of my config)
+#+begin_src emacs-lisp :tangle ~/.emacs
+(use-package evil
+  :ensure t
+  :init
+  (setq evil-want-integration t) ;; This is optional since it's already set to t by default.
+  (setq evil-want-keybinding nil)
+  :config
+  (evil-mode 1))
+
+(use-package evil-collection
+  :after evil
+  :ensure t
+  :config
+  (evil-collection-init))
+
+(evil-ex-define-cmd "wq" 'save-and-kill-this-buffer)
+(defun save-and-kill-this-buffer()(interactive)(save-buffer)(kill-current-buffer))
 #+end_src
 
 * Finally
