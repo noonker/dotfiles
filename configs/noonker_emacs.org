@@ -72,9 +72,6 @@ Anything in this section can be described in one sentence.
   (global-set-key (kbd "C-x C-b") 'ibuffer)
   ) ;; Advanced buffer list
 (use-package magit)
-(use-package org
-  :mode ("\\.org\\'" . org-mode)
-  :config (define-key org-mode-map (kbd "C-c C-r") verb-command-map))
 (use-package transient)
 (use-package
   emojify
@@ -852,6 +849,26 @@ Spray mode is a speed-reading mode
   (set-text-properties (point-min) (point-max) nil)))
 (global-set-key (kbd "<f9>") 'spray-mode)
 #+end_src
+* Evil (hiding the shame at the bottom of my config)
+#+begin_src emacs-lisp :tangle ~/.emacs
+(use-package evil
+  :ensure t
+  :init
+  (setq evil-want-integration t) ;; This is optional since it's already set to t by default.
+  (setq evil-want-keybinding nil)
+  :config
+  (evil-mode 1))
+
+(use-package evil-collection
+  :after evil
+  :ensure t
+  :config
+  (evil-collection-init))
+
+(evil-ex-define-cmd "wq" 'save-and-kill-this-buffer)
+(defun save-and-kill-this-buffer()(interactive)(save-buffer)(kill-current-buffer))
+#+end_src
+
 * Programming
 
 ** Artist Mode
@@ -929,11 +946,18 @@ Lispy mode makes lisp-mode editing significantly more efficent
   :init
   )
 
+(use-package lispyville
+  :config
+  (lispyville-set-key-theme '(operators c-w additional)))
+
 (progn
       (add-hook 'emacs-lisp-mode-hook (lambda ()(lispy-mode 1)))
       (add-hook 'spacemacs-mode-hook (lambda () (lispy-mode 1)))
       (add-hook 'scheme-mode-hook (lambda () (lispy-mode 1)))
-      (add-hook 'cider-repl-mode-hook (lambda () (lispy-mode 1))))
+      (add-hook 'cider-repl-mode-hook (lambda () (lispy-mode 1)))
+      (add-hook 'emacs-lisp-mode-hook (lambda () (lispyville-mode 1)))
+)
+
 #+end_src
 
 ** SBCL
@@ -2202,26 +2226,6 @@ The doom modeline looks better than the stock emacs modeline.
       (add-hook 'prog-mode-hook #'copilot-mode)
       )
   )
-#+end_src
-
-* Evil (hiding the shame at the bottom of my config)
-#+begin_src emacs-lisp :tangle ~/.emacs
-(use-package evil
-  :ensure t
-  :init
-  (setq evil-want-integration t) ;; This is optional since it's already set to t by default.
-  (setq evil-want-keybinding nil)
-  :config
-  (evil-mode 1))
-
-(use-package evil-collection
-  :after evil
-  :ensure t
-  :config
-  (evil-collection-init))
-
-(evil-ex-define-cmd "wq" 'save-and-kill-this-buffer)
-(defun save-and-kill-this-buffer()(interactive)(save-buffer)(kill-current-buffer))
 #+end_src
 
 * Finally
