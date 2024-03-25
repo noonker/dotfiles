@@ -64,7 +64,6 @@ This section sets up [[https://github.com/radian-software/straight.el][straight.
 Anything in this section can be described in one sentence.
 
 #+begin_src emacs-lisp :tangle ~/.emacs
-(use-package auto-complete) ;; Auto complete dropdowns
 (use-package iedit) ;; Find and edit multiple occurances
 (use-package undo-tree) ;; Respresent undo and redo history as a tree
 (use-package ibuffer
@@ -73,10 +72,8 @@ Anything in this section can be described in one sentence.
   ) ;; Advanced buffer list
 (use-package magit)
 (use-package transient)
-(use-package
-  emojify
+(use-package emojify
   :config (global-emojify-mode)) ;; Emojis enabled
-
 #+end_src
 
 ** Ace
@@ -98,21 +95,7 @@ Anything in this section can be described in one sentence.
               ("M-h" . backward-kill-word))
   :init
   (vertico-mode)
-
-  ;; Different scroll margin
-  ;; (setq vertico-scroll-margin 0)
-
-  ;; Show more candidates
-  ;; (setq vertico-count 20)
-
-  ;; Grow and shrink the Vertico minibuffer
-  ;; (setq vertico-resize t)
-
-  ;; Optionally enable cycling for `vertico-next' and `vertico-previous'.
-  ;; (setq vertico-cycle t)
   )
-
-
 
 ;; Persist history over Emacs restarts. Vertico sorts by history position.
 (use-package savehist
@@ -249,33 +232,12 @@ Random global behavior configs
   ")
 #+end_src
 
-
-** Mac Shell Path
-
-This package reads the environment from the shell path even when launched from ,/Applications/
-
-#+begin_src emacs-lisp :tangle ~/.emacs
-  (use-package
-    exec-path-from-shell
-    :init (defmacro with-system (type &rest body)
-          "Evaluate BODY if `system-type' equals TYPE."
-          (declare (indent defun))
-          `(when
-           (eq system-type ',type)
-         ,@body))
-    (when (memq window-system '(mac ns))
-      (exec-path-from-shell-initialize)
-      (exec-path-from-shell-copy-envs
-       '("PATH"))))
-#+end_src
-
 ** Projectile
 
 Projectile enriches Emacs's ability to understand git projects
 
 #+begin_src emacs-lisp :tangle ~/.emacs
-  (use-package
-    projectile
+  (use-package projectile
     :bind (("s-p" . projectile-command-map)
        ("C-c p" . projectile-command-map))
     :config (projectile-global-mode)
@@ -283,17 +245,6 @@ Projectile enriches Emacs's ability to understand git projects
     (define-key projectile-mode-map (kbd "s-p") 'projectile-command-map)
     (define-key projectile-mode-map (kbd "C-c p") 'projectile-command-map)
     (projectile-mode +1))
-#+end_src
-
-** Yasnippet
-
-Allows for expansion of "snippets" by typing some short code and hitting =<TAB>=. Example =<src= in an org-mode block
-
-#+begin_src emacs-lisp :tangle ~/.emacs
-  (use-package yasnippet
-    :config
-    (yas-global-mode 1))
-  (use-package yasnippet-snippets)
 #+end_src
 
 ** GPG Config
@@ -315,9 +266,6 @@ Anything in this section can be described in one sentence.
 (use-package pass
   :config (global-set-key (kbd "<f12>") 'password-store-copy)) ;; Password Store
 (use-package plantuml-mode) ;; Define graphs in code
-(use-package d2-mode) ;; D2 Mode
-(use-package ob-d2) ;; Org D2
-(use-package yara-mode) ;; Syntax highlighting
 #+end_src
 
 ** Eshell
@@ -449,13 +397,6 @@ Tramp allows for nearly transparent editing of files on remote machines. Run =C-
 
 (define-key dired-mode-map (kbd "}") 'wdired-change-to-wdired-mode)
 (define-key dired-mode-map (kbd "{") 'find-name-dired)  ;; Quick Search
-
-(use-package
-  dired-git-info
-  :bind (:map dired-mode-map
-  (")" . dired-git-info-mode))) ;; Show git information in dired mode
-
-
 #+end_src
 
 ** SMTP
@@ -484,55 +425,6 @@ Drone Zone >>> All Else
 
 #+begin_src emacs-lisp :tangle ~/.emacs
 (use-package somafm)
-#+end_src
-
-** W3m
-
-W3m is an emacs web browser
-
-#+begin_src emacs-lisp :tangle ~/.emacs
-  (use-package w3m
-    :config
-    (defalias 'epa--decode-coding-string 'decode-coding-string)
-    (defun ffap-w3m-other-window (url &optional new-session)
-      "Browse url in w3m.
-              If current frame has only one window, create a new window and browse the webpage"
-      (interactive (progn
-             (require 'browse-url)
-             (browse-url-interactive-arg "Emacs-w3m URL: ")))
-      (let ((w3m-pop-up-windows t))
-    (if (one-window-p) (split-window))
-    (other-window 1)
-    (w3m-goto-url-new-session url new-session)
-    (other-window 1)))
-
-    (autoload 'w3m-browse-url "w3m" "Ask a WWW browser to show a URL." t)
-
-    (setq w3m-use-cookies t)
-
-    (defun rand-w3m-view-this-url-background-session ()
-      (interactive)
-      (let ((in-background-state w3m-new-session-in-background))
-    (setq w3m-new-session-in-background t)
-    (w3m-view-this-url-new-session)
-    (setq w3m-new-session-in-background in-background-state)))
-
-    (defun my-w3m-bindings ()
-      (define-key w3m-mode-map (kbd "C-<return>") 'rand-w3m-view-this-url-background-session))
-
-    (add-hook 'w3m-mode-hook 'my-w3m-bindings)
-
-    (defun rand-w3m-view-this-url-background-session ()
-      (interactive)
-      (let ((in-background-state w3m-new-session-in-background))
-    (setq w3m-new-session-in-background t)
-    (w3m-view-this-url-new-session)
-    (setq w3m-new-session-in-background in-background-state)))
-
-    (defun my-w3m-bindings ()
-      (define-key w3m-mode-map (kbd "C-<return>") 'rand-w3m-view-this-url-background-session))
-
-    (add-hook 'w3m-mode-hook 'my-w3m-bindings))
 #+end_src
 
 ** ERC
@@ -612,17 +504,6 @@ IRC for Emacs
        do (elfeed-untag entry 'unread)
        when (elfeed-entry-link entry)
        do (browse-url-firefox it))
-  (mapc #'elfeed-search-update-entry entries)
-  (unless (use-region-p) (forward-line))))
-
-  (defun elfeed-w3m-open (&optional use-generic-p)
-    "open with eww"
-    (interactive "P")
-    (let ((entries (elfeed-search-selected)))
-  (cl-loop for entry in entries
-       do (elfeed-untag entry 'unread)
-       when (elfeed-entry-link entry)
-       do (ffap-w3m-other-window it))
   (mapc #'elfeed-search-update-entry entries)
   (unless (use-region-p) (forward-line))))
 
@@ -710,30 +591,10 @@ that I'm requiring them outside of a package
 
 ** Shell
 
-Shell configurations for emacs. Largely based around [[https://fishshell.com][Fish shell]]
+Shell configurations for emacs. Largely based around
 
 #+begin_src emacs-lisp :tangle ~/.emacs
-(use-package eshell-git-prompt)
-
-(use-package fish-completion
-  :config
-  (when (and (executable-find "fish")
-         (require 'fish-completion nil t))
-    (global-fish-completion-mode)))
-
-(use-package fish-mode
-  :config
-  (if (string-equal "mac" (current-platform))
-      (setenv "SHELL" "/opt/homebrew/bin/fish")
-    (setenv "SHELL" "/usr/bin/fish")
-      )
- ;; Fish is my ENV
-  )
-(use-package vterm
-  :config
-    (if (string-equal "mac" (current-platform))
-      (setq vterm-shell "/opt/homebrew/bin/fish")
-    (setq vterm-shell "/usr/bin/fish"))) ;; Fish is my shell
+(use-package vterm)
 #+end_src
 
 ** Mobile
@@ -849,6 +710,7 @@ Spray mode is a speed-reading mode
   (set-text-properties (point-min) (point-max) nil)))
 (global-set-key (kbd "<f9>") 'spray-mode)
 #+end_src
+
 * Evil (hiding the shame at the bottom of my config)
 #+begin_src emacs-lisp :tangle ~/.emacs
 (use-package evil
@@ -978,7 +840,6 @@ On MacOS you need to add =-DCMAKE_PREFIX_PATH=/usr/local/opt/llvm= after =cmake=
 
 #+begin_src emacs-lisp :tangle ~/.emacs
   (use-package dap-mode)
-  (use-package which-key)
 
   (add-hook 'c-mode-hook 'lsp)
   (add-hook 'c++-mode-hook 'lsp)
@@ -1163,53 +1024,6 @@ Clojure + LSP
 (use-package yaml)
 #+end_src
 
-** CSV
-#+begin_src emacs-lisp :tangle ~/.emacs
-(use-package csv-mode)
-#+end_src
-
-** SQL
-#+begin_src emacs-lisp :tangle ~/.emacs
-(use-package ejc-sql
-  :commands
-  (ejc-create-connection ejc-connect ejc-set-column-width-limit)
-  :init
-  (setq ejc-set-rows-limit 1000
-    ejc-result-table-impl 'orgtbl-mode ;; 'ejc-result-mode
-    ejc-use-flx t
-    ejc-flx-threshold 3
-    nrepl-sync-request-timeout 30)
-  ;; enable auto complete
-  (add-hook 'ejc-sql-minor-mode-hook
-    (lambda ()
-      (auto-complete-mode t)
-      (ejc-ac-setup)))
-  :config
-  (setq clomacs-httpd-default-port 8090)
-  (add-hook 'ejc-sql-minor-mode-hook
-    (lambda ()
-      (auto-complete-mode t)
-      (ejc-ac-setup)))
-  (setq ejc-use-flx t)
-  (setq ejc-flx-threshold 2)
-  (require 'ejc-company)
-  (push 'ejc-company-backend company-backends)
-  (add-hook 'ejc-sql-minor-mode-hook
-    (lambda ()
-      (company-mode t)))
-  (company-quickhelp-mode)
-  (add-hook 'ejc-sql-minor-mode-hook
-    (lambda ()
-      (ejc-eldoc-setup)))
-  (add-hook 'ejc-sql-connected-hook
-    (lambda ()
-      (ejc-set-fetch-size 50)
-      (ejc-set-max-rows 50)
-      (ejc-set-show-too-many-rows-message t)
-      (ejc-set-column-width-limit 25)))
-  )
-#+end_src
-
 * Text
 ** Pandoc
 
@@ -1249,6 +1063,8 @@ Clojure + LSP
     (when (and (boundp 'yas-minor-mode) yas-minor-mode)
       (let ((yas-buffer-local-condition ''(require-snippet-condition . auto)))
         (yas-expand)))))
+
+(use-package yasnippet-snippets)
 
 ;; CDLatex integration with YaSnippet: Allow cdlatex tab to work inside Yas
 ;; fields
@@ -1341,8 +1157,7 @@ Clojure + LSP
 (global-set-key (kbd "C-c n r f") 'org-roam-node-find)
 (global-set-key (kbd "C-c n r i") 'org-roam-node-insert)
 
-(setq personal/node-types '(
-			    'ctf
+(setq personal/node-types '('ctf
 			    'investigation
 			    'demo
 			    'poetry
@@ -1432,7 +1247,6 @@ Clojure + LSP
 (use-package ob-sql-mode)
 (use-package ob-typescript)
 (use-package ob-markdown)
-(use-package ob-restclient)
 #+end_src
 
 *** Org Babel
@@ -1443,7 +1257,6 @@ Clojure + LSP
    (python . t)
    (verb . t)
    (plantuml . t)
-   (d2 . t)
    (shell . t)
    (sql . t)
    (sqlite . t)
@@ -1452,7 +1265,6 @@ Clojure + LSP
    (latex . t)
    (C . t)
    (clojure . t)
-   (restclient . t)
    ))
 
 (setq org-babel-clojure-backend 'cider)
@@ -1598,20 +1410,7 @@ Clojure + LSP
 	  org-roam-ui-open-on-start t
 	  ))
 
-  (org-roam-db-autosync-mode) ;; Automatically update the org roam database
-  
-  ;; Deft Fix
-  (advice-add 'deft-parse-title :override
-	      (lambda (file contents)
-		(if deft-use-filename-as-title
-		    (deft-base-filename file)
-		  (let* ((case-fold-search 't)
-			 (begin (string-match "title: " contents))
-			 (end-of-begin (match-end 0))
-			 (end (string-match "\n" contents begin)))
-		    (if begin
-			(substring contents end-of-begin end)
-		      (format "%s" file))))))
+  (org-roam-db-autosync-mode) ;; Automatically update the org roam database 
 #+end_src
 
 *** Org Protocol
@@ -1627,8 +1426,6 @@ Clojure + LSP
 *** Org Packages
 #+begin_src emacs-lisp :tangle ~/.emacs
     (use-package org-bullets)
-    (use-package org-chef)
-    (use-package websocket)
     (use-package org-web-tools)
 #+end_src
 
@@ -1637,8 +1434,6 @@ Clojure + LSP
 (use-package ox-reveal
   :config
   (setq org-reveal-root "file:///home/user/git/reveal.js"))
-(use-package ox-twbs)
-(use-package ox-json)
 
 (setq org-export-with-drawers nil)
 
@@ -1661,8 +1456,6 @@ Clojure + LSP
 Blogging with hugo
 
 #+begin_src emacs-lisp :tangle ~/.emacs
-(use-package easy-hugo)
-
 (defun replace-regexp-entire-buffer (pattern replacement)
   "Perform regular-expression replacement throughout buffer."
   (interactive
@@ -1702,6 +1495,7 @@ Blogging with hugo
 #+begin_src emacs-lisp :tangle ~/.emacs
   (use-package markdown-mode)
 #+end_src
+
 ** Flyspell
 #+begin_src emacs-lisp :tangle ~/.emacs
   (use-package flyspell
