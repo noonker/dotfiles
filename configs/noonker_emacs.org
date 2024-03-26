@@ -272,6 +272,9 @@ Emacs shell settings
 #+begin_src emacs-lisp :tangle ~/.emacs
 (use-package eshell-git-prompt)
 (eshell-git-prompt-use-theme 'robbyrussell) ;; Eshell theme
+
+(add-hook 'eshell-mode-hook (lambda () (company-mode -1)))
+
 (defun git-prompt-eshell ()
   "Git a git prompt"
   (let (beg dir git-branch git-dirty end)
