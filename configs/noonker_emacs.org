@@ -19,25 +19,25 @@ It is broken up into several sections:
 This section sets up [[https://github.com/radian-software/straight.el][straight.el]] with [[https://github.com/jwiegley/use-package][use-package]] to simplify setup of emacs. These packages allow me to control how the packages are installed, when they are loaded, and which configurations should be run with them.
 
 #+begin_src emacs-lisp :tangle ~/.emacs
-  (defvar bootstrap-version)
+(defvar bootstrap-version)
 
-  (let ((bootstrap-file
-    (expand-file-name "straight/repos/straight.el/bootstrap.el" user-emacs-directory))
-    (bootstrap-version 5))
-    (unless (file-exists-p bootstrap-file)
-      (with-current-buffer
-      (url-retrieve-synchronously
-       "https://raw.githubusercontent.com/raxod502/straight.el/develop/install.el"
-       'silent 'inhibit-cookies)
-    (goto-char (point-max))
-    (eval-print-last-sexp)))
-    (load bootstrap-file nil 'nomessage))
+(let ((bootstrap-file
+       (expand-file-name "straight/repos/straight.el/bootstrap.el" user-emacs-directory))
+      (bootstrap-version 5))
+  (unless (file-exists-p bootstrap-file)
+    (with-current-buffer
+	(url-retrieve-synchronously
+	 "https://raw.githubusercontent.com/raxod502/straight.el/develop/install.el"
+	 'silent 'inhibit-cookies)
+      (goto-char (point-max))
+      (eval-print-last-sexp)))
+  (load bootstrap-file nil 'nomessage))
 
-  ;; Tell use-package to use straight to install applications
-  (straight-use-package 'use-package)
+;; Tell use-package to use straight to install applications
+(straight-use-package 'use-package)
 
-  ;; ...without specifying :straight
-  (setq straight-use-package-by-default 't)
+;; ...without specifying :straight
+(setq straight-use-package-by-default 't)
 #+end_src
 
 * Behavior
@@ -65,7 +65,6 @@ Anything in this section can be described in one sentence.
 
 #+begin_src emacs-lisp :tangle ~/.emacs
 (use-package iedit) ;; Find and edit multiple occurances
-(use-package undo-tree) ;; Respresent undo and redo history as a tree
 (use-package ibuffer
   :config
   (global-set-key (kbd "C-x C-b") 'ibuffer)
@@ -178,7 +177,6 @@ Anything in this section can be described in one sentence.
 (global-set-key (kbd "C-2") 'consult-buffer)
 #+end_src
 
-
 ** Theme
 
 Leuven Theme and Comic Mono
@@ -215,7 +213,7 @@ Random global behavior configs
 (setq inhibit-startup-screen t) ;; Don't show the starup screen
 (setq create-lockfiles nil) ;; I don't work on systems where multiple people are editing the same files with emacs.
 (if (version< "29.0" emacs-version)
-  (pixel-scroll-precision-mode 1)) ;; Smooth Scrolling
+    (pixel-scroll-precision-mode 1)) ;; Smooth Scrolling
 (global-so-long-mode 1) ;; Stop trying to syntax highlight absurdly long strings
 (global-set-key (kbd "C-s") 'swiper)
 #+end_src
@@ -225,11 +223,11 @@ Random global behavior configs
 - There are some things I type often enough to save them to a register. =insert-register= followed by the prefix key =C-c x r g=
 
 #+begin_src emacs-lisp :tangle ~/.emacs
-  (set-register ?d '"import pdb\npdb.set_trace()")
-  (set-register ?c '"sudo socat TCP-LISTEN:6001,reuseaddr,fork EXEC:\"qrexec-client-vm screenshare my-screenshare\"&")
-  (set-register ?s '";; This buffer is for text that is not saved, and for Lisp evaluation.
-  ;; To create a file, visit it with <open> and enter text in its buffer.
-  ")
+(set-register ?d '"import pdb\npdb.set_trace()")
+(set-register ?c '"sudo socat TCP-LISTEN:6001,reuseaddr,fork EXEC:\"qrexec-client-vm screenshare my-screenshare\"&")
+(set-register ?s '";; This buffer is for text that is not saved, and for Lisp evaluation.
+;; To create a file, visit it with <open> and enter text in its buffer.
+")
 #+end_src
 
 ** Projectile
@@ -237,14 +235,14 @@ Random global behavior configs
 Projectile enriches Emacs's ability to understand git projects
 
 #+begin_src emacs-lisp :tangle ~/.emacs
-  (use-package projectile
-    :bind (("s-p" . projectile-command-map)
-       ("C-c p" . projectile-command-map))
-    :config (projectile-global-mode)
-    (setq projectile-current-project-on-switch 'keep)
-    (define-key projectile-mode-map (kbd "s-p") 'projectile-command-map)
-    (define-key projectile-mode-map (kbd "C-c p") 'projectile-command-map)
-    (projectile-mode +1))
+(use-package projectile
+  :bind (("s-p" . projectile-command-map)
+	 ("C-c p" . projectile-command-map))
+  :config (projectile-global-mode)
+  (setq projectile-current-project-on-switch 'keep)
+  (define-key projectile-mode-map (kbd "s-p") 'projectile-command-map)
+  (define-key projectile-mode-map (kbd "C-c p") 'projectile-command-map)
+  (projectile-mode +1))
 #+end_src
 
 ** GPG Config
@@ -262,7 +260,6 @@ Emacs can nearly transparently use .gpg encrypted files in emacs. These settings
 Anything in this section can be described in one sentence.
 
 #+begin_src emacs-lisp :tangle ~/.emacs
-(use-package ag) ;; the-silver-searcher for emacs
 (use-package pass
   :config (global-set-key (kbd "<f12>") 'password-store-copy)) ;; Password Store
 (use-package plantuml-mode) ;; Define graphs in code
@@ -273,66 +270,65 @@ Anything in this section can be described in one sentence.
 Emacs shell settings
 
 #+begin_src emacs-lisp :tangle ~/.emacs
-  (use-package eshell-git-prompt)
-  (eshell-git-prompt-use-theme 'robbyrussell) ;; Eshell theme
-    (defun git-prompt-eshell ()
-      "Git a git prompt"
-      (let (beg dir git-branch git-dirty end)
-	(if (eshell-git-prompt--git-root-dir)
-	    (progn
-	      (setq eshell-git-prompt-branch-name (eshell-git-prompt--branch-name))
-	      (setq git-branch
-		    (concat
-		     (with-face "git:(" 'eshell-git-prompt-robyrussell-git-face)
-		     (with-face (eshell-git-prompt--readable-branch-name) 'eshell-git-prompt-robyrussell-branch-face)
-		     (with-face ")" 'eshell-git-prompt-robyrussell-git-face)))
-	      (setq git-dirty
-		    (when (eshell-git-prompt--collect-status)
-		      (with-face "✗" 'eshell-git-prompt-robyrussell-git-dirty-face)))
-	      (concat git-branch git-dirty)) "☮" )))
+(use-package eshell-git-prompt)
+(eshell-git-prompt-use-theme 'robbyrussell) ;; Eshell theme
+(defun git-prompt-eshell ()
+  "Git a git prompt"
+  (let (beg dir git-branch git-dirty end)
+    (if (eshell-git-prompt--git-root-dir)
+	(progn
+	  (setq eshell-git-prompt-branch-name (eshell-git-prompt--branch-name))
+	  (setq git-branch
+		(concat
+		 (with-face "git:(" 'eshell-git-prompt-robyrussell-git-face)
+		 (with-face (eshell-git-prompt--readable-branch-name) 'eshell-git-prompt-robyrussell-branch-face)
+		 (with-face ")" 'eshell-git-prompt-robyrussell-git-face)))
+	  (setq git-dirty
+		(when (eshell-git-prompt--collect-status)
+		  (with-face "✗" 'eshell-git-prompt-robyrussell-git-dirty-face)))
+	  (concat git-branch git-dirty)) "☮" )))
 
-    (setq eshell-prompt-function
-	  (lambda ()
-	    (concat
-	     (propertize "┌─[" 'face 'org-level-4)
-	     (propertize (user-login-name) 'face 'bold)
-	     (propertize "@" 'face 'org-level-4)
-	     (if (is-tramp-window)
-		 (propertize (file-remote-p default-directory) 'face 'bold)
-	       (propertize (system-name) 'face 'bold))
-	     (propertize "]──[" 'face 'org-level-4)
-	     (propertize (format-time-string "%H:%M" (current-time)) 'face 'cursor)
-	     (propertize "]──[" 'face 'org-level-4)
-	     (propertize (concat (eshell/pwd)) 'face 'bold)
-	     (propertize "]──[" 'face 'org-level-4)
-	     (if (is-tramp-window) "🌎"
-	       (concat (propertize (git-prompt-eshell) 'face 'org-level-6)
-		       (if pyvenv-virtual-env-name (concat (propertize "]──[" 'face 'org-level-4)
-							   (propertize (format "venv:%s" pyvenv-virtual-env-name) 'face 'org-level-2)))))
-	     (propertize "]\n" 'face 'org-level-4)
-	     (propertize "└─>" 'face 'org-level-4)
-	     (propertize (if (= (user-uid) 0) " # " " $ ") 'face 'org-level-4)
-	     )))
+(setq eshell-prompt-function
+      (lambda ()
+	(concat
+	 (propertize "┌─[" 'face 'org-level-4)
+	 (propertize (user-login-name) 'face 'bold)
+	 (propertize "@" 'face 'org-level-4)
+	 (if (is-tramp-window)
+	     (propertize (file-remote-p default-directory) 'face 'bold)
+	   (propertize (system-name) 'face 'bold))
+	 (propertize "]──[" 'face 'org-level-4)
+	 (propertize (format-time-string "%H:%M" (current-time)) 'face 'cursor)
+	 (propertize "]──[" 'face 'org-level-4)
+	 (propertize (concat (eshell/pwd)) 'face 'bold)
+	 (propertize "]──[" 'face 'org-level-4)
+	 (if (is-tramp-window) "🌎"
+	   (concat (propertize (git-prompt-eshell) 'face 'org-level-6)
+		   (if pyvenv-virtual-env-name (concat (propertize "]──[" 'face 'org-level-4)
+						       (propertize (format "venv:%s" pyvenv-virtual-env-name) 'face 'org-level-2)))))
+	 (propertize "]\n" 'face 'org-level-4)
+	 (propertize "└─>" 'face 'org-level-4)
+	 (propertize (if (= (user-uid) 0) " # " " $ ") 'face 'org-level-4)
+	 )))
 
-    (setq eshell-visual-commands '("htop" "vi" "screen" "top" "less"
-				   "more" "lynx" "ncftp" "pine" "tin" "trn" "elm"
-				   "vim"))
+(setq eshell-visual-commands '("htop" "vi" "screen" "top" "less"
+			       "more" "lynx" "ncftp" "pine" "tin" "trn" "elm"
+			       "vim"))
 
-    (setq eshell-visual-subcommands '("git" "log" "diff" "show" "ssh"))
+(setq eshell-visual-subcommands '("git" "log" "diff" "show" "ssh"))
 
-    (setenv "PAGER" "cat")
+(setenv "PAGER" "cat")
 
-    (defalias 'ff 'find-file)
-    (defalias 'd 'dired)
+(defalias 'ff 'find-file)
+(defalias 'd 'dired)
 
-    (defun eshell/clear ()
-      (let ((inhibit-read-only t))
-	(erase-buffer)))
+(defun eshell/clear ()
+  (let ((inhibit-read-only t))
+    (erase-buffer)))
 
-    (defun eshell/gst (&rest args)
-      (magit-status (pop args) nil)
-      (eshell/echo))   ;; The echo command suppresses output
-
+(defun eshell/gst (&rest args)
+  (magit-status (pop args) nil)
+  (eshell/echo))   ;; The echo command suppresses output
 #+end_src
 
 ** GhostText
@@ -350,18 +346,18 @@ Tramp allows for nearly transparent editing of files on remote machines. Run =C-
 ;;; no vc in tramp
 (setq remote-file-name-inhibit-cache nil)
 (setq vc-ignore-dir-regexp
-	(format "\\(%s\\)\\|\\(%s\\)"
-		vc-ignore-dir-regexp
-		tramp-file-name-regexp))
+      (format "\\(%s\\)\\|\\(%s\\)"
+	      vc-ignore-dir-regexp
+	      tramp-file-name-regexp))
 (setq tramp-verbose 1)
 (defadvice projectile-on (around exlude-tramp activate)
   "This should disable projectile when visiting a remote file"
   (unless  (--any? (and it (file-remote-p it))
-		     (list
-		      (buffer-file-name)
-		      list-buffers-directory
-		      default-directory
-		      dired-directory))
+		   (list
+		    (buffer-file-name)
+		    list-buffers-directory
+		    default-directory
+		    dired-directory))
     ad-do-it))
 
 (setq projectile-mode-line "Projectile")
@@ -385,7 +381,6 @@ Tramp allows for nearly transparent editing of files on remote machines. Run =C-
 (define-key dired-mode-map (kbd "[") 'dired-preview-mode)
 (define-key dired-mode-map (kbd "]") 'image-dired) 
 
-
 (with-eval-after-load 'dired
   (require 'dired-x)
   ;; Set dired-x global variables here.  For example:
@@ -405,18 +400,18 @@ This is my minimal SMTP setup for Protonmail Bridge
 
 #+begin_src emacs-lisp :tangle ~/.emacs
 (setq user-mail-address "noonker@pm.me"
-    user-full-name  "Joshua Person")
+      user-full-name  "Joshua Person")
 
 
-  (setq send-mail-function 'smtpmail-send-it
-        starttls-use-gnutls t
-        smtpmail-smtp-server "127.0.0.1"
-        smtpmail-smtp-service 1025
-        smtpmail-auth-credentials "~/.authinfo.gpg"
-        smtpmail-stream-type 'starttls
-        smtpmail-smtp-user "noonker@pm.me")
+(setq send-mail-function 'smtpmail-send-it
+      starttls-use-gnutls t
+      smtpmail-smtp-server "127.0.0.1"
+      smtpmail-smtp-service 1025
+      smtpmail-auth-credentials "~/.authinfo.gpg"
+      smtpmail-stream-type 'starttls
+      smtpmail-smtp-user "noonker@pm.me")
 
-  (setq mail-user-agent 'mu4e-user-agent)
+(setq mail-user-agent 'mu4e-user-agent)
 #+end_src
 
 ** SomaFM
@@ -432,12 +427,12 @@ Drone Zone >>> All Else
 IRC for Emacs
 
 #+begin_src emacs-lisp :tangle ~/.emacs
-  (use-package erc
-    :config
-    (setq erc-hide-list '("JOIN" "PART" "QUIT")))
-  (use-package erc-colorize
-    :config
-    (erc-colorize-mode 1))
+(use-package erc
+  :config
+  (setq erc-hide-list '("JOIN" "PART" "QUIT")))
+(use-package erc-colorize
+  :config
+  (erc-colorize-mode 1))
 #+end_src
 
 ** Elfeed
@@ -447,90 +442,71 @@ IRC for Emacs
 #+begin_src emacs-lisp :tangle ~/.emacs
 (use-package elfeed
   :bind (:map elfeed-search-mode-map
-      ("m" . elfeed-mail-todo)
-      ("t" . elfeed-w3m-open)
-      ("w" . elfeed-eww-open)
-      ("f" . elfeed-firefox-open)
-      ("o" . elfeed-org-open)
-      ("d" . elfeed-youtube-dl)
-      ("a" . elfeed-termux-open)
-      )
+	      ("m" . elfeed-mail-todo)
+	      ("t" . elfeed-w3m-open)
+	      ("w" . elfeed-eww-open)
+	      ("f" . elfeed-firefox-open)
+	      ("o" . elfeed-org-open)
+	      ("d" . elfeed-youtube-dl)
+	      ("a" . elfeed-termux-open)
+	      )
 
   :config
-
-  (defun termux-open-it (url)
-    "Opens URL in an async shell"
-    (let ((default-directory "~/"))
-      (async-shell-command (format "termux-open-url %s" url))))
-
-  (defun elfeed-termux-open (&optional use-generic-p)
-    "open with eww"
-    (interactive "P")
-    (let ((entries (elfeed-search-selected)))
-  (cl-loop for entry in entries
-       do (elfeed-untag entry 'unread)
-       when (elfeed-entry-link entry)
-       do (termux-open-it it))
-  (mapc #'elfeed-search-update-entry entries)
-  (unless (use-region-p) (forward-line))))
-    
   (defun elfeed-mail-todo (&optional use-generic-p)
     "Mail this to myself for later reading"
     (interactive "P")
     (let ((entries (elfeed-search-selected)))
-  (cl-loop for entry in entries
-       do (elfeed-untag entry 'unread)
-       when (elfeed-entry-title entry)
-       do (todo it (elfeed-entry-link entry)))
-  (mapc #'elfeed-search-update-entry entries)
-  (unless (use-region-p) (forward-line))))
+      (cl-loop for entry in entries
+	       do (elfeed-untag entry 'unread)
+	       when (elfeed-entry-title entry)
+	       do (todo it (elfeed-entry-link entry)))
+      (mapc #'elfeed-search-update-entry entries)
+      (unless (use-region-p) (forward-line))))
 
   (defun elfeed-eww-open (&optional use-generic-p)
     "open with eww"
     (interactive "P")
     (let ((entries (elfeed-search-selected)))
-  (cl-loop for entry in entries
-       do (elfeed-untag entry 'unread)
-       when (elfeed-entry-link entry)
-       do (eww-browse-url it))
-  (mapc #'elfeed-search-update-entry entries)
-  (unless (use-region-p) (forward-line))))
+      (cl-loop for entry in entries
+	       do (elfeed-untag entry 'unread)
+	       when (elfeed-entry-link entry)
+	       do (eww-browse-url it))
+      (mapc #'elfeed-search-update-entry entries)
+      (unless (use-region-p) (forward-line))))
 
   (defun elfeed-firefox-open (&optional use-generic-p)
-    "open with eww"
+    "open with firefox"
     (interactive "P")
     (let ((entries (elfeed-search-selected)))
-  (cl-loop for entry in entries
-       do (elfeed-untag entry 'unread)
-       when (elfeed-entry-link entry)
-       do (browse-url-firefox it))
-  (mapc #'elfeed-search-update-entry entries)
-  (unless (use-region-p) (forward-line))))
+      (cl-loop for entry in entries
+	       do (elfeed-untag entry 'unread)
+	       when (elfeed-entry-link entry)
+	       do (browse-url-firefox it))
+      (mapc #'elfeed-search-update-entry entries)
+      (unless (use-region-p) (forward-line))))
 
   (defun elfeed-youtube-dl (&optional use-generic-p)
-    "open with eww"
+    "youtube-dl"
     (interactive "P")
     (let ((entries (elfeed-search-selected)))
-  (cl-loop for entry in entries
-       do (elfeed-untag entry 'unread)
-       when (elfeed-entry-link entry)
-       do (yt-dl-it it))
-  (mapc #'elfeed-search-update-entry entries)
-  (unless (use-region-p) (forward-line))))
+      (cl-loop for entry in entries
+	       do (elfeed-untag entry 'unread)
+	       when (elfeed-entry-link entry)
+	       do (yt-dl-it it))
+      (mapc #'elfeed-search-update-entry entries)
+      (unless (use-region-p) (forward-line))))
 
   (defun elfeed-org-open (&optional use-generic-p)
-    "open with eww"
+    "open with org-web-tools"
     (interactive "P")
     (let ((entries (elfeed-search-selected)))
-  (cl-loop for entry in entries
-       do (elfeed-untag entry 'unread)
-       when (elfeed-entry-link entry)
-       do (org-web-tools-read-url-as-org it))
-  (mapc #'elfeed-search-update-entry entries)
-  (unless (use-region-p) (forward-line))))
+      (cl-loop for entry in entries
+	       do (elfeed-untag entry 'unread)
+	       when (elfeed-entry-link entry)
+	       do (org-web-tools-read-url-as-org it))
+      (mapc #'elfeed-search-update-entry entries)
+      (unless (use-region-p) (forward-line))))
   )
-
-(use-package elfeed-web)
 #+end_src
 
 ** Mu4e
@@ -539,13 +515,13 @@ Email client for emacs
 
 #+begin_src emacs-lisp :tangle ~/.emacs
 (use-package mu4e
-:straight
-(:local-repo "/run/current-system/sw/share/emacs/site-lisp/mu4e"
- :type built-in)
-:commands (mu4e)
-:init
- (setq
-  mu4e-attachment-dir "~/Downloads"
+  :straight
+  (:local-repo "/run/current-system/sw/share/emacs/site-lisp/mu4e"
+	       :type built-in)
+  :commands (mu4e)
+  :init
+  (setq
+   mu4e-attachment-dir "~/Downloads"
    mu4e-sent-folder   "/Sent"       ;; folder for sent messages
    mu4e-drafts-folder "/Drafts"     ;; unfinished messages
    mu4e-trash-folder  "/Trash"      ;; trashed messages
@@ -556,26 +532,26 @@ Email client for emacs
   )
 
 (use-package mu4e-alert
-:after mu4e
-:init
-(mu4e-alert-enable-mode-line-display)
-(setq mu4e-alert-interesting-mail-query
-  (concat
-   "flag:unread maildir:/INBOX "
-   ))
-(add-hook 'after-init-hook #'mu4e-alert-enable-mode-line-display))
+  :after mu4e
+  :init
+  (mu4e-alert-enable-mode-line-display)
+  (setq mu4e-alert-interesting-mail-query
+	(concat
+	 "flag:unread maildir:/INBOX "
+	 ))
+  (add-hook 'after-init-hook #'mu4e-alert-enable-mode-line-display))
 
 (use-package org-msg
   :init
   (setq mail-user-agent 'mu4e-user-agent)
   (setq org-msg-options "html-postamble:nil H:5 num:nil ^:{} toc:nil author:nil email:nil \\n:t"
-      org-msg-startup "hidestars indent inlineimages"
-      org-msg-default-alternatives '((new		. (text html))
-				     (reply-to-html	. (text html))
-				     (reply-to-text	. (text)))
-      org-msg-convert-citation t)
+	org-msg-startup "hidestars indent inlineimages"
+	org-msg-default-alternatives '((new		. (text html))
+				       (reply-to-html	. (text html))
+				       (reply-to-text	. (text)))
+	org-msg-convert-citation t)
   (org-msg-mode)
- )
+  )
 #+end_src
 
 ** Emacs Lisp Packages
@@ -584,9 +560,9 @@ These are emacs-lisp packages that I use often enough in scratch-buffers
 that I'm requiring them outside of a package
 
 #+begin_src emacs-lisp :tangle ~/.emacs
-  (use-package ov)
-  (use-package request)
-  (use-package cl-lib)
+(use-package ov)
+(use-package request)
+(use-package cl-lib)
 #+end_src
 
 ** Shell
@@ -646,7 +622,7 @@ Functions and mobile gadgets
 	      (split-string
 	       (shell-command-to-string "$HOME/Library/Android/sdk/emulator/emulator -list-avds") "\n"))))
     (if avd
-      (shell-command (format "$HOME/Library/Android/sdk/emulator/emulator -avd %s -netdelay none -netspeed full -no-snapshot-load&" avd)))
+	(shell-command (format "$HOME/Library/Android/sdk/emulator/emulator -avd %s -netdelay none -netspeed full -no-snapshot-load&" avd)))
     ))
 
 (defun get-android-view ()
@@ -668,25 +644,25 @@ Functions and mobile gadgets
 Magit is git porcelain for Emacs
 
 #+begin_src emacs-lisp :tangle ~/.emacs
-  (use-package magit
-    :config
-      (global-set-key (kbd "C-x g") 'magit-status)
-      (setq magit-save-repository-buffers nil))
+(use-package magit
+  :config
+  (global-set-key (kbd "C-x g") 'magit-status)
+  (setq magit-save-repository-buffers nil))
 #+end_src
 
 ** Counsel
 #+begin_src emacs-lisp :tangle ~/.emacs
-    (use-package counsel)
+(use-package counsel)
 #+end_src
 
 ** Kubernetes
 
 #+begin_src emacs-lisp :tangle ~/.emacs
 (if (not im-at-work)
-(use-package kubel
-  :after (vterm)
-  :config (kubel-vterm-setup))
-    )
+    (use-package kubel
+      :after (vterm)
+      :config (kubel-vterm-setup))
+  )
 #+end_src
 
 ** Docker
@@ -707,29 +683,22 @@ Spray mode is a speed-reading mode
 (defun no-properties-pls ()
   (interactive)
   (let ((inhibit-read-only t))
-  (set-text-properties (point-min) (point-max) nil)))
+    (set-text-properties (point-min) (point-max) nil)))
 (global-set-key (kbd "<f9>") 'spray-mode)
 #+end_src
 
 * Programming
 
-** Artist Mode
-
-#+begin_src emacs-lisp :tangle ~/.emacs
-(add-hook 'artist-mode-hook (lambda () (setq indent-tabs-mode nil)))  
-#+end_src
-
-
 ** LSP
 #+begin_src emacs-lisp :tangle ~/.emacs
-  (use-package lsp-ui
-    :commands lsp-ui-mode
-    :config
-    (setq lsp-ui-doc-enable nil)
-    (setq lsp-ui-doc-header t)
-    (setq lsp-ui-doc-include-signature t)
-    (setq lsp-ui-doc-border (face-foreground 'default))
-    )
+(use-package lsp-ui
+  :commands lsp-ui-mode
+  :config
+  (setq lsp-ui-doc-enable nil)
+  (setq lsp-ui-doc-header t)
+  (setq lsp-ui-doc-include-signature t)
+  (setq lsp-ui-doc-border (face-foreground 'default))
+  )
 #+end_src
 
 ** Flycheck
@@ -737,10 +706,10 @@ Spray mode is a speed-reading mode
 [[https://www.flycheck.org/en/latest/][Flycheck]] is a syntax checker for emacs
 
 #+begin_src emacs-lisp :tangle ~/.emacs
-  (use-package flycheck
-    :config
-    (global-flycheck-mode)
-    (setq-default flycheck-disabled-checker '(emacs-lisp-checkdoc)))
+(use-package flycheck
+  :config
+  (global-flycheck-mode)
+  (setq-default flycheck-disabled-checker '(emacs-lisp-checkdoc)))
 #+end_src
 
 ** Company
@@ -749,23 +718,23 @@ Company is an autocomplete option framework for emacs
 
 #+begin_src emacs-lisp :tangle ~/.emacs
 (use-package company
-    :config
-    (global-company-mode)
-    (setq company-dabbrev-downcase 0)
-    (setq company-idle-delay 0.38)
-    (setq company-minimum-prefix-length 2)
+  :config
+  (global-company-mode)
+  (setq company-dabbrev-downcase 0)
+  (setq company-idle-delay 0.38)
+  (setq company-minimum-prefix-length 2)
 
-    (defun complete-or-indent ()
-      (interactive)
-      (if (company-manual-begin)
-      (company-complete-common)
-    (indent-according-to-mode)))
+  (defun complete-or-indent ()
+    (interactive)
+    (if (company-manual-begin)
+	(company-complete-common)
+      (indent-according-to-mode)))
 
-    (defun indent-or-complete ()
-      (interactive)
-      (if (looking-at "\\_>")
-      (company-complete-common)
-    (indent-according-to-mode))))
+  (defun indent-or-complete ()
+    (interactive)
+    (if (looking-at "\\_>")
+	(company-complete-common)
+      (indent-according-to-mode))))
 #+end_src
 
 ** Java
@@ -784,17 +753,13 @@ Lispy mode makes lisp-mode editing significantly more efficent
 #+begin_src emacs-lisp :tangle ~/.emacs
 (use-package lispy
   :bind
-  (("C-4" . lispy-arglist-inline))
-  :init
-  )
+  (("C-4" . lispy-arglist-inline)))
 
 (progn
-      (add-hook 'emacs-lisp-mode-hook (lambda ()(lispy-mode 1)))
-      (add-hook 'spacemacs-mode-hook (lambda () (lispy-mode 1)))
-      (add-hook 'scheme-mode-hook (lambda () (lispy-mode 1)))
-      (add-hook 'cider-repl-mode-hook (lambda () (lispy-mode 1)))
-)
-
+  (add-hook 'emacs-lisp-mode-hook (lambda ()(lispy-mode 1)))
+  (add-hook 'spacemacs-mode-hook (lambda () (lispy-mode 1)))
+  (add-hook 'scheme-mode-hook (lambda () (lispy-mode 1)))
+  (add-hook 'cider-repl-mode-hook (lambda () (lispy-mode 1))))
 #+end_src
 
 ** SBCL
@@ -802,10 +767,10 @@ Lispy mode makes lisp-mode editing significantly more efficent
 Common Lisp configs
 
 #+begin_src emacs-lisp :tangle ~/.emacs
-	(setq slime-contribs '(slime-fancy))
-	(if (file-exists-p "~/.roswell/helper.el")
-	    (load (expand-file-name "~/.roswell/helper.el")))
-	(setq inferior-lisp-program "ros -Q run")
+(setq slime-contribs '(slime-fancy))
+(if (file-exists-p "~/.roswell/helper.el")
+    (load (expand-file-name "~/.roswell/helper.el")))
+(setq inferior-lisp-program "ros -Q run")
 #+end_src
 
 
@@ -814,73 +779,68 @@ Common Lisp configs
 On MacOS you need to add =-DCMAKE_PREFIX_PATH=/usr/local/opt/llvm= after =cmake= to run =install-irony-server= per [[https://github.com/Sarcasm/irony-mode/issues/167][this]] git issue.
 
 #+begin_src emacs-lisp :tangle ~/.emacs
-  (use-package dap-mode)
+(add-hook 'c-mode-hook 'lsp)
+(add-hook 'c++-mode-hook 'lsp)
 
-  (add-hook 'c-mode-hook 'lsp)
-  (add-hook 'c++-mode-hook 'lsp)
+(setq gc-cons-threshold (* 100 1024 1024)
+      read-process-output-max (* 1024 1024)
+      treemacs-space-between-root-nodes nil
+      company-minimum-prefix-length 1
+      lsp-idle-delay 0.1)  ;; clangd is fast
 
-  (setq gc-cons-threshold (* 100 1024 1024)
-	read-process-output-max (* 1024 1024)
-	treemacs-space-between-root-nodes nil
-	company-minimum-prefix-length 1
-	lsp-idle-delay 0.1)  ;; clangd is fast
+(add-hook 'c-mode-common-hook (lambda () (lsp) ))
 
-  (add-hook 'c-mode-common-hook (lambda () (lsp) ))
+(with-eval-after-load 'lsp-mode
+  (add-hook 'lsp-mode-hook #'lsp-enable-which-key-integration)
+  (require 'dap-cpptools))
 
-  (with-eval-after-load 'lsp-mode
-    (add-hook 'lsp-mode-hook #'lsp-enable-which-key-integration)
-    (require 'dap-cpptools))
-    
+(use-package irony)
+(add-hook 'c++-mode-hook 'irony-mode)
+(add-hook 'c-mode-hook 'irony-mode)
+(add-hook 'objc-mode-hook 'irony-mode)
+(add-hook 'irony-mode-hook 'irony-cdb-autosetup-compile-options)
+(add-to-list 'company-backends 'company-irony) ;; Add the required company backend.
 
-    (use-package irony)
-      (add-hook 'c++-mode-hook 'irony-mode)
-	  (add-hook 'c-mode-hook 'irony-mode)
-	  (add-hook 'objc-mode-hook 'irony-mode)
+;; Enable irony for all c++ files, and platformio-mode only
+;; when needed (platformio.ini present in project root).
+(add-hook 'c++-mode-hook (lambda ()
+			   (irony-mode)
+			   (irony-eldoc)
+			   (platformio-conditionally-enable)))
 
-	  (add-hook 'irony-mode-hook 'irony-cdb-autosetup-compile-options)
-
-	  (add-to-list 'company-backends 'company-irony) ;; Add the required company backend.
-
-	  ;; Enable irony for all c++ files, and platformio-mode only
-	  ;; when needed (platformio.ini present in project root).
-	  (add-hook 'c++-mode-hook (lambda ()
-				     (irony-mode)
-				     (irony-eldoc)
-				     (platformio-conditionally-enable)))
-
-	  ;; Use irony's completion functions.
-	  (add-hook 'irony-mode-hook
-		    (lambda ()
-		      (define-key irony-mode-map [remap completion-at-point]
+;; Use irony's completion functions.
+(add-hook 'irony-mode-hook
+	  (lambda ()
+	    (define-key irony-mode-map [remap completion-at-point]
 			'irony-completion-at-point-async)
 
-		      (define-key irony-mode-map [remap complete-symbol]
+	    (define-key irony-mode-map [remap complete-symbol]
 			'irony-completion-at-point-async)
 
-		      (irony-cdb-autosetup-compile-options)))
+	    (irony-cdb-autosetup-compile-options)))
 
-	  ;; Setup irony for flycheck.
-	  ;;  (add-hook 'flycheck-mode-hook 'flycheck-irony-setup)
+;; Setup irony for flycheck.
+;;  (add-hook 'flycheck-mode-hook 'flycheck-irony-setup)
 
-	  (use-package ggtags)
-	  (add-hook 'c-mode-common-hook
-		    (lambda ()
-		      (when (derived-mode-p 'c-mode 'c++-mode 'java-mode 'asm-mode)
-			(ggtags-mode 1))))
+(use-package ggtags)
+(add-hook 'c-mode-common-hook
+	  (lambda ()
+	    (when (derived-mode-p 'c-mode 'c++-mode 'java-mode 'asm-mode)
+	      (ggtags-mode 1))))
 
-	  (define-key ggtags-mode-map (kbd "C-c g s") 'ggtags-find-other-symbol)
-	  (define-key ggtags-mode-map (kbd "C-c g h") 'ggtags-view-tag-history)
-	  (define-key ggtags-mode-map (kbd "C-c g r") 'ggtags-find-reference)
-	  (define-key ggtags-mode-map (kbd "C-c g f") 'ggtags-find-file)
-	  (define-key ggtags-mode-map (kbd "C-c g c") 'ggtags-create-tags)
-	  (define-key ggtags-mode-map (kbd "C-c g u") 'ggtags-update-tags)
+(define-key ggtags-mode-map (kbd "C-c g s") 'ggtags-find-other-symbol)
+(define-key ggtags-mode-map (kbd "C-c g h") 'ggtags-view-tag-history)
+(define-key ggtags-mode-map (kbd "C-c g r") 'ggtags-find-reference)
+(define-key ggtags-mode-map (kbd "C-c g f") 'ggtags-find-file)
+(define-key ggtags-mode-map (kbd "C-c g c") 'ggtags-create-tags)
+(define-key ggtags-mode-map (kbd "C-c g u") 'ggtags-update-tags)
 
-	  (define-key ggtags-mode-map (kbd "M-,") 'pop-tag-mark)
+(define-key ggtags-mode-map (kbd "M-,") 'pop-tag-mark)
 
-	  (setq-local imenu-create-index-function #'ggtags-build-imenu-index)
+(setq-local imenu-create-index-function #'ggtags-build-imenu-index)
 
-	  (add-to-list 'company-backends 'company-c-headers)
-	  (setq wdired-allow-to-change-permissions t)
+(add-to-list 'company-backends 'company-c-headers)
+(setq wdired-allow-to-change-permissions t)
 #+end_src
 
 ** Swift
@@ -899,15 +859,14 @@ Python + LSP
 (use-package lsp-pyright
   :ensure t
   :hook (python-mode . (lambda ()
-                          (require 'lsp-pyright)
-                          (lsp))))  ; or lsp-deferred
+                         (require 'lsp-pyright)
+                         (lsp))))  ; or lsp-deferred
 (use-package elpy
   :ensure t
   :init
   (elpy-enable))
 
 (setq elpy-rpc-virtualenv-path 'global)
-
 (pyvenv-workon "p310")
 (setq python-shell-interpreter "python")
 #+end_src
@@ -917,7 +876,7 @@ Python + LSP
 Platformio is for programming embedded devices
 
 #+begin_src emacs-lisp :tangle ~/.emacs
- (use-package platformio-mode)
+(use-package platformio-mode)
 #+end_src
 
 ** Typescript
@@ -949,20 +908,20 @@ Clojure + LSP
 (add-hook 'clojurec-mode-hook 'lsp)
 
 (setq gc-cons-threshold (* 100 1024 1024)
-  read-process-output-max (* 1024 1024)
-  treemacs-space-between-root-nodes nil
-  company-minimum-prefix-length 1
-  lsp-lens-enable t
-  lsp-signature-auto-activate nil
-  lsp-enable-indentation nil ; uncomment to use cider indentation instead of lsp
-  lsp-enable-completion-at-point nil ; uncomment to use cider completion instead of lsp
-  )
+      read-process-output-max (* 1024 1024)
+      treemacs-space-between-root-nodes nil
+      company-minimum-prefix-length 1
+      lsp-lens-enable t
+      lsp-signature-auto-activate nil
+      lsp-enable-indentation nil ; uncomment to use cider indentation instead of lsp
+      lsp-enable-completion-at-point nil ; uncomment to use cider completion instead of lsp
+      )
 
 (use-package clojure-mode
   :ensure t
   :mode (("\\.clj\\'" . clojure-mode)
 	 ("\\.edn\\'" . clojure-mode)
-  ))
+	 ))
 
 (use-package cider
   :ensure t
@@ -971,20 +930,20 @@ Clojure + LSP
   :diminish subword-mode
   :config
   (setq nrepl-log-messages t
-   cider-repl-display-in-current-window t
-    cider-repl-use-clojure-font-lock t
-    cider-prompt-save-file-on-load 'always-save
-    cider-font-lock-dynamically '(macro core function var)
-    nrepl-hide-special-buffers t
-    cider-overlays-use-font-lock t)
+	cider-repl-display-in-current-window t
+	cider-repl-use-clojure-font-lock t
+	cider-prompt-save-file-on-load 'always-save
+	cider-font-lock-dynamically '(macro core function var)
+	nrepl-hide-special-buffers t
+	cider-overlays-use-font-lock t)
   (cider-repl-toggle-pretty-printing))
 
 (with-eval-after-load 'dap-mode
   (require 'dap-chrome))
 
-  (add-hook 'clojure-mode-hook #'lispy-mode)
-  (add-hook 'clojure-mode-hook #'subword-mode)
-  (add-hook 'clojure-mode-hook #'eldoc-mode)
+(add-hook 'clojure-mode-hook #'lispy-mode)
+(add-hook 'clojure-mode-hook #'subword-mode)
+(add-hook 'clojure-mode-hook #'eldoc-mode)
 #+end_src
 
 ** Json
@@ -1008,95 +967,95 @@ Clojure + LSP
 
 ** \LaTeX
 #+begin_src emacs-lisp :tangle ~/.emacs
-  (use-package tex
-    :straight auctex)
+(use-package tex
+  :straight auctex)
 
-  ;; CDLatex settings
-  (use-package cdlatex
-    :ensure t
-    :hook (LaTeX-mode . turn-on-cdlatex)
-    :bind (:map cdlatex-mode-map 
-                ("<tab>" . cdlatex-tab)))
+;; CDLatex settings
+(use-package cdlatex
+  :ensure t
+  :hook (LaTeX-mode . turn-on-cdlatex)
+  :bind (:map cdlatex-mode-map 
+              ("<tab>" . cdlatex-tab)))
 
-  ;; Yasnippet settings
-  (use-package yasnippet
-    :ensure t
-    :hook ((LaTeX-mode . yas-minor-mode)
-           (post-self-insert . my/yas-try-expanding-auto-snippets))
+;; Yasnippet settings
+(use-package yasnippet
+  :ensure t
+  :hook ((LaTeX-mode . yas-minor-mode)
+         (post-self-insert . my/yas-try-expanding-auto-snippets))
+  :config
+  (use-package warnings
     :config
-    (use-package warnings
-      :config
-      (cl-pushnew '(yasnippet backquote-change)
-                  warning-suppress-types
-                  :test 'equal))
+    (cl-pushnew '(yasnippet backquote-change)
+                warning-suppress-types
+                :test 'equal))
 
-    (setq yas-triggers-in-field t)
-    
-    ;; Function that tries to autoexpand YaSnippets
-    ;; The double quoting is NOT a typo!
-    (defun my/yas-try-expanding-auto-snippets ()
-      (when (and (boundp 'yas-minor-mode) yas-minor-mode)
-        (let ((yas-buffer-local-condition ''(require-snippet-condition . auto)))
-          (yas-expand)))))
-
-  (use-package yasnippet-snippets)
-
-  (yas-global-mode)
+  (setq yas-triggers-in-field t)
   
-  ;; CDLatex integration with YaSnippet: Allow cdlatex tab to work inside Yas
-  ;; fields
-  (use-package cdlatex
-    :hook ((cdlatex-tab . yas-expand)
-           (cdlatex-tab . cdlatex-in-yas-field))
+  ;; Function that tries to autoexpand YaSnippets
+  ;; The double quoting is NOT a typo!
+  (defun my/yas-try-expanding-auto-snippets ()
+    (when (and (boundp 'yas-minor-mode) yas-minor-mode)
+      (let ((yas-buffer-local-condition ''(require-snippet-condition . auto)))
+        (yas-expand)))))
+
+(use-package yasnippet-snippets)
+
+(yas-global-mode)
+
+;; CDLatex integration with YaSnippet: Allow cdlatex tab to work inside Yas
+;; fields
+(use-package cdlatex
+  :hook ((cdlatex-tab . yas-expand)
+         (cdlatex-tab . cdlatex-in-yas-field))
+  :config
+  (use-package yasnippet
+    :bind (:map yas-keymap
+		("<tab>" . yas-next-field-or-cdlatex)
+		("TAB" . yas-next-field-or-cdlatex))
     :config
-    (use-package yasnippet
-      :bind (:map yas-keymap
-             ("<tab>" . yas-next-field-or-cdlatex)
-             ("TAB" . yas-next-field-or-cdlatex))
-      :config
-      (defun cdlatex-in-yas-field ()
-        ;; Check if we're at the end of the Yas field
-        (when-let* ((_ (overlayp yas--active-field-overlay))
-                    (end (overlay-end yas--active-field-overlay)))
-          (if (>= (point) end)
-              ;; Call yas-next-field if cdlatex can't expand here
-              (let ((s (thing-at-point 'sexp)))
-                (unless (and s (assoc (substring-no-properties s)
-                                      cdlatex-command-alist-comb))
-                  (yas-next-field-or-maybe-expand)
-                  t))
-            ;; otherwise expand and jump to the correct location
-            (let (cdlatex-tab-hook minp)
-              (setq minp
-                    (min (save-excursion (cdlatex-tab)
-                                         (point))
-                         (overlay-end yas--active-field-overlay)))
-              (goto-char minp) t))))
+    (defun cdlatex-in-yas-field ()
+      ;; Check if we're at the end of the Yas field
+      (when-let* ((_ (overlayp yas--active-field-overlay))
+                  (end (overlay-end yas--active-field-overlay)))
+        (if (>= (point) end)
+            ;; Call yas-next-field if cdlatex can't expand here
+            (let ((s (thing-at-point 'sexp)))
+              (unless (and s (assoc (substring-no-properties s)
+                                    cdlatex-command-alist-comb))
+                (yas-next-field-or-maybe-expand)
+                t))
+          ;; otherwise expand and jump to the correct location
+          (let (cdlatex-tab-hook minp)
+            (setq minp
+                  (min (save-excursion (cdlatex-tab)
+                                       (point))
+                       (overlay-end yas--active-field-overlay)))
+            (goto-char minp) t))))
 
-      (defun yas-next-field-or-cdlatex nil
-        (interactive)
-        "Jump to the next Yas field correctly with cdlatex active."
-        (if
-            (or (bound-and-true-p cdlatex-mode)
-                (bound-and-true-p org-cdlatex-mode))
-            (cdlatex-tab)
-          (yas-next-field-or-maybe-expand)))))
+    (defun yas-next-field-or-cdlatex nil
+      (interactive)
+      "Jump to the next Yas field correctly with cdlatex active."
+      (if
+          (or (bound-and-true-p cdlatex-mode)
+              (bound-and-true-p org-cdlatex-mode))
+          (cdlatex-tab)
+        (yas-next-field-or-maybe-expand)))))
 
-  (use-package latex-preview-pane)
+(use-package latex-preview-pane)
 
-  (with-eval-after-load 'org
-    (progn
-      (add-to-list 'org-latex-packages-alist '("" "tcolorbox" t))
-      (add-to-list 'org-latex-packages-alist '("" "minted" t))
-      (add-to-list 'org-latex-packages-alist '("" "lipsum" t))))
+(with-eval-after-load 'org
+  (progn
+    (add-to-list 'org-latex-packages-alist '("" "tcolorbox" t))
+    (add-to-list 'org-latex-packages-alist '("" "minted" t))
+    (add-to-list 'org-latex-packages-alist '("" "lipsum" t))))
 
-  (setq org-preview-latex-default-process 'imagemagick)
+(setq org-preview-latex-default-process 'imagemagick)
 
-  (use-package org-contrib
-    :config (require 'ox-extra)
-    (ox-extras-activate '(ignore-headlines)))
+(use-package org-contrib
+  :config (require 'ox-extra)
+  (ox-extras-activate '(ignore-headlines)))
 
-  (setq org-format-latex-options (plist-put org-format-latex-options :scale 2.0))
+(setq org-format-latex-options (plist-put org-format-latex-options :scale 2.0))
 #+end_src
 
 
@@ -1142,81 +1101,24 @@ Clojure + LSP
 			    'music-analysis))
 
 (defun org-today-update-day ()
-    (interactive)
-    (setq org-archive-location (format "%s/archive/%s.org::" org-agenda-basedir (format-time-string "%Y-%m-%d"))))
+  (interactive)
+  (setq org-archive-location (format "%s/archive/%s.org::" org-agenda-basedir (format-time-string "%Y-%m-%d"))))
 
 (org-today-update-day)
 #+end_src
 
 *** Org Download
 #+begin_src emacs-lisp :tangle ~/.emacs
-  (use-package org-download
-    :init
-    (progn
-      (setq org-image-actual-width (list 400))))
+(use-package org-download
+  :init
+  (progn
+    (setq org-image-actual-width (list 400))))
 #+end_src
 
 *** Org Transclusion
 #+begin_src emacs-lisp :tangle ~/.emacs
-  (use-package org-transclusion
+(use-package org-transclusion
   :after org)
-#+end_src
-
-*** Org Timestamps
-#+begin_src emacs-lisp :tangle ~/.emacs
-  ;;--------------------------
-  ;; Handling file properties for ‘CREATED’ & ‘LAST_MODIFIED’
-  ;;--------------------------
-
-  (defun zp/org-find-time-file-property (property &optional anywhere)
-    "Return the position of the time file PROPERTY if it exists.
-  When ANYWHERE is non-nil, search beyond the preamble."
-    (save-excursion
-      (goto-char (point-min))
-      (let ((first-heading
-             (save-excursion
-               (re-search-forward org-outline-regexp-bol nil t))))
-        (when (re-search-forward (format "^#\\+%s:" property)
-                                 (if anywhere nil first-heading)
-                                 t)
-          (point)))))
-
-  (defun zp/org-has-time-file-property-p (property &optional anywhere)
-    "Return the position of time file PROPERTY if it is defined.
-  As a special case, return -1 if the time file PROPERTY exists but
-  is not defined."
-    (when-let ((pos (zp/org-find-time-file-property property anywhere)))
-      (save-excursion
-        (goto-char pos)
-        (if (and (looking-at-p " ")
-                 (progn (forward-char)
-                        (org-at-timestamp-p 'lax)))
-            pos
-          -1))))
-
-  (defun zp/org-set-time-file-property (property &optional anywhere pos)
-    "Set the time file PROPERTY in the preamble.
-  When ANYWHERE is non-nil, search beyond the preamble.
-  If the position of the file PROPERTY has already been computed,
-  it can be passed in POS."
-    (when-let ((pos (or pos
-                        (zp/org-find-time-file-property property))))
-      (save-excursion
-        (goto-char pos)
-        (if (looking-at-p " ")
-            (forward-char)
-          (insert " "))
-        (delete-region (point) (line-end-position))
-        (let* ((now (format-time-string "[%Y-%m-%d %a %H:%M]")))
-          (insert now)))))
-
-  (defun zp/org-set-last-modified ()
-    "Update the LAST_MODIFIED file property in the preamble."
-    (when (derived-mode-p 'org-mode)
-      (zp/org-set-time-file-property "LAST_MODIFIED")))
-
-  (add-hook 'before-save-hook #'zp/org-set-last-modified )
-
 #+end_src
 
 *** Org Babel Packages
@@ -1254,81 +1156,81 @@ Clojure + LSP
 
 *** Org Agenda
 #+begin_src emacs-lisp :tangle ~/.emacs
-  (setq org-archive-file-header-format nil)
+(setq org-archive-file-header-format nil)
 
-  (defun  org-init-agenda ()
-    (interactive)
-    (let ((initial '(("backlog.org" nil)
-                     ("recurring.org" nil)
-                     ("today.org" nil)
-                     ("projects" t)
-                     ("archive" t)))
-          (todostr "#+TODO: TODO STRT | DONE WONTDO"))
-      (if (not (file-directory-p org-agenda-basedir))
-          (make-directory org-agenda-basedir))
+(defun  org-init-agenda ()
+  (interactive)
+  (let ((initial '(("backlog.org" nil)
+                   ("recurring.org" nil)
+                   ("today.org" nil)
+                   ("projects" t)
+                   ("archive" t)))
+        (todostr "#+TODO: TODO STRT | DONE WONTDO"))
+    (if (not (file-directory-p org-agenda-basedir))
+        (make-directory org-agenda-basedir))
 
-      (dolist (element initial)
-        (let ((name  (nth 0 element))
-              (isdir (nth 1 element)))
-          ;; If the file doesn't exist and not flagged as dir
-          (if (and (not isdir)
-                   (not (file-directory-p (format "%s/%s" org-agenda-basedir name))))
-              (write-region todostr nil (format "%s/%s" org-agenda-basedir name)))
+    (dolist (element initial)
+      (let ((name  (nth 0 element))
+            (isdir (nth 1 element)))
+        ;; If the file doesn't exist and not flagged as dir
+        (if (and (not isdir)
+                 (not (file-directory-p (format "%s/%s" org-agenda-basedir name))))
+            (write-region todostr nil (format "%s/%s" org-agenda-basedir name)))
 
-          ;; If the file doesn't exist and is flagged as dir
-          (if (and isdir
-                   (not (file-directory-p (format "%s/%s" org-agenda-basedir name))))
-              (make-directory (format "%s/%s" org-agenda-basedir name)))))))
+        ;; If the file doesn't exist and is flagged as dir
+        (if (and isdir
+                 (not (file-directory-p (format "%s/%s" org-agenda-basedir name))))
+            (make-directory (format "%s/%s" org-agenda-basedir name)))))))
 
 
-  (setq org-agenda-files (append (list (format "%s/backlog.org" org-agenda-basedir)
-                                       (format "%s/recurring.org" org-agenda-basedir)
-                                       (format "%s/meetings.org" org-agenda-basedir)
-                                       (format "%s/today.org" org-agenda-basedir))
-                                 (directory-files-recursively (format "%s/projects/" org-agenda-basedir) "^[0-9a-zA-Z\-_]*?\.org$")
-                                 ))
+(setq org-agenda-files (append (list (format "%s/backlog.org" org-agenda-basedir)
+                                     (format "%s/recurring.org" org-agenda-basedir)
+                                     (format "%s/meetings.org" org-agenda-basedir)
+                                     (format "%s/today.org" org-agenda-basedir))
+                               (directory-files-recursively (format "%s/projects/" org-agenda-basedir) "^[0-9a-zA-Z\-_]*?\.org$")
+                               ))
 
-  (setq org-archive-location (format "%s/archive/%s.org::" org-agenda-basedir (format-time-string "%Y-%m-%d")))
+(setq org-archive-location (format "%s/archive/%s.org::" org-agenda-basedir (format-time-string "%Y-%m-%d")))
 
-  (defun org-agenda-new-day ()
-    (interactive)
-    (with-current-buffer (find-file (format "%s/today.org" org-agenda-basedir))
-      (mark-whole-buffer)
-      (kill-region (mark) (point))
-      (if (= (buffer-size) 0) (insert "#+CREATED: %U\n#+LAST_MODIFIED: %U#+TODO: TODO IN-PROGRESS | DONE WONTDO\n\n* Tasks\n* Thoughts\n")))
-    (org-agenda))
+(defun org-agenda-new-day ()
+  (interactive)
+  (with-current-buffer (find-file (format "%s/today.org" org-agenda-basedir))
+    (mark-whole-buffer)
+    (kill-region (mark) (point))
+    (if (= (buffer-size) 0) (insert "#+CREATED: %U\n#+LAST_MODIFIED: %U#+TODO: TODO IN-PROGRESS | DONE WONTDO\n\n* Tasks\n* Thoughts\n")))
+  (org-agenda))
 
-  (defun org-complex-tasks ()
-    (interactive)
-    (let ((tasks  (quote ("TODO Create Jira Ticket"
-                          "TODO Documentation"
-                          "TODO Close Jira Ticket"))))
-      (org-end-of-line)
-      (insert " [/]")
+(defun org-complex-tasks ()
+  (interactive)
+  (let ((tasks  (quote ("TODO Create Jira Ticket"
+                        "TODO Documentation"
+                        "TODO Close Jira Ticket"))))
+    (org-end-of-line)
+    (insert " [/]")
+    (org-insert-heading)
+    (org-demote-subtree)
+    (insert (car tasks))
+    (dolist (element (cdr tasks))
       (org-insert-heading)
-      (org-demote-subtree)
-      (insert (car tasks))
-      (dolist (element (cdr tasks))
-        (org-insert-heading)
-        (insert element))))
+      (insert element))))
 #+end_src
 
 *** Org Refile
 #+begin_src emacs-lisp :tangle ~/.emacs
-  (defun directory-files-if-exists (dir)
-    (if (file-directory-p dir)
-	(directory-files dir t)
-      ""))
+(defun directory-files-if-exists (dir)
+  (if (file-directory-p dir)
+      (directory-files dir t)
+    ""))
 
-  (setq org-blogpost-directory (directory-files-if-exists (format "%s/blog/content/posts" org-directory)))
-  (setq org-cheatsheet-directory (directory-files-if-exists (format "%s/cheatsheet" org-directory)))
-  (setq org-notes-directory (directory-files-if-exists (format "%s/notes" org-directory)))
-  (setq org-refile-use-outline-path t)                  ; Show full paths for refiling
-  (setq org-outline-path-complete-in-steps nil)         ; Refile in a single go
-  (setq org-refile-targets '((org-agenda-files :maxlevel . 3)))
-  (setq org-refile-allow-creating-parent-nodes t)
-  (setq org-refile-allow-creating-parent-nodes 'confirm)
-  (setq org-refile-use-outline-path 'file)
+(setq org-blogpost-directory (directory-files-if-exists (format "%s/blog/content/posts" org-directory)))
+(setq org-cheatsheet-directory (directory-files-if-exists (format "%s/cheatsheet" org-directory)))
+(setq org-notes-directory (directory-files-if-exists (format "%s/notes" org-directory)))
+(setq org-refile-use-outline-path t)                  ; Show full paths for refiling
+(setq org-outline-path-complete-in-steps nil)         ; Refile in a single go
+(setq org-refile-targets '((org-agenda-files :maxlevel . 3)))
+(setq org-refile-allow-creating-parent-nodes t)
+(setq org-refile-allow-creating-parent-nodes 'confirm)
+(setq org-refile-use-outline-path 'file)
 #+end_src
 
 *** Org Capture
@@ -1355,7 +1257,7 @@ Clojure + LSP
 	("B" "Blog Post" plain (file (lambda () (format "%s/blog/noonker/content/posts/%s-%s.org" org-directory (format-time-string "%Y-%m-%d") (replace-regexp-in-string " " "-" (downcase (read-string "Name: ")))))) 
 	 ,(format "#+title: TITLE\n#+subtitle:\n#+date: %s\n#+tags[]: tech, emacs\n#+draft: false\n\n" (format-time-string "%Y-%m-%d")))
 	)
-)
+      )
 
 (setq org-roam-capture-templates '(
 				   ("n" "notes" plain "%?"
@@ -1371,39 +1273,39 @@ Clojure + LSP
 
 *** Org Roam
 #+begin_src emacs-lisp :tangle ~/.emacs
-  (setq org-roam-directory "~/org/")
-  (use-package websocket)
+(setq org-roam-directory "~/org/")
+(use-package websocket)
 
-  (use-package org-roam-ui
-    :after org-roam ;; or :after org
-    ;;         normally we'd recommend hooking orui after org-roam, but since org-roam does not have
-    ;;         a hookable mode anymore, you're advised to pick something yourself
-    ;;         if you don't care about startup time, use
-    ;;  :hook (after-init . org-roam-ui-mode)
-    :config
-    (setq org-roam-ui-sync-theme t
-	  org-roam-ui-follow t
-	  org-roam-ui-update-on-save t
-	  org-roam-ui-open-on-start t
-	  ))
+(use-package org-roam-ui
+  :after org-roam ;; or :after org
+  ;;         normally we'd recommend hooking orui after org-roam, but since org-roam does not have
+  ;;         a hookable mode anymore, you're advised to pick something yourself
+  ;;         if you don't care about startup time, use
+  ;;  :hook (after-init . org-roam-ui-mode)
+  :config
+  (setq org-roam-ui-sync-theme t
+	org-roam-ui-follow t
+	org-roam-ui-update-on-save t
+	org-roam-ui-open-on-start t
+	))
 
-  (org-roam-db-autosync-mode) ;; Automatically update the org roam database 
+(org-roam-db-autosync-mode) ;; Automatically update the org roam database 
 #+end_src
 
 *** Org Protocol
 #+begin_src emacs-lisp :tangle ~/.emacs
-  (defun transform-square-brackets-to-round-ones(string-to-transform)
-    "Transforms [ into ( and ] into ), other chars left unchanged."
-    (concat
-     (mapcar #'(lambda (c) (if (equal c ?\[) ?\( (if (equal c ?\]) ?\) c))) string-to-transform))
-    )
+(defun transform-square-brackets-to-round-ones(string-to-transform)
+  "Transforms [ into ( and ] into ), other chars left unchanged."
+  (concat
+   (mapcar #'(lambda (c) (if (equal c ?\[) ?\( (if (equal c ?\]) ?\) c))) string-to-transform))
+  )
 
 #+end_src
 
 *** Org Packages
 #+begin_src emacs-lisp :tangle ~/.emacs
-    (use-package org-bullets)
-    (use-package org-web-tools)
+(use-package org-bullets)
+(use-package org-web-tools)
 #+end_src
 
 *** Org eXport
@@ -1421,12 +1323,6 @@ Clojure + LSP
         "pdflatex -shell-escape -interaction nonstopmode -output-directory %o %f"))
 
 #+end_src
-
-*** Org Transclusion
-#+begin_src emacs-lisp :tangle ~/.emacs
-  (use-package org-transclusion)
-#+end_src
-
 
 *** Org + Hugo
 
@@ -1470,20 +1366,20 @@ Blogging with hugo
 
 ** Markdown
 #+begin_src emacs-lisp :tangle ~/.emacs
-  (use-package markdown-mode)
+(use-package markdown-mode)
 #+end_src
 
 ** Flyspell
 #+begin_src emacs-lisp :tangle ~/.emacs
-  (use-package flyspell
-    :config
-    (dolist (hook '(text-mode-hook))
+(use-package flyspell
+  :config
+  (dolist (hook '(text-mode-hook))
     (add-hook hook (lambda () (flyspell-mode 1))))
-    (add-hook 'python-mode-hook
-    (lambda ()
-    (flyspell-prog-mode)
-    ))
-    )
+  (add-hook 'python-mode-hook
+	    (lambda ()
+	      (flyspell-prog-mode)
+	      ))
+  )
 #+end_src
 
 ** Languagetool
@@ -1492,10 +1388,10 @@ Run =brew install languagetool= to install on mac
 
 #+begin_src emacs-lisp :tangle ~/.emacs
 (use-package langtool
- :config
- (setq langtool-bin "/usr/local/bin/languagetool")
- (setq langtool-http-server-host "localhost"
-      langtool-http-server-port 8081)
+  :config
+  (setq langtool-bin "/usr/local/bin/languagetool")
+  (setq langtool-http-server-host "localhost"
+	langtool-http-server-port 8081)
   )
 #+end_src
 
@@ -1520,10 +1416,10 @@ Replace spotlight with emacs
 Download vidoes with youtube-dl
 
 #+begin_src emacs-lisp :tangle ~/.emacs
-  (defun yt-dl-it (url)
-    "Downloads the URL in an async shell"
-    (let ((default-directory "~/Videos"))
-      (async-shell-command (format "yt-dlp %s" url))))
+(defun yt-dl-it (url)
+  "Downloads the URL in an async shell"
+  (let ((default-directory "~/Videos"))
+    (async-shell-command (format "yt-dlp %s" url))))
 #+end_src
 
 ** Image to Text
@@ -1531,18 +1427,18 @@ Download vidoes with youtube-dl
 Use tesseract-ocr to turn an image into text and insert it into this buffer
 
 #+begin_src emacs-lisp :tangle ~/.emacs
-  (defun image-to-text ()
-    (interactive)
-    (if buffer-file-name
-    (progn
-      ;; Convert the file to a tif file for tesseract consumption.
-      (shell-command (concat "convert " buffer-file-name " -resize 400% -type Grayscale " buffer-file-name ".tif"))
-      ;; Convert the file from tif to txt using tesseract.
-      (shell-command (concat "tesseract -l eng " buffer-file-name ".tif " buffer-file-name))
-      ;; Delete the tif file artifact.
-      (shell-command (concat "rm " buffer-file-name ".tif"))
-      ;; Open the text file in buffer, this should be the text found in the image converted.
-      (find-file (concat buffer-file-name ".txt")))))
+(defun image-to-text ()
+  (interactive)
+  (if buffer-file-name
+      (progn
+	;; Convert the file to a tif file for tesseract consumption.
+	(shell-command (concat "convert " buffer-file-name " -resize 400% -type Grayscale " buffer-file-name ".tif"))
+	;; Convert the file from tif to txt using tesseract.
+	(shell-command (concat "tesseract -l eng " buffer-file-name ".tif " buffer-file-name))
+	;; Delete the tif file artifact.
+	(shell-command (concat "rm " buffer-file-name ".tif"))
+	;; Open the text file in buffer, this should be the text found in the image converted.
+	(find-file (concat buffer-file-name ".txt")))))
 #+end_src
 
 ** CNC Mode
@@ -1550,51 +1446,51 @@ Use tesseract-ocr to turn an image into text and insert it into this buffer
 These functions enable options where you can have one buffer of commands to run and several other open buffers that the commands will be sent to.
 
 #+begin_src emacs-lisp :tangle ~/.emacs
-  ;; cnc-command
-  (defun visible-buffers ()
-    "Definition"
-    (interactive)
-    (mapcar '(lambda (window) (buffer-name (window-buffer window))) (window-list)))
+;; cnc-command
+(defun visible-buffers ()
+  "Definition"
+  (interactive)
+  (mapcar '(lambda (window) (buffer-name (window-buffer window))) (window-list)))
 
-  (defun all-buffers-except-this ()
-    "Definition"
-    (interactive)
-    (delete (buffer-name (current-buffer)) (visible-buffers))
-    )
+(defun all-buffers-except-this ()
+  "Definition"
+  (interactive)
+  (delete (buffer-name (current-buffer)) (visible-buffers))
+  )
 
-  (defun cnc-from-file ()
-    "A command to run commands on the other open buffers"
-    (interactive)
-    (dolist (elt (all-buffers-except-this))
-      (comint-send-string elt (format "%s\n" (thing-at-point `line))))
-    (next-line)
-    t
-    )
+(defun cnc-from-file ()
+  "A command to run commands on the other open buffers"
+  (interactive)
+  (dolist (elt (all-buffers-except-this))
+    (comint-send-string elt (format "%s\n" (thing-at-point `line))))
+  (next-line)
+  t
+  )
 
-  (defun cnc-prompt (cmd)
-    "A command to run commands on the other open buffers"
-    (interactive "sCmd: ")
-    (dolist (elt (visible-buffers))
-      (comint-send-string elt (format "%s\n" cmd)))
-    )
+(defun cnc-prompt (cmd)
+  "A command to run commands on the other open buffers"
+  (interactive "sCmd: ")
+  (dolist (elt (visible-buffers))
+    (comint-send-string elt (format "%s\n" cmd)))
+  )
 
-  (defun split-cnc (number)
-    (interactive "N")
-    "Function to split windows into one major window and multiple minor ansi-terms"
-    (split-window-horizontally)
-    (other-window 1)
-    (ansi-term "/bin/bash" "cnc")
-    (while (> number 1)
-      (split-window-vertically)
-      (ansi-term "/bin/bash" "cnc")
-      (other-window 1)
-      (setq number (+ -1 number)))
+(defun split-cnc (number)
+  (interactive "N")
+  "Function to split windows into one major window and multiple minor ansi-terms"
+  (split-window-horizontally)
+  (other-window 1)
+  (ansi-term "/bin/bash" "cnc")
+  (while (> number 1)
+    (split-window-vertically)
     (ansi-term "/bin/bash" "cnc")
     (other-window 1)
-    (balance-windows))
+    (setq number (+ -1 number)))
+  (ansi-term "/bin/bash" "cnc")
+  (other-window 1)
+  (balance-windows))
 
-  (global-set-key (kbd "C-c y") `cnc-prompt)
-  (global-set-key (kbd "C-c C-.") `cnc-from-file)
+(global-set-key (kbd "C-c y") `cnc-prompt)
+(global-set-key (kbd "C-c C-.") `cnc-from-file)
 #+end_src
 
 ** Misc
@@ -1608,31 +1504,31 @@ These functions are helpers and should be self explanitory
 (defun no-fonts-pls ()
   (interactive)
   (let ((inhibit-read-only t))
-(set-text-properties (point-min) (point-max) nil)))
+    (set-text-properties (point-min) (point-max) nil)))
 
 (defun what-is-my-ip ()
   (interactive)
   (message "IP: %s"
-       (with-current-buffer (url-retrieve-synchronously "https://api.`ipify.org")
-     (buffer-substring (+ 1 url-http-end-of-headers) (point-max)))))
+	   (with-current-buffer (url-retrieve-synchronously "https://api.`ipify.org")
+	     (buffer-substring (+ 1 url-http-end-of-headers) (point-max)))))
 
 (defun character-below ()
   (save-excursion
-(next-line)
-(string (char-after (point)))))
+    (next-line)
+    (string (char-after (point)))))
 
 (defun replace-below (cur rep bel)
   (interactive)
   (let ((pos 1)
-    (tmp))
-(while (< pos (point-max))
-  (if (equal cur (string (char-after pos)))
-      (if (equal bel (character-above))
-      (progn (delete-char 1) (insert rep))
-    ))
-  (setq pos (+ 1 pos))
-  (goto-char pos)
-  )))
+	(tmp))
+    (while (< pos (point-max))
+      (if (equal cur (string (char-after pos)))
+	  (if (equal bel (character-above))
+	      (progn (delete-char 1) (insert rep))
+	    ))
+      (setq pos (+ 1 pos))
+      (goto-char pos)
+      )))
 
 (defun ruthless-kill ()
   "Kill the line without copying it"
@@ -1650,16 +1546,16 @@ These functions are helpers and should be self explanitory
 (defun selenium()
   (interactive)
   (save-excursion
-(async-shell-command "java -jar $HOME/Documents/selenium.jar")))
+    (async-shell-command "java -jar $HOME/Documents/selenium.jar")))
 
 (defun toggle-maximize-buffer ()
   "Maximize buffer"
-   (interactive)
-   (if (= 1 (length (window-list)))
-       (jump-to-register '_)
-     (progn
-       (set-register '_ (list (current-window-configuration)))
-       (delete-other-windows))))
+  (interactive)
+  (if (= 1 (length (window-list)))
+      (jump-to-register '_)
+    (progn
+      (set-register '_ (list (current-window-configuration)))
+      (delete-other-windows))))
 
 (defun untabify-buffer ()
   (interactive)
@@ -1683,17 +1579,17 @@ These functions are helpers and should be self explanitory
   (split-window-horizontally)
   (other-window 1)
   (while (> number 1)
-(setq number (+ -1 number))
-(split-window-vertically))
+    (setq number (+ -1 number))
+    (split-window-vertically))
   (balance-windows))
 
 (defun sudo ()
   "Use TRAMP to `sudo' the current buffer"
   (interactive)
   (when buffer-file-name
-(find-alternate-file
- (concat "/sudo:root@localhost:"
-     buffer-file-name))))
+    (find-alternate-file
+     (concat "/sudo:root@localhost:"
+	     buffer-file-name))))
 
 (defun proxy (text &optional port)
   (interactive "sHost: ")
@@ -1704,7 +1600,7 @@ These functions are helpers and should be self explanitory
   (compose-mail-other-window "noonker@pm.me" text)
   (mail-text)
   (if body
-  (insert body))
+      (insert body))
   (message-send-and-exit)
   )
 
@@ -1716,243 +1612,243 @@ These functions are helpers and should be self explanitory
 The doom modeline looks better than the stock emacs modeline.
 
 #+begin_src emacs-lisp :tangle ~/.emacs
-  (use-package doom-modeline
-    :config (doom-modeline-mode 1)
-    (setq doom-modeline-height 40)
-    )
+(use-package doom-modeline
+  :config (doom-modeline-mode 1)
+  (setq doom-modeline-height 17)
+  )
 
-  ;; If non-nil, cause imenu to see `doom-modeline' declarations.
-  ;; This is done by adjusting `lisp-imenu-generic-expression' to
-  ;; include support for finding `doom-modeline-def-*' forms.
-  ;; Must be set before loading doom-modeline.
-  (setq doom-modeline-support-imenu t)
+;; If non-nil, cause imenu to see `doom-modeline' declarations.
+;; This is done by adjusting `lisp-imenu-generic-expression' to
+;; include support for finding `doom-modeline-def-*' forms.
+;; Must be set before loading doom-modeline.
+(setq doom-modeline-support-imenu t)
 
-  ;; How wide the mode-line bar should be. It's only respected in GUI.
-  (setq doom-modeline-bar-width 4)
+;; How wide the mode-line bar should be. It's only respected in GUI.
+(setq doom-modeline-bar-width 4)
 
-  ;; Whether to use hud instead of default bar. It's only respected in GUI.
-  (setq doom-modeline-hud nil)
+;; Whether to use hud instead of default bar. It's only respected in GUI.
+(setq doom-modeline-hud nil)
 
-  ;; The limit of the window width.
-  ;; If `window-width' is smaller than the limit, some information won't be
-  ;; displayed. It can be an integer or a float number. `nil' means no limit."
-  (setq doom-modeline-window-width-limit 85)
+;; The limit of the window width.
+;; If `window-width' is smaller than the limit, some information won't be
+;; displayed. It can be an integer or a float number. `nil' means no limit."
+(setq doom-modeline-window-width-limit 85)
 
-  ;; How to detect the project root.
-  ;; nil means to use `default-directory'.
-  ;; The project management packages have some issues on detecting project root.
-  ;; e.g. `projectile' doesn't handle symlink folders well, while `project' is unable
-  ;; to hanle sub-projects.
-  ;; You can specify one if you encounter the issue.
-  (setq doom-modeline-project-detection 'auto)
+;; How to detect the project root.
+;; nil means to use `default-directory'.
+;; The project management packages have some issues on detecting project root.
+;; e.g. `projectile' doesn't handle symlink folders well, while `project' is unable
+;; to hanle sub-projects.
+;; You can specify one if you encounter the issue.
+(setq doom-modeline-project-detection 'auto)
 
-  ;; Determines the style used by `doom-modeline-buffer-file-name'.
-  ;;
-  ;; Given ~/Projects/FOSS/emacs/lisp/comint.el
-  ;;   auto => emacs/l/comint.el (in a project) or comint.el
-  ;;   truncate-upto-project => ~/P/F/emacs/lisp/comint.el
-  ;;   truncate-from-project => ~/Projects/FOSS/emacs/l/comint.el
-  ;;   truncate-with-project => emacs/l/comint.el
-  ;;   truncate-except-project => ~/P/F/emacs/l/comint.el
-  ;;   truncate-upto-root => ~/P/F/e/lisp/comint.el
-  ;;   truncate-all => ~/P/F/e/l/comint.el
-  ;;   truncate-nil => ~/Projects/FOSS/emacs/lisp/comint.el
-  ;;   relative-from-project => emacs/lisp/comint.el
-  ;;   relative-to-project => lisp/comint.el
-  ;;   file-name => comint.el
-  ;;   buffer-name => comint.el<2> (uniquify buffer name)
-  ;;
-  ;; If you are experiencing the laggy issue, especially while editing remote files
-  ;; with tramp, please try `file-name' style.
-  ;; Please refer to https://github.com/bbatsov/projectile/issues/657.
-  (setq doom-modeline-buffer-file-name-style 'auto)
+;; Determines the style used by `doom-modeline-buffer-file-name'.
+;;
+;; Given ~/Projects/FOSS/emacs/lisp/comint.el
+;;   auto => emacs/l/comint.el (in a project) or comint.el
+;;   truncate-upto-project => ~/P/F/emacs/lisp/comint.el
+;;   truncate-from-project => ~/Projects/FOSS/emacs/l/comint.el
+;;   truncate-with-project => emacs/l/comint.el
+;;   truncate-except-project => ~/P/F/emacs/l/comint.el
+;;   truncate-upto-root => ~/P/F/e/lisp/comint.el
+;;   truncate-all => ~/P/F/e/l/comint.el
+;;   truncate-nil => ~/Projects/FOSS/emacs/lisp/comint.el
+;;   relative-from-project => emacs/lisp/comint.el
+;;   relative-to-project => lisp/comint.el
+;;   file-name => comint.el
+;;   buffer-name => comint.el<2> (uniquify buffer name)
+;;
+;; If you are experiencing the laggy issue, especially while editing remote files
+;; with tramp, please try `file-name' style.
+;; Please refer to https://github.com/bbatsov/projectile/issues/657.
+(setq doom-modeline-buffer-file-name-style 'auto)
 
-  ;; Whether display icons in the mode-line.
-  ;; While using the server mode in GUI, should set the value explicitly.
-  (setq doom-modeline-icon t)
+;; Whether display icons in the mode-line.
+;; While using the server mode in GUI, should set the value explicitly.
+(setq doom-modeline-icon t)
 
-  ;; Whether display the icon for `major-mode'. It respects option `doom-modeline-icon'.
-  (setq doom-modeline-major-mode-icon t)
+;; Whether display the icon for `major-mode'. It respects option `doom-modeline-icon'.
+(setq doom-modeline-major-mode-icon t)
 
-  ;; Whether display the colorful icon for `major-mode'.
-  ;; It respects `nerd-icons-color-icons'.
-  (setq doom-modeline-major-mode-color-icon t)
+;; Whether display the colorful icon for `major-mode'.
+;; It respects `nerd-icons-color-icons'.
+(setq doom-modeline-major-mode-color-icon t)
 
-  ;; Whether display the icon for the buffer state. It respects option `doom-modeline-icon'.
-  (setq doom-modeline-buffer-state-icon t)
+;; Whether display the icon for the buffer state. It respects option `doom-modeline-icon'.
+(setq doom-modeline-buffer-state-icon t)
 
-  ;; Whether display the modification icon for the buffer.
-  ;; It respects option `doom-modeline-icon' and option `doom-modeline-buffer-state-icon'.
-  (setq doom-modeline-buffer-modification-icon t)
+;; Whether display the modification icon for the buffer.
+;; It respects option `doom-modeline-icon' and option `doom-modeline-buffer-state-icon'.
+(setq doom-modeline-buffer-modification-icon t)
 
-  ;; Whether display the lsp icon. It respects option `doom-modeline-icon'.
-  (setq doom-modeline-lsp-icon t)
+;; Whether display the lsp icon. It respects option `doom-modeline-icon'.
+(setq doom-modeline-lsp-icon t)
 
-  ;; Whether display the time icon. It respects option `doom-modeline-icon'.
-  (setq doom-modeline-time-icon t)
+;; Whether display the time icon. It respects option `doom-modeline-icon'.
+(setq doom-modeline-time-icon t)
 
-  ;; Whether display the live icons of time.
-  ;; It respects option `doom-modeline-icon' and option `doom-modeline-time-icon'.
-  (setq doom-modeline-time-live-icon t)
+;; Whether display the live icons of time.
+;; It respects option `doom-modeline-icon' and option `doom-modeline-time-icon'.
+(setq doom-modeline-time-live-icon t)
 
-  ;; Whether to use unicode as a fallback (instead of ASCII) when not using icons.
-  (setq doom-modeline-unicode-fallback nil)
+;; Whether to use unicode as a fallback (instead of ASCII) when not using icons.
+(setq doom-modeline-unicode-fallback nil)
 
-  ;; Whether display the buffer name.
-  (setq doom-modeline-buffer-name t)
+;; Whether display the buffer name.
+(setq doom-modeline-buffer-name t)
 
-  ;; Whether highlight the modified buffer name.
-  (setq doom-modeline-highlight-modified-buffer-name t)
+;; Whether highlight the modified buffer name.
+(setq doom-modeline-highlight-modified-buffer-name t)
 
-  ;; When non-nil, mode line displays column numbers zero-based.
-  ;; See `column-number-indicator-zero-based'.
-  (setq doom-modeline-column-zero-based t)
+;; When non-nil, mode line displays column numbers zero-based.
+;; See `column-number-indicator-zero-based'.
+(setq doom-modeline-column-zero-based t)
 
-  ;; Specification of \"percentage offset\" of window through buffer.
-  ;; See `mode-line-percent-position'.
-  (setq doom-modeline-percent-position '(-3 "%p"))
+;; Specification of \"percentage offset\" of window through buffer.
+;; See `mode-line-percent-position'.
+(setq doom-modeline-percent-position '(-3 "%p"))
 
-  ;; Format used to display line numbers in the mode line.
-  ;; See `mode-line-position-line-format'.
-  (setq doom-modeline-position-line-format '("L%l"))
+;; Format used to display line numbers in the mode line.
+;; See `mode-line-position-line-format'.
+(setq doom-modeline-position-line-format '("L%l"))
 
-  ;; Format used to display column numbers in the mode line.
-  ;; See `mode-line-position-column-format'.
-  (setq doom-modeline-position-column-format '("C%c"))
+;; Format used to display column numbers in the mode line.
+;; See `mode-line-position-column-format'.
+(setq doom-modeline-position-column-format '("C%c"))
 
-  ;; Format used to display combined line/column numbers in the mode line. See `mode-line-position-column-line-format'.
-  (setq doom-modeline-position-column-line-format '("%l:%c"))
+;; Format used to display combined line/column numbers in the mode line. See `mode-line-position-column-line-format'.
+(setq doom-modeline-position-column-line-format '("%l:%c"))
 
-  ;; Whether display the minor modes in the mode-line.
-  (setq doom-modeline-minor-modes nil)
+;; Whether display the minor modes in the mode-line.
+(setq doom-modeline-minor-modes nil)
 
-  ;; If non-nil, a word count will be added to the selection-info modeline segment.
-  (setq doom-modeline-enable-word-count nil)
+;; If non-nil, a word count will be added to the selection-info modeline segment.
+(setq doom-modeline-enable-word-count nil)
 
-  ;; Major modes in which to display word count continuously.
-  ;; Also applies to any derived modes. Respects `doom-modeline-enable-word-count'.
-  ;; If it brings the sluggish issue, disable `doom-modeline-enable-word-count' or
-  ;; remove the modes from `doom-modeline-continuous-word-count-modes'.
-  (setq doom-modeline-continuous-word-count-modes '(markdown-mode gfm-mode org-mode))
+;; Major modes in which to display word count continuously.
+;; Also applies to any derived modes. Respects `doom-modeline-enable-word-count'.
+;; If it brings the sluggish issue, disable `doom-modeline-enable-word-count' or
+;; remove the modes from `doom-modeline-continuous-word-count-modes'.
+(setq doom-modeline-continuous-word-count-modes '(markdown-mode gfm-mode org-mode))
 
-  ;; Whether display the buffer encoding.
-  (setq doom-modeline-buffer-encoding t)
+;; Whether display the buffer encoding.
+(setq doom-modeline-buffer-encoding t)
 
-  ;; Whether display the indentation information.
-  (setq doom-modeline-indent-info nil)
+;; Whether display the indentation information.
+(setq doom-modeline-indent-info nil)
 
-  ;; Whether display the total line number。
-  (setq doom-modeline-total-line-number nil)
+;; Whether display the total line number。
+(setq doom-modeline-total-line-number nil)
 
-  ;; If non-nil, only display one number for check information if applicable.
-  (setq doom-modeline-check-simple-format t)
+;; If non-nil, only display one number for check information if applicable.
+(setq doom-modeline-check-simple-format t)
 
-  ;; The maximum number displayed for notifications.
-  (setq doom-modeline-number-limit 99)
+;; The maximum number displayed for notifications.
+(setq doom-modeline-number-limit 99)
 
-  ;; The maximum displayed length of the branch name of version control.
-  (setq doom-modeline-vcs-max-length 12)
+;; The maximum displayed length of the branch name of version control.
+(setq doom-modeline-vcs-max-length 12)
 
-  ;; Whether display the workspace name. Non-nil to display in the mode-line.
-  (setq doom-modeline-workspace-name t)
+;; Whether display the workspace name. Non-nil to display in the mode-line.
+(setq doom-modeline-workspace-name t)
 
-  ;; Whether display the perspective name. Non-nil to display in the mode-line.
-  (setq doom-modeline-persp-name t)
+;; Whether display the perspective name. Non-nil to display in the mode-line.
+(setq doom-modeline-persp-name t)
 
-  ;; If non nil the default perspective name is displayed in the mode-line.
-  (setq doom-modeline-display-default-persp-name nil)
+;; If non nil the default perspective name is displayed in the mode-line.
+(setq doom-modeline-display-default-persp-name nil)
 
-  ;; If non nil the perspective name is displayed alongside a folder icon.
-  (setq doom-modeline-persp-icon t)
+;; If non nil the perspective name is displayed alongside a folder icon.
+(setq doom-modeline-persp-icon t)
 
-  ;; Whether display the `lsp' state. Non-nil to display in the mode-line.
-  (setq doom-modeline-lsp t)
+;; Whether display the `lsp' state. Non-nil to display in the mode-line.
+(setq doom-modeline-lsp t)
 
-  ;; Whether display the GitHub notifications. It requires `ghub' package.
-  (setq doom-modeline-github nil)
+;; Whether display the GitHub notifications. It requires `ghub' package.
+(setq doom-modeline-github nil)
 
-  ;; The interval of checking GitHub.
-  (setq doom-modeline-github-interval (* 30 60))
+;; The interval of checking GitHub.
+(setq doom-modeline-github-interval (* 30 60))
 
-  ;; Whether display the modal state.
-  ;; Including `evil', `overwrite', `god', `ryo' and `xah-fly-keys', etc.
-  (setq doom-modeline-modal t)
+;; Whether display the modal state.
+;; Including `evil', `overwrite', `god', `ryo' and `xah-fly-keys', etc.
+(setq doom-modeline-modal t)
 
-  ;; Whether display the modal state icon.
-  ;; Including `evil', `overwrite', `god', `ryo' and `xah-fly-keys', etc.
-  (setq doom-modeline-modal-icon t)
+;; Whether display the modal state icon.
+;; Including `evil', `overwrite', `god', `ryo' and `xah-fly-keys', etc.
+(setq doom-modeline-modal-icon t)
 
-  ;; Whether display the modern icons for modals.
-  (setq doom-modeline-modal-modern-icon t)
+;; Whether display the modern icons for modals.
+(setq doom-modeline-modal-modern-icon t)
 
-  ;; When non-nil, always show the register name when recording an evil macro.
-  (setq doom-modeline-always-show-macro-register nil)
+;; When non-nil, always show the register name when recording an evil macro.
+(setq doom-modeline-always-show-macro-register nil)
 
-  ;; Whether display the mu4e notifications. It requires `mu4e-alert' package.
-  (setq doom-modeline-mu4e nil)
-  
-  ;; also enable the start of mu4e-alert
-  (mu4e-alert-enable-mode-line-display)
+;; Whether display the mu4e notifications. It requires `mu4e-alert' package.
+(setq doom-modeline-mu4e nil)
 
-  ;; Whether display the gnus notifications.
-  (setq doom-modeline-gnus t)
+;; also enable the start of mu4e-alert
+(mu4e-alert-enable-mode-line-display)
 
-  ;; Whether gnus should automatically be updated and how often (set to 0 or smaller than 0 to disable)
-  (setq doom-modeline-gnus-timer 2)
+;; Whether display the gnus notifications.
+(setq doom-modeline-gnus t)
 
-  ;; Wheter groups should be excludede when gnus automatically being updated.
-  (setq doom-modeline-gnus-excluded-groups '("dummy.group"))
+;; Whether gnus should automatically be updated and how often (set to 0 or smaller than 0 to disable)
+(setq doom-modeline-gnus-timer 2)
 
-  ;; Whether display the IRC notifications. It requires `circe' or `erc' package.
-  (setq doom-modeline-irc t)
+;; Wheter groups should be excludede when gnus automatically being updated.
+(setq doom-modeline-gnus-excluded-groups '("dummy.group"))
 
-  ;; Function to stylize the irc buffer names.
-  (setq doom-modeline-irc-stylize 'identity)
+;; Whether display the IRC notifications. It requires `circe' or `erc' package.
+(setq doom-modeline-irc t)
 
-  ;; Whether display the battery status. It respects `display-battery-mode'.
-  (setq doom-modeline-battery t)
+;; Function to stylize the irc buffer names.
+(setq doom-modeline-irc-stylize 'identity)
 
-  ;; Whether display the time. It respects `display-time-mode'.
-  (setq doom-modeline-time t)
+;; Whether display the battery status. It respects `display-battery-mode'.
+(setq doom-modeline-battery t)
 
-  ;; Whether display the misc segment on all mode lines.
-  ;; If nil, display only if the mode line is active.
-  (setq doom-modeline-display-misc-in-all-mode-lines t)
+;; Whether display the time. It respects `display-time-mode'.
+(setq doom-modeline-time t)
 
-  ;; The function to handle `buffer-file-name'.
-  (setq doom-modeline-buffer-file-name-function #'identity)
+;; Whether display the misc segment on all mode lines.
+;; If nil, display only if the mode line is active.
+(setq doom-modeline-display-misc-in-all-mode-lines t)
 
-  ;; The function to handle `buffer-file-truename'.
-  (setq doom-modeline-buffer-file-truename-function #'identity)
+;; The function to handle `buffer-file-name'.
+(setq doom-modeline-buffer-file-name-function #'identity)
 
-  ;; Whether display the environment version.
-  (setq doom-modeline-env-version t)
-  ;; Or for individual languages
-  (setq doom-modeline-env-enable-python t)
-  (setq doom-modeline-env-enable-ruby t)
-  (setq doom-modeline-env-enable-perl t)
-  (setq doom-modeline-env-enable-go t)
-  (setq doom-modeline-env-enable-elixir t)
-  (setq doom-modeline-env-enable-rust t)
+;; The function to handle `buffer-file-truename'.
+(setq doom-modeline-buffer-file-truename-function #'identity)
 
-  ;; Change the executables to use for the language version string
-  (setq doom-modeline-env-python-executable "python") ; or `python-shell-interpreter'
-  (setq doom-modeline-env-ruby-executable "ruby")
-  (setq doom-modeline-env-perl-executable "perl")
-  (setq doom-modeline-env-go-executable "go")
-  (setq doom-modeline-env-elixir-executable "iex")
-  (setq doom-modeline-env-rust-executable "rustc")
+;; Whether display the environment version.
+(setq doom-modeline-env-version t)
+;; Or for individual languages
+(setq doom-modeline-env-enable-python t)
+(setq doom-modeline-env-enable-ruby t)
+(setq doom-modeline-env-enable-perl t)
+(setq doom-modeline-env-enable-go t)
+(setq doom-modeline-env-enable-elixir t)
+(setq doom-modeline-env-enable-rust t)
 
-  ;; What to display as the version while a new one is being loaded
-  (setq doom-modeline-env-load-string "...")
+;; Change the executables to use for the language version string
+(setq doom-modeline-env-python-executable "python") ; or `python-shell-interpreter'
+(setq doom-modeline-env-ruby-executable "ruby")
+(setq doom-modeline-env-perl-executable "perl")
+(setq doom-modeline-env-go-executable "go")
+(setq doom-modeline-env-elixir-executable "iex")
+(setq doom-modeline-env-rust-executable "rustc")
 
-  ;; By default, almost all segments are displayed only in the active window. To
-  ;; display such segments in all windows, specify e.g.
-  (setq doom-modeline-always-visible-segments '(mu4e irc))
+;; What to display as the version while a new one is being loaded
+(setq doom-modeline-env-load-string "...")
 
-  ;; Hooks that run before/after the modeline version string is updated
-  (setq doom-modeline-before-update-env-hook nil)
-  (setq doom-modeline-after-update-env-hook nil)
+;; By default, almost all segments are displayed only in the active window. To
+;; display such segments in all windows, specify e.g.
+(setq doom-modeline-always-visible-segments '(mu4e irc))
+
+;; Hooks that run before/after the modeline version string is updated
+(setq doom-modeline-before-update-env-hook nil)
+(setq doom-modeline-after-update-env-hook nil)
 #+end_src
 
 
@@ -1964,12 +1860,12 @@ The doom modeline looks better than the stock emacs modeline.
     (use-package gptel
       :straight (:host github :repo "karthink/gptel" :files ("dist" "*.el"))
       :config (setq gptel-api-key (password-store-get "openai"))
-                    (setq 
-		     gptel-model "mixtral"                                                                                                
-		     gptel-backend (gptel-make-ollama "Ollama" 
-						      :host "localhost:11434" 
-						      :stream t 
-						      :models '("mixtral")))))
+      (setq
+       gptel-model "mixtral"
+       gptel-backend (gptel-make-ollama "Ollama"
+					:host "localhost:11434"
+					:stream t
+					:models '("mixtral")))))
 #+end_src
 
 ** Copilot
@@ -1993,13 +1889,13 @@ The doom modeline looks better than the stock emacs modeline.
 Load my RSS feeds
 #+begin_src emacs-lisp :tangle ~/.emacs
 (if (not im-at-work)
-  (load-file "~/git/things/dot/elfeed.el.gpg"))
+    (load-file "~/git/things/dot/elfeed.el.gpg"))
 #+end_src
 
 * Work Config
 #+begin_src emacs-lisp :tangle ~/.emacs
 (if im-at-work
-(progn
-  (org-babel-lob-ingest "~/org/config.org")
-  (org-sbe work-config)))
+    (progn
+      (org-babel-lob-ingest "~/org/config.org")
+      (org-sbe work-config)))
 #+end_src
