@@ -761,20 +761,40 @@ Company is an autocomplete option framework for emacs
 #+end_src
 
 
-** Lispy
+** Evil + Paredit
 
-Lispy mode makes lisp-mode editing significantly more efficent
+Just want to be evil.
 
 #+begin_src emacs-lisp :tangle ~/.emacs
-(use-package lispy
-  :bind
-  (("C-4" . lispy-arglist-inline)))
+(use-package evil
+  :ensure t
+  :init
+  (setq evil-want-integration t) ;; This is optional since it's already set to t by default.
+  (setq evil-want-keybinding nil)
+  :config
+  (evil-mode 1))
 
-(progn
-  (add-hook 'emacs-lisp-mode-hook (lambda ()(lispy-mode 1)))
-  (add-hook 'spacemacs-mode-hook (lambda () (lispy-mode 1)))
-  (add-hook 'scheme-mode-hook (lambda () (lispy-mode 1)))
-  (add-hook 'cider-repl-mode-hook (lambda () (lispy-mode 1))))
+(use-package evil-collection
+  :after evil
+  :ensure t
+  :config
+  (evil-collection-init))
+
+(use-package paredit)
+(use-package evil-paredit)
+
+(defun hook-the-parenthesis-things ()
+  (paredit-mode 1)
+  (evil-paredit-mode 1))
+
+(add-hook 'emacs-lisp-mode-hook 'hook-the-parenthesis-things)
+
+(evil-ex-define-cmd "wq" 'save-and-kill-this-buffer)
+
+(defun save-and-kill-this-buffer()
+  (interactive)
+  (save-buffer)
+  (kill-current-buffer))
 #+end_src
 
 ** SBCL
