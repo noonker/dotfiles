@@ -711,26 +711,6 @@ Spray mode is a speed-reading mode
 (global-set-key (kbd "<f9>") 'spray-mode)
 #+end_src
 
-* Evil (hiding the shame at the bottom of my config)
-#+begin_src emacs-lisp :tangle ~/.emacs
-(use-package evil
-  :ensure t
-  :init
-  (setq evil-want-integration t) ;; This is optional since it's already set to t by default.
-  (setq evil-want-keybinding nil)
-  :config
-  (evil-mode 1))
-
-(use-package evil-collection
-  :after evil
-  :ensure t
-  :config
-  (evil-collection-init))
-
-(evil-ex-define-cmd "wq" 'save-and-kill-this-buffer)
-(defun save-and-kill-this-buffer()(interactive)(save-buffer)(kill-current-buffer))
-#+end_src
-
 * Programming
 
 ** Artist Mode
@@ -854,8 +834,8 @@ On MacOS you need to add =-DCMAKE_PREFIX_PATH=/usr/local/opt/llvm= after =cmake=
 
   (with-eval-after-load 'lsp-mode
     (add-hook 'lsp-mode-hook #'lsp-enable-which-key-integration)
-    (require 'dap-cpptools)
-    (yas-global-mode))
+    (require 'dap-cpptools))
+    
 
     (use-package irony)
       (add-hook 'c++-mode-hook 'irony-mode)
@@ -1033,93 +1013,95 @@ Clojure + LSP
 
 ** \LaTeX
 #+begin_src emacs-lisp :tangle ~/.emacs
-(use-package tex
-  :straight auctex)
+  (use-package tex
+    :straight auctex)
 
-;; CDLatex settings
-(use-package cdlatex
-  :ensure t
-  :hook (LaTeX-mode . turn-on-cdlatex)
-  :bind (:map cdlatex-mode-map 
-              ("<tab>" . cdlatex-tab)))
+  ;; CDLatex settings
+  (use-package cdlatex
+    :ensure t
+    :hook (LaTeX-mode . turn-on-cdlatex)
+    :bind (:map cdlatex-mode-map 
+                ("<tab>" . cdlatex-tab)))
 
-;; Yasnippet settings
-(use-package yasnippet
-  :ensure t
-  :hook ((LaTeX-mode . yas-minor-mode)
-         (post-self-insert . my/yas-try-expanding-auto-snippets))
-  :config
-  (use-package warnings
-    :config
-    (cl-pushnew '(yasnippet backquote-change)
-                warning-suppress-types
-                :test 'equal))
-
-  (setq yas-triggers-in-field t)
-  
-  ;; Function that tries to autoexpand YaSnippets
-  ;; The double quoting is NOT a typo!
-  (defun my/yas-try-expanding-auto-snippets ()
-    (when (and (boundp 'yas-minor-mode) yas-minor-mode)
-      (let ((yas-buffer-local-condition ''(require-snippet-condition . auto)))
-        (yas-expand)))))
-
-(use-package yasnippet-snippets)
-
-;; CDLatex integration with YaSnippet: Allow cdlatex tab to work inside Yas
-;; fields
-(use-package cdlatex
-  :hook ((cdlatex-tab . yas-expand)
-         (cdlatex-tab . cdlatex-in-yas-field))
-  :config
+  ;; Yasnippet settings
   (use-package yasnippet
-    :bind (:map yas-keymap
-           ("<tab>" . yas-next-field-or-cdlatex)
-           ("TAB" . yas-next-field-or-cdlatex))
+    :ensure t
+    :hook ((LaTeX-mode . yas-minor-mode)
+           (post-self-insert . my/yas-try-expanding-auto-snippets))
     :config
-    (defun cdlatex-in-yas-field ()
-      ;; Check if we're at the end of the Yas field
-      (when-let* ((_ (overlayp yas--active-field-overlay))
-                  (end (overlay-end yas--active-field-overlay)))
-        (if (>= (point) end)
-            ;; Call yas-next-field if cdlatex can't expand here
-            (let ((s (thing-at-point 'sexp)))
-              (unless (and s (assoc (substring-no-properties s)
-                                    cdlatex-command-alist-comb))
-                (yas-next-field-or-maybe-expand)
-                t))
-          ;; otherwise expand and jump to the correct location
-          (let (cdlatex-tab-hook minp)
-            (setq minp
-                  (min (save-excursion (cdlatex-tab)
-                                       (point))
-                       (overlay-end yas--active-field-overlay)))
-            (goto-char minp) t))))
+    (use-package warnings
+      :config
+      (cl-pushnew '(yasnippet backquote-change)
+                  warning-suppress-types
+                  :test 'equal))
 
-    (defun yas-next-field-or-cdlatex nil
-      (interactive)
-      "Jump to the next Yas field correctly with cdlatex active."
-      (if
-          (or (bound-and-true-p cdlatex-mode)
-              (bound-and-true-p org-cdlatex-mode))
-          (cdlatex-tab)
-        (yas-next-field-or-maybe-expand)))))
+    (setq yas-triggers-in-field t)
+    
+    ;; Function that tries to autoexpand YaSnippets
+    ;; The double quoting is NOT a typo!
+    (defun my/yas-try-expanding-auto-snippets ()
+      (when (and (boundp 'yas-minor-mode) yas-minor-mode)
+        (let ((yas-buffer-local-condition ''(require-snippet-condition . auto)))
+          (yas-expand)))))
 
-(use-package latex-preview-pane)
+  (use-package yasnippet-snippets)
 
-(with-eval-after-load 'org
-  (progn
-    (add-to-list 'org-latex-packages-alist '("" "tcolorbox" t))
-    (add-to-list 'org-latex-packages-alist '("" "minted" t))
-    (add-to-list 'org-latex-packages-alist '("" "lipsum" t))))
+  (yas-global-mode)
+  
+  ;; CDLatex integration with YaSnippet: Allow cdlatex tab to work inside Yas
+  ;; fields
+  (use-package cdlatex
+    :hook ((cdlatex-tab . yas-expand)
+           (cdlatex-tab . cdlatex-in-yas-field))
+    :config
+    (use-package yasnippet
+      :bind (:map yas-keymap
+             ("<tab>" . yas-next-field-or-cdlatex)
+             ("TAB" . yas-next-field-or-cdlatex))
+      :config
+      (defun cdlatex-in-yas-field ()
+        ;; Check if we're at the end of the Yas field
+        (when-let* ((_ (overlayp yas--active-field-overlay))
+                    (end (overlay-end yas--active-field-overlay)))
+          (if (>= (point) end)
+              ;; Call yas-next-field if cdlatex can't expand here
+              (let ((s (thing-at-point 'sexp)))
+                (unless (and s (assoc (substring-no-properties s)
+                                      cdlatex-command-alist-comb))
+                  (yas-next-field-or-maybe-expand)
+                  t))
+            ;; otherwise expand and jump to the correct location
+            (let (cdlatex-tab-hook minp)
+              (setq minp
+                    (min (save-excursion (cdlatex-tab)
+                                         (point))
+                         (overlay-end yas--active-field-overlay)))
+              (goto-char minp) t))))
 
-(setq org-preview-latex-default-process 'imagemagick)
+      (defun yas-next-field-or-cdlatex nil
+        (interactive)
+        "Jump to the next Yas field correctly with cdlatex active."
+        (if
+            (or (bound-and-true-p cdlatex-mode)
+                (bound-and-true-p org-cdlatex-mode))
+            (cdlatex-tab)
+          (yas-next-field-or-maybe-expand)))))
 
-(use-package org-contrib
-  :config (require 'ox-extra)
-  (ox-extras-activate '(ignore-headlines)))
+  (use-package latex-preview-pane)
 
-(setq org-format-latex-options (plist-put org-format-latex-options :scale 2.0))
+  (with-eval-after-load 'org
+    (progn
+      (add-to-list 'org-latex-packages-alist '("" "tcolorbox" t))
+      (add-to-list 'org-latex-packages-alist '("" "minted" t))
+      (add-to-list 'org-latex-packages-alist '("" "lipsum" t))))
+
+  (setq org-preview-latex-default-process 'imagemagick)
+
+  (use-package org-contrib
+    :config (require 'ox-extra)
+    (ox-extras-activate '(ignore-headlines)))
+
+  (setq org-format-latex-options (plist-put org-format-latex-options :scale 2.0))
 #+end_src
 
 
@@ -1741,7 +1723,7 @@ The doom modeline looks better than the stock emacs modeline.
 #+begin_src emacs-lisp :tangle ~/.emacs
   (use-package doom-modeline
     :config (doom-modeline-mode 1)
-    (setq doom-modeline-height 22)
+    (setq doom-modeline-height 40)
     )
 
   ;; If non-nil, cause imenu to see `doom-modeline' declarations.
@@ -1987,22 +1969,6 @@ The doom modeline looks better than the stock emacs modeline.
     (use-package gptel
       :straight (:host github :repo "karthink/gptel" :files ("dist" "*.el"))
       :config (setq gptel-api-key (password-store-get "openai"))))
-#+end_src
-
-#+begin_src emacs-lisp :tangle ~/.emacs
-(if (not im-at-work)
-(use-package org-ai
-  :ensure
-  :commands (org-ai-mode)
-  :custom
-  (org-ai-openai-api-token (password-store-get "Internet/openai"))
-  :init
-  (add-hook 'org-mode-hook #'org-ai-mode)
-  :config
-  ;; if you are on the gpt-4 beta:
-  ;; (setq org-ai-default-chat-model "gpt-4")
-  ;; if you are using yasnippet and want `ai` snippets
-  (org-ai-install-yasnippets)))
 #+end_src
 
 ** Copilot
