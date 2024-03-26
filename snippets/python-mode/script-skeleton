@@ -1,0 +1,14 @@
+# -*- mode: snippet -*-
+# name: script-skeleton
+# key: skel
+# --
+import os
+import argparse
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description='$1')
+    parser.add_argument('-$2', '--$3', help=('$4')
+
+    args = parser.parse_args()
+
+    $0

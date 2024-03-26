@@ -1,0 +1,5 @@
+# -*- mode: snippet -*-
+# name: redirect
+# key: >b
+# --
+> #<*$1*>$0

@@ -271,52 +271,64 @@ Emacs shell settings
 
 #+begin_src emacs-lisp :tangle ~/.emacs
 (use-package eshell-git-prompt)
+(use-package eshell
+  :bind (("C-c e" . counsel-esh-history)
+	 ("C-<tab>" . yas-expand-from-trigger-key))
+  )
 (eshell-git-prompt-use-theme 'robbyrussell) ;; Eshell theme
 
+(setq eshell-error-if-no-glob t
+      eshell-hist-ignoredups t
+      eshell-save-history-on-exit t
+      eshell-prefer-lisp-functions nil
+      eshell-destroy-buffer-when-process-dies t)
+
 (add-hook 'eshell-mode-hook (lambda () (company-mode -1)))
+
+
 
 (defun git-prompt-eshell ()
   "Git a git prompt"
   (let (beg dir git-branch git-dirty end)
     (if (eshell-git-prompt--git-root-dir)
-	(progn
-	  (setq eshell-git-prompt-branch-name (eshell-git-prompt--branch-name))
-	  (setq git-branch
-		(concat
-		 (with-face "git:(" 'eshell-git-prompt-robyrussell-git-face)
-		 (with-face (eshell-git-prompt--readable-branch-name) 'eshell-git-prompt-robyrussell-branch-face)
-		 (with-face ")" 'eshell-git-prompt-robyrussell-git-face)))
-	  (setq git-dirty
-		(when (eshell-git-prompt--collect-status)
-		  (with-face "✗" 'eshell-git-prompt-robyrussell-git-dirty-face)))
-	  (concat git-branch git-dirty)) "☮" )))
+      	(progn
+      	  (setq eshell-git-prompt-branch-name (eshell-git-prompt--branch-name))
+      	  (setq git-branch
+      		(concat
+      		 (with-face "git:(" 'eshell-git-prompt-robyrussell-git-face)
+      		 (with-face (eshell-git-prompt--readable-branch-name) 'eshell-git-prompt-robyrussell-branch-face)
+      		 (with-face ")" 'eshell-git-prompt-robyrussell-git-face)))
+      	  (setq git-dirty
+      		(when (eshell-git-prompt--collect-status)
+      		  (with-face "✗" 'eshell-git-prompt-robyrussell-git-dirty-face)))
+      	  (concat git-branch git-dirty)) "☮" )))
 
 (setq eshell-prompt-function
       (lambda ()
-	(concat
-	 (propertize "┌─[" 'face 'org-level-4)
-	 (propertize (user-login-name) 'face 'bold)
-	 (propertize "@" 'face 'org-level-4)
-	 (if (is-tramp-window)
-	     (propertize (file-remote-p default-directory) 'face 'bold)
-	   (propertize (system-name) 'face 'bold))
-	 (propertize "]──[" 'face 'org-level-4)
-	 (propertize (format-time-string "%H:%M" (current-time)) 'face 'cursor)
-	 (propertize "]──[" 'face 'org-level-4)
-	 (propertize (concat (eshell/pwd)) 'face 'bold)
-	 (propertize "]──[" 'face 'org-level-4)
-	 (if (is-tramp-window) "🌎"
-	   (concat (propertize (git-prompt-eshell) 'face 'org-level-6)
-		   (if pyvenv-virtual-env-name (concat (propertize "]──[" 'face 'org-level-4)
-						       (propertize (format "venv:%s" pyvenv-virtual-env-name) 'face 'org-level-2)))))
-	 (propertize "]\n" 'face 'org-level-4)
-	 (propertize "└─>" 'face 'org-level-4)
-	 (propertize (if (= (user-uid) 0) " # " " $ ") 'face 'org-level-4)
-	 )))
+      	(concat
+      	 (propertize "┌─[" 'face 'org-level-4)
+      	 (propertize (user-login-name) 'face 'bold)
+      	 (propertize "@" 'face 'org-level-4)
+      	 (if (is-tramp-window)
+      	     (propertize (file-remote-p default-directory) 'face 'bold)
+      	   (propertize (system-name) 'face 'bold))
+      	 (propertize "]──[" 'face 'org-level-4)
+      	 (propertize (format-time-string "%H:%M" (current-time)) 'face 'cursor)
+      	 (propertize "]──[" 'face 'org-level-4)
+      	 (propertize (concat (eshell/pwd)) 'face 'bold)
+      	 (propertize "]──[" 'face 'org-level-4)
+      	 (if (is-tramp-window) "🌎"
+      	   (concat (propertize (git-prompt-eshell) 'face 'org-level-6)
+      		   (if pyvenv-virtual-env-name (concat (propertize "]──[" 'face 'org-level-4)
+      						       (propertize (format "venv:%s" pyvenv-virtual-env-name) 'face 'org-level-2)))))
+      	 (propertize "]\n" 'face 'org-level-4)
+      	 (propertize "└─>" 'face 'org-level-4)
+      	 (propertize (if (= (user-uid) 0) " # " " $ ") 'face 'org-level-4)
+      	 )))
 
 (setq eshell-visual-commands '("htop" "vi" "screen" "top" "less"
-			       "more" "lynx" "ncftp" "pine" "tin" "trn" "elm"
-			       "vim"))
+      			       "more" "lynx" "ncftp" "pine" "tin" "trn" "elm"
+      			       "vim"))
 
 (setq eshell-visual-subcommands '("git" "log" "diff" "show" "ssh"))
 
@@ -993,6 +1005,8 @@ Clojure + LSP
                 :test 'equal))
 
   (setq yas-triggers-in-field t)
+
+  (add-to-list 'yas-snippet-dirs (file-name-concat "~/git" "dotfiles/snippets"))
   
   ;; Function that tries to autoexpand YaSnippets
   ;; The double quoting is NOT a typo!
@@ -1004,6 +1018,8 @@ Clojure + LSP
 (use-package yasnippet-snippets)
 
 (yas-global-mode)
+
+(yas-reload-all)
 
 ;; CDLatex integration with YaSnippet: Allow cdlatex tab to work inside Yas
 ;; fields
