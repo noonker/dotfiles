@@ -783,6 +783,11 @@ Just want to be evil.
   :config
   (evil-collection-init))
 
+(evil-set-initial-state 'magit-status-mode 'emacs)
+(evil-set-initial-state 'mu4e-main-mode 'emacs)
+(evil-set-initial-state 'mu4e-headers-mode 'emacs)
+(evil-set-initial-state 'elfeed-search-mode 'emacs)
+
 (use-package paredit)
 
 (use-package evil-paredit)
@@ -1181,6 +1186,7 @@ Clojure + LSP
    (plantuml . t)
    (shell . t)
    (sql . t)
+   (js . t)
    (sqlite . t)
    (gnuplot . t)
    (typescript . t)
