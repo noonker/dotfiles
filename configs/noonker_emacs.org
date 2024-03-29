@@ -761,49 +761,20 @@ Company is an autocomplete option framework for emacs
 (use-package lsp-treemacs)
 #+end_src
 
+** Lispy
 
-** Evil + Paredit
-
-Just want to be evil.
+Lispy mode makes lisp-mode editing significantly more efficent
 
 #+begin_src emacs-lisp :tangle ~/.emacs
-(use-package evil
-  :ensure t
-  :init
-  (setq evil-want-integration t) ;; This is optional since it's already set to t by default.
-  (setq evil-want-keybinding nil)
-  :config
-  (evil-mode 1)
-  (define-key evil-normal-state-map (kbd "C-e") 'move-end-of-line)
-  )
+(use-package lispy
+  :bind
+  (("C-4" . lispy-arglist-inline)))
 
-(use-package evil-collection
-  :after evil
-  :ensure t
-  :config
-  (evil-collection-init))
-
-(evil-set-initial-state 'magit-status-mode 'emacs)
-(evil-set-initial-state 'mu4e-main-mode 'emacs)
-(evil-set-initial-state 'mu4e-headers-mode 'emacs)
-(evil-set-initial-state 'elfeed-search-mode 'emacs)
-
-(use-package paredit)
-
-(use-package evil-paredit)
-
-(defun hook-the-parenthesis-things ()
-  (paredit-mode 1)
-  (evil-paredit-mode 1))
-
-(add-hook 'emacs-lisp-mode-hook 'hook-the-parenthesis-things)
-
-(evil-ex-define-cmd "wq" 'save-and-kill-this-buffer)
-
-(defun save-and-kill-this-buffer()
-  (interactive)
-  (save-buffer)
-  (kill-current-buffer))
+(progn
+  (add-hook 'emacs-lisp-mode-hook (lambda ()(lispy-mode 1)))
+  (add-hook 'spacemacs-mode-hook (lambda () (lispy-mode 1)))
+  (add-hook 'scheme-mode-hook (lambda () (lispy-mode 1)))
+  (add-hook 'cider-repl-mode-hook (lambda () (lispy-mode 1))))
 #+end_src
 
 ** SBCL
