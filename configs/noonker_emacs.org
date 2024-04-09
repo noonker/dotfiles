@@ -192,6 +192,7 @@ Leuven Theme and Comic Mono
 Random global behavior configs
 
 #+begin_src emacs-lisp :tangle ~/.emacs
+(setq display-line-numbers-type 'relative) ;; Relative line numbers
 (global-display-line-numbers-mode) ;; Enable line numbers
 (custom-set-variables '(linum-format 'dynamic)) ;; Automatically align line numbers
 (global-hl-line-mode) ;; Highlight the current line
@@ -767,7 +768,7 @@ Company is an autocomplete option framework for emacs
 (use-package lsp-treemacs)
 #+end_src
 
-** Lispy
+** Evil
 
 Lispy mode makes lisp-mode editing significantly more efficent
 
