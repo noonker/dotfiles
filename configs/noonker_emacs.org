@@ -789,11 +789,6 @@ Lispy mode makes lisp-mode editing significantly more efficent
   :config
   (evil-collection-init))
 
-(evil-set-initial-state 'magit-status-mode 'emacs)
-(evil-set-initial-state 'mu4e-main-mode 'emacs)
-(evil-set-initial-state 'mu4e-headers-mode 'emacs)
-(evil-set-initial-state 'elfeed-search-mode 'emacs)
-
 (use-package paredit)
 
 (use-package evil-paredit)
@@ -1014,6 +1009,18 @@ Clojure + LSP
 #+begin_src emacs-lisp :tangle ~/.emacs
 (use-package pandoc-mode)
 #+END_SRC
+
+* PDF
+
+** PDF Tools
+#+begin_src emacs-lisp :tangle ~/.emacs
+(use-package pdf-tools
+  :straight t
+  :config
+  (pdf-tools-install))
+
+(add-hook 'pdf-view-mode-hook (lambda () (progn (display-line-numbers-mode -1))))
+#+end_src
 
 ** \LaTeX
 #+begin_src emacs-lisp :tangle ~/.emacs
