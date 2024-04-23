@@ -219,18 +219,6 @@ Random global behavior configs
 (global-set-key (kbd "C-s") 'swiper)
 #+end_src
 
-** Registers
-
-- There are some things I type often enough to save them to a register. =insert-register= followed by the prefix key =C-c x r g=
-
-#+begin_src emacs-lisp :tangle ~/.emacs
-(set-register ?d '"import pdb\npdb.set_trace()")
-(set-register ?c '"sudo socat TCP-LISTEN:6001,reuseaddr,fork EXEC:\"qrexec-client-vm screenshare my-screenshare\"&")
-(set-register ?s '";; This buffer is for text that is not saved, and for Lisp evaluation.
-;; To create a file, visit it with <open> and enter text in its buffer.
-")
-#+end_src
-
 ** Projectile
 
 Projectile enriches Emacs's ability to understand git projects
@@ -287,8 +275,6 @@ Emacs shell settings
 
 (add-hook 'eshell-mode-hook (lambda () (company-mode -1)))
 
-
-
 (defun git-prompt-eshell ()
   "Git a git prompt"
   (let (beg dir git-branch git-dirty end)
@@ -325,12 +311,12 @@ Emacs shell settings
       						       (propertize (format "venv:%s" pyvenv-virtual-env-name) 'face 'org-level-2)))))
       	 (propertize "]\n" 'face 'org-level-4)
       	 (propertize "└─>" 'face 'org-level-4)
-      	 (propertize (if (= (user-uid) 0) " # " " $ ") 'face 'org-level-4)
-      	 )))
+      	 (propertize (if (= (user-uid) 0) " # " " $ ") 'face 'default)
+	 )))
 
 (setq eshell-visual-commands '("htop" "vi" "screen" "top" "less"
-      			       "more" "lynx" "ncftp" "pine" "tin" "trn" "elm"
-      			       "vim" "mitmproxy"))
+      			   "more" "lynx" "ncftp" "pine" "tin" "trn" "elm"
+      			   "vim" "mitmproxy"))
 
 (setq eshell-visual-subcommands '("git" "log" "diff" "show" "ssh"))
 
@@ -346,13 +332,6 @@ Emacs shell settings
 (defun eshell/gst (&rest args)
   (magit-status (pop args) nil)
   (eshell/echo))   ;; The echo command suppresses output
-#+end_src
-
-** GhostText
-
-#+begin_src emacs-lisp :tangle ~/.emacs
-(use-package atomic-chrome
-  :init (atomic-chrome-start-server))  
 #+end_src
 
 ** Tramp
@@ -760,14 +739,6 @@ Company is an autocomplete option framework for emacs
       (indent-according-to-mode))))
 #+end_src
 
-** Java
-#+begin_src emacs-lisp :tangle ~/.emacs
-(use-package lsp-java :config (add-hook 'java-mode-hook 'lsp))
-(use-package dap-mode :after lsp-mode :config (dap-auto-configure-mode))
-;; (use-package dap-java :ensure nil)
-(use-package lsp-treemacs)
-#+end_src
-
 ** Evil
 
 Lispy mode makes lisp-mode editing significantly more efficent
@@ -1002,13 +973,6 @@ Clojure + LSP
 #+begin_src emacs-lisp :tangle ~/.emacs
 (use-package yaml)
 #+end_src
-
-* Text
-** Pandoc
-
-#+begin_src emacs-lisp :tangle ~/.emacs
-(use-package pandoc-mode)
-#+END_SRC
 
 * PDF
 
