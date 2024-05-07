@@ -807,8 +807,7 @@ On MacOS you need to add =-DCMAKE_PREFIX_PATH=/usr/local/opt/llvm= after =cmake=
 (add-hook 'c-mode-common-hook (lambda () (lsp) ))
 
 (with-eval-after-load 'lsp-mode
-  (add-hook 'lsp-mode-hook #'lsp-enable-which-key-integration)
-  (require 'dap-cpptools))
+  (add-hook 'lsp-mode-hook #'lsp-enable-which-key-integration))
 
 (use-package irony)
 (add-hook 'c++-mode-hook 'irony-mode)
@@ -953,9 +952,6 @@ Clojure + LSP
 	nrepl-hide-special-buffers t
 	cider-overlays-use-font-lock t)
   (cider-repl-toggle-pretty-printing))
-
-(with-eval-after-load 'dap-mode
-  (require 'dap-chrome))
 
 (add-hook 'clojure-mode-hook #'lispy-mode)
 (add-hook 'clojure-mode-hook #'subword-mode)
@@ -1151,6 +1147,8 @@ Clojure + LSP
 (use-package ob-sql-mode)
 (use-package ob-typescript)
 (use-package ob-markdown)
+(use-package ob-mermaid
+  :config (setq ob-mermaid-cli-path "/usr/local/bin/mmdc"))
 #+end_src
 
 *** Org Babel
@@ -1160,6 +1158,7 @@ Clojure + LSP
  '((dot . t)
    (python . t)
    (verb . t)
+   (mermaid . t)
    (plantuml . t)
    (shell . t)
    (sql . t)
@@ -1517,6 +1516,12 @@ These functions enable options where you can have one buffer of commands to run 
 
 (global-set-key (kbd "C-c y") `cnc-prompt)
 (global-set-key (kbd "C-c C-.") `cnc-from-file)
+#+end_src
+
+
+** Typit
+#+begin_src emacs-lisp :tangle ~/.emacs
+(use-package speed-type)
 #+end_src
 
 ** Misc
