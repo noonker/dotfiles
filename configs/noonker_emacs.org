@@ -739,28 +739,11 @@ Company is an autocomplete option framework for emacs
       (indent-according-to-mode))))
 #+end_src
 
-** Lispy
+** Evil?
 
 Lispy mode makes lisp-mode editing significantly more efficent
 
 #+begin_src emacs-lisp :tangle ~/.emacs
-(use-package lispy
-  :bind
-  (("C-4" . lispy-arglist-inline)))
-
-(progn
-  (add-hook 'emacs-lisp-mode-hook (lambda ()(lispy-mode 1)))
-  (add-hook 'spacemacs-mode-hook (lambda () (lispy-mode 1)))
-  (add-hook 'scheme-mode-hook (lambda () (lispy-mode 1)))
-  (add-hook 'cider-repl-mode-hook (lambda () (lispy-mode 1))))
-#+end_src
-
-
-** Evil? :Disabled:
-
-Lispy mode makes lisp-mode editing significantly more efficent
-
-#+begin_src
 (use-package evil
   :ensure t
   :init
