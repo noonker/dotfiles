@@ -561,14 +561,7 @@ that I'm requiring them outside of a package
 (use-package cl-lib)
 #+end_src
 
-** Shell
-
-Shell configurations for emacs. Largely based around
-
-#+begin_src emacs-lisp :tangle ~/.emacs
-(use-package vterm)
-(setq vterm-timer-delay 0.01)
-#+end_src
+** PCRE2EL
 
 #+begin_src emacs-lisp :tangle ~/.emacs
 (use-package pcre2el)
@@ -581,7 +574,7 @@ Functions and mobile gadgets
 
 #+begin_src emacs-lisp :tangle ~/.emacs
 (defun copy-app-to-desktop (bundle-id)
-  (let ((command (format "adb pull $(adb shell pm path %s | cut -d \":\" -f2) %s/%s.apk" bundle-id "$HOME/Desktop/" bundle-id)))
+  (let ((command (format "adb pull $(adb shell pm path %s | cut -d \":\" -f2 | head -n1 ) %s/%s.apk" bundle-id "$HOME/Desktop/" bundle-id)))
     (shell-command command)
     )
   )
@@ -657,14 +650,20 @@ Magit is git porcelain for Emacs
 (use-package counsel)
 #+end_src
 
+** Alert
+#+begin_src  emacs-lisp :tangle ~/.emacs
+  (use-package alert
+  :config
+  (if (eq system-type 'darwin)
+      (setq alert-default-style 'osx-notifier)))
+#+end_src
+
+
 ** Kubernetes
 
 #+begin_src emacs-lisp :tangle ~/.emacs
 (if (not im-at-work)
-    (use-package kubel
-      :after (vterm)
-      :config (kubel-vterm-setup))
-  )
+    (use-package kubel))
 #+end_src
 
 ** Docker
@@ -1090,6 +1089,8 @@ Clojure + LSP
 *** Org One Liners
 #+begin_src emacs-lisp :tangle ~/.emacs
 (setq org-fontify-whole-heading-line t)
+(setq org-startup-folded t)
+
 
 (setq org-directory "~/org")
 (setq org-agenda-basedir "~/org/tasks")
@@ -1881,7 +1882,6 @@ The doom modeline looks better than the stock emacs modeline.
 (setq doom-modeline-before-update-env-hook nil)
 (setq doom-modeline-after-update-env-hook nil)
 #+end_src
-
 
 * AI
 
