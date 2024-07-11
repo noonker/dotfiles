@@ -805,8 +805,7 @@ On MacOS you need to add =-DCMAKE_PREFIX_PATH=/usr/local/opt/llvm= after =cmake=
 
 (add-hook 'c-mode-common-hook (lambda () (lsp) ))
 
-(with-eval-after-load 'lsp-mode
-  (add-hook 'lsp-mode-hook #'lsp-enable-which-key-integration))
+(with-eval-after-load 'lsp-mode)
 
 (use-package irony)
 (add-hook 'c++-mode-hook 'irony-mode)
@@ -1148,6 +1147,7 @@ Clojure + LSP
 (use-package ob-sql-mode)
 (use-package ob-typescript)
 (use-package ob-markdown)
+(use-package mermaid-mode)
 (use-package ob-mermaid
   :config (setq ob-mermaid-cli-path "/usr/local/bin/mmdc"))
 #+end_src
@@ -1523,6 +1523,19 @@ These functions enable options where you can have one buffer of commands to run 
 ** Typit
 #+begin_src emacs-lisp :tangle ~/.emacs
 (use-package speed-type)
+#+end_src
+
+** Atomic Chrome
+#+begin_src emacs-lisp :tangle ~/.emacs
+(use-package atomic-chrome)
+(require 'atomic-chrome)
+(atomic-chrome-start-server)
+#+end_src
+
+** Rainbow Delimeters
+
+#+begin_src emacs-lisp :tangle ~/.emacs
+(use-package rainbow-delimiters)
 #+end_src
 
 ** Misc
