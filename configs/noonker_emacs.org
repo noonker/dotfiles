@@ -1921,7 +1921,7 @@ The doom modeline looks better than the stock emacs modeline.
 Load my RSS feeds
 #+begin_src emacs-lisp :tangle ~/.emacs
 (if (not im-at-work)
-    (load-file "~/git/things/dot/elfeed.el.gpg"))
+    (load-file "~/.password-store/Config/elfeed.el.gpg"))
 #+end_src
 
 * Work Config
