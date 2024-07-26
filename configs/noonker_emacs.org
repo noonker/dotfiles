@@ -315,8 +315,8 @@ Emacs shell settings
 	 )))
 
 (setq eshell-visual-commands '("htop" "vi" "screen" "top" "less"
-      			   "more" "lynx" "ncftp" "pine" "tin" "trn" "elm"
-      			   "vim" "mitmproxy"))
+      			       "more" "lynx" "ncftp" "pine" "tin" "trn" "elm"
+      			       "vim" "mitmproxy"))
 
 (setq eshell-visual-subcommands '("git" "log" "diff" "show" "ssh"))
 
@@ -395,19 +395,6 @@ Tramp allows for nearly transparent editing of files on remote machines. Run =C-
 This is my minimal SMTP setup for Protonmail Bridge
 
 #+begin_src emacs-lisp :tangle ~/.emacs
-(setq user-mail-address "noonker@pm.me"
-      user-full-name  "Joshua Person")
-
-
-(setq send-mail-function 'smtpmail-send-it
-      starttls-use-gnutls t
-      smtpmail-smtp-server "127.0.0.1"
-      smtpmail-smtp-service 1025
-      smtpmail-auth-credentials "~/.authinfo.gpg"
-      smtpmail-stream-type 'starttls
-      smtpmail-smtp-user "noonker@pm.me")
-
-(setq mail-user-agent 'mu4e-user-agent)
 #+end_src
 
 ** SomaFM
@@ -510,44 +497,45 @@ IRC for Emacs
 Email client for emacs
 
 #+begin_src emacs-lisp :tangle ~/.emacs
-(use-package mu4e
-  :straight
-  (:local-repo "/run/current-system/sw/share/emacs/site-lisp/mu4e"
-	       :type built-in)
-  :commands (mu4e)
-  :init
-  (setq
-   mu4e-attachment-dir "~/Downloads"
-   mu4e-sent-folder   "/Sent"       ;; folder for sent messages
-   mu4e-drafts-folder "/Drafts"     ;; unfinished messages
-   mu4e-trash-folder  "/Trash"      ;; trashed messages
-   mu4e-refile-folder "/Archive")   ;; saved messages
-  (setq mu4e-get-mail-command "mbsync exchange")
-  (setq mu4e-update-interval 300)
-  (global-set-key (kbd "C-c m m") `mu4e)
-  )
+(if (not im-at-work)
+    (progn (use-package mu4e
+	     :straight
+	     (:local-repo "/run/current-system/sw/share/emacs/site-lisp/mu4e"
+			  :type built-in)
+	     :commands (mu4e)
+	     :init
+	     (setq
+	      mu4e-attachment-dir "~/Downloads"
+	      mu4e-sent-folder   "/Sent"       ;; folder for sent messages
+	      mu4e-drafts-folder "/Drafts"     ;; unfinished messages
+	      mu4e-trash-folder  "/Trash"      ;; trashed messages
+	      mu4e-refile-folder "/Archive")   ;; saved messages
+	     (setq mu4e-get-mail-command "mbsync exchange")
+	     (setq mu4e-update-interval 300)
+	     (setq mail-user-agent 'mu4e-user-agent)
+	     (global-set-key (kbd "C-c m m") `mu4e)
+	     )
 
-(use-package mu4e-alert
-  :after mu4e
-  :init
-  (mu4e-alert-enable-mode-line-display)
-  (setq mu4e-alert-interesting-mail-query
-	(concat
-	 "flag:unread maildir:/INBOX "
-	 ))
-  (add-hook 'after-init-hook #'mu4e-alert-enable-mode-line-display))
+	   (use-package mu4e-alert
+	     :after mu4e
+	     :init
+	     (mu4e-alert-enable-mode-line-display)
+	     (setq mu4e-alert-interesting-mail-query
+		   (concat
+		    "flag:unread maildir:/INBOX "
+		    ))
+	     (add-hook 'after-init-hook #'mu4e-alert-enable-mode-line-display))
 
-(use-package org-msg
-  :init
-  (setq mail-user-agent 'mu4e-user-agent)
-  (setq org-msg-options "html-postamble:nil H:5 num:nil ^:{} toc:nil author:nil email:nil \\n:t"
-	org-msg-startup "hidestars indent inlineimages"
-	org-msg-default-alternatives '((new		. (text html))
-				       (reply-to-html	. (text html))
-				       (reply-to-text	. (text)))
-	org-msg-convert-citation t)
-  (org-msg-mode)
-  )
+	   (use-package org-msg
+	     :init
+	     (setq mail-user-agent 'mu4e-user-agent)
+	     (setq org-msg-options "html-postamble:nil H:5 num:nil ^:{} toc:nil author:nil email:nil \\n:t"
+		   org-msg-startup "hidestars indent inlineimages"
+		   org-msg-default-alternatives '((new		. (text html))
+						  (reply-to-html	. (text html))
+						  (reply-to-text	. (text)))
+		   org-msg-convert-citation t)
+	     (org-msg-mode))))
 #+end_src
 
 ** Emacs Lisp Packages
@@ -652,7 +640,7 @@ Magit is git porcelain for Emacs
 
 ** Alert
 #+begin_src  emacs-lisp :tangle ~/.emacs
-  (use-package alert
+(use-package alert
   :config
   (if (eq system-type 'darwin)
       (setq alert-default-style 'osx-notifier)))
@@ -1903,13 +1891,13 @@ The doom modeline looks better than the stock emacs modeline.
 (if (not im-at-work)
     (use-package gptel
       :straight (:host github :repo "karthink/gptel" :files ("dist" "*.el"))
-      :config (setq gptel-api-key (password-store-get "openai"))
+      :config (setq gptel-api-key (password-store-get "Internet/openai"))
       (setq
        gptel-model "mixtral"
        gptel-backend (gptel-make-ollama "Ollama"
-					:host "localhost:11434"
-					:stream t
-					:models '("mixtral")))))
+		       :host "localhost:11434"
+		       :stream t
+		       :models '("mixtral")))))
 #+end_src
 
 ** Copilot

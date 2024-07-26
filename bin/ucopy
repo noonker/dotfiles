@@ -1,4 +1,0 @@
-#!/bin/zsh
-
-HOSTSYSTEM=$(uname)
-if [ "$HOSTSYSTEM" = "Darwin" ]; then pbcopy; elif [ -x "$(command -v klipper)" ]; then xclip -selection clipboard; elif [ "$HOSTSYSTEM" = "Linux" ]; then xclip; fi

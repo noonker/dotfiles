@@ -1,4 +1,0 @@
-#!/bin/bash
-
-if [[ $HOSTSYSTEM -eq "Darwin" ]]; then pbpaste; elif [[ $HOSTSYSTEM -eq "Linux" ]]; then xpaste; fi
-
