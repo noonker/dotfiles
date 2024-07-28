@@ -650,8 +650,7 @@ Magit is git porcelain for Emacs
 ** Kubernetes
 
 #+begin_src emacs-lisp :tangle ~/.emacs
-(if (not im-at-work)
-    (use-package kubel))
+(use-package kubel)
 #+end_src
 
 ** Docker
@@ -868,6 +867,7 @@ Python + LSP
   (elpy-enable))
 
 (setq elpy-rpc-virtualenv-path 'global)
+(setenv "WORKON_HOME" "~/.virtualenvs")
 (pyvenv-workon "p310")
 (setq python-shell-interpreter "python")
 #+end_src
@@ -1387,6 +1387,8 @@ Blogging with hugo
 #+begin_src emacs-lisp :tangle ~/.emacs
 (use-package flyspell
   :config
+  (setq ispell-program-name "aspell"
+	ispell-list-command "--list")
   (dolist (hook '(text-mode-hook))
     (add-hook hook (lambda () (flyspell-mode 1))))
   (add-hook 'python-mode-hook
@@ -1568,7 +1570,7 @@ These functions are helpers and should be self explanitory
   (interactive)
   (delete-region (point) (line-end-position)))
 
-(global-set-key (kbd "C-x j") 'kill-this-buffer)
+(global-set-key (kbd "C-x j") 'kill-current-buffer)
 (global-set-key (kbd "C-c k") 'ruthless-kill)
 
 (defun insert-current-date ()
@@ -1821,7 +1823,7 @@ The doom modeline looks better than the stock emacs modeline.
 (setq doom-modeline-mu4e nil)
 
 ;; also enable the start of mu4e-alert
-(mu4e-alert-enable-mode-line-display)
+(if (not im-at-work) (mu4e-alert-enable-mode-line-display))
 
 ;; Whether display the gnus notifications.
 (setq doom-modeline-gnus t)
