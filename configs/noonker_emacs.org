@@ -1,8 +1,3 @@
-;; Local Variables: 
-;; eval: (add-hook 'after-save-hook (lambda ()(if (y-or-n-p "Reload?")(load-file user-init-file))) nil t) 
-;; eval: (add-hook 'after-save-hook (lambda ()(if (y-or-n-p "Tangle?")(org-babel-tangle))) nil t) 
-;; End:
-
 #+title: Noonker's Config
 
 Below is my configuration for Emacs. It is a literate config that can be installed by running =org-babel-tangle= or by using the hotkey =C-c C-v C-t=.
@@ -184,7 +179,7 @@ Leuven Theme and Comic Mono
 #+begin_src emacs-lisp :tangle ~/.emacs
 (load-theme 'leuven t)
 
-(set-face-attribute 'default nil :font "Comic Code" :height 100)
+(set-face-attribute 'default nil :font "JetBrains Mono" :height 100)
 #+end_src
 
 ** Global Config
@@ -866,10 +861,9 @@ Python + LSP
   :init
   (elpy-enable))
 
-(setq elpy-rpc-virtualenv-path 'global)
-(setenv "WORKON_HOME" "~/.virtualenvs")
+(setq elpy-rpc-virtualenv-path 'current)
+(setenv "WORKON_HOME" (file-name-concat (file-truename "~") ".virtualenvs"))
 (pyvenv-workon "p310")
-(setq python-shell-interpreter "python")
 #+end_src
 
 ** Platformio
