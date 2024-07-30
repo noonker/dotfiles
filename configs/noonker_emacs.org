@@ -385,13 +385,6 @@ Tramp allows for nearly transparent editing of files on remote machines. Run =C-
 (define-key dired-mode-map (kbd "{") 'find-name-dired)  ;; Quick Search
 #+end_src
 
-** SMTP
-
-This is my minimal SMTP setup for Protonmail Bridge
-
-#+begin_src emacs-lisp :tangle ~/.emacs
-#+end_src
-
 ** SomaFM
 
 Drone Zone >>> All Else
@@ -550,7 +543,6 @@ that I'm requiring them outside of a package
 (use-package pcre2el)
 #+end_src
 
-
 ** Mobile
 
 Functions and mobile gadgets
@@ -616,7 +608,6 @@ Functions and mobile gadgets
       )))
 #+end_src
 
-
 ** Magit
 
 Magit is git porcelain for Emacs
@@ -640,7 +631,6 @@ Magit is git porcelain for Emacs
   (if (eq system-type 'darwin)
       (setq alert-default-style 'osx-notifier)))
 #+end_src
-
 
 ** Kubernetes
 
@@ -1914,8 +1904,8 @@ The doom modeline looks better than the stock emacs modeline.
 * Hunting
 #+begin_src emacs-lisp :tangle ~/.emacs
 (use-package deferred)
-(use-package hunting-mode
-  :straight (:local-repo "~/git/hunting-mode"))
+;;(use-package hunting-mode
+;;  :straight (:local-repo "~/git/hunting-mode"))
 ;; TODO
 ;; (add-to-list ' hunting-glyph-hooks
 ;; 	       `(,hunting-ipv4-regex-wrapped hunting-misp-ioc-in-misp-p "💢" "💤")
@@ -1924,7 +1914,7 @@ The doom modeline looks better than the stock emacs modeline.
 ;; 	       `(,hunting-sha256-regex-wrapped hunting-project-hash-contains-p "✅" "❌")
 ;; )
 ;;(hunting-glyph-debug)
-(add-hook 'org-mode-hook 'hunting-mode)
+;;(add-hook 'org-mode-hook 'hunting-mode)
 #+end_src
 
 * Finally
