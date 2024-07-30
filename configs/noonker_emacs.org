@@ -179,7 +179,7 @@ Leuven Theme and Comic Mono
 #+begin_src emacs-lisp :tangle ~/.emacs
 (load-theme 'leuven t)
 
-(set-face-attribute 'default nil :font "JetBrains Mono" :height 100)
+(set-face-attribute 'default nil :font "JetBrains Mono" :height 150)
 #+end_src
 
 ** Global Config
@@ -859,11 +859,11 @@ Python + LSP
 (use-package elpy
   :ensure t
   :init
-  (elpy-enable))
-
-(setq elpy-rpc-virtualenv-path 'current)
-(setenv "WORKON_HOME" (file-name-concat (file-truename "~") ".virtualenvs"))
-(pyvenv-workon "p310")
+  (elpy-enable)
+  (pyvenv-tracking-mode)
+  (setq elpy-rpc-virtualenv-path 'current)
+  (setenv "WORKON_HOME" (file-name-concat (file-truename "~") ".virtualenvs"))
+  (setq python-shell-interpreter "python"))
 #+end_src
 
 ** Platformio
@@ -1642,9 +1642,7 @@ The doom modeline looks better than the stock emacs modeline.
 
 #+begin_src emacs-lisp :tangle ~/.emacs
 (use-package doom-modeline
-  :config (doom-modeline-mode 1)
-  (setq doom-modeline-height 17)
-  )
+  :config (doom-modeline-mode 1))
 
 ;; If non-nil, cause imenu to see `doom-modeline' declarations.
 ;; This is done by adjusting `lisp-imenu-generic-expression' to
@@ -1911,6 +1909,22 @@ The doom modeline looks better than the stock emacs modeline.
       (add-hook 'prog-mode-hook #'copilot-mode)
       )
   )
+#+end_src
+
+* Hunting
+#+begin_src emacs-lisp :tangle ~/.emacs
+(use-package deferred)
+(use-package hunting-mode
+  :straight (:local-repo "~/git/hunting-mode"))
+;; TODO
+;; (add-to-list ' hunting-glyph-hooks
+;; 	       `(,hunting-ipv4-regex-wrapped hunting-misp-ioc-in-misp-p "💢" "💤")
+;; 	       `(,hunting-md5-regex-wrapped hunting-project-hash-contains-p "✅" "❌")
+;; 	       `(,hunting-sha1-regex-wrapped hunting-project-hash-contains-p "✅" "❌")
+;; 	       `(,hunting-sha256-regex-wrapped hunting-project-hash-contains-p "✅" "❌")
+;; )
+;;(hunting-glyph-debug)
+(add-hook 'org-mode-hook 'hunting-mode)
 #+end_src
 
 * Finally
