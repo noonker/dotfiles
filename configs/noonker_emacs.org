@@ -51,6 +51,11 @@ This section sets up [[https://github.com/radian-software/straight.el][straight.
 (defcustom im-at-work t
   "im-at-work can be used to conditionally disable code which may not be suitable for work environments. ChatGPT, copilot, etc"
   :type '(boolean))
+
+(if (string= (current-platform)
+	     "mac")
+      (use-package exec-path-from-shell
+	:init (exec-path-from-shell-initialize)))
 #+end_src
 
 
@@ -643,8 +648,6 @@ Magit is git porcelain for Emacs
 (use-package docker
   :ensure t
   :bind ("C-c d" . docker))
-
-(setq docker-run-as-root t)
 #+end_src
 
 ** Spray Mode
@@ -838,6 +841,9 @@ On MacOS you need to add =-DCMAKE_PREFIX_PATH=/usr/local/opt/llvm= after =cmake=
 Python + LSP
 
 #+begin_src emacs-lisp :tangle ~/.emacs
+(use-package envrc
+  :hook (after-init . envrc-global-mode))
+
 (use-package python
   :bind (("C-c C-c" . python-shell-send-region)))
 
@@ -1624,6 +1630,20 @@ These functions are helpers and should be self explanitory
   )
 
 (global-set-key (kbd "C-c C-t") 'todo)
+
+(defun noonker/flatten-category (category)
+  (mapcar (lambda (item) (cons (car category) item)) (cadr category)))
+
+(defun noonker/flatten-bookmarks (bookmarks)
+  (mapcan 'noonker/flatten-category bookmarks))
+
+(defun noonker/bookmarks-complete (bookmarks)
+  (let* ((choice (completing-read
+		 "Bookmarks:"
+		 (mapcar (lambda (item) (string-join item "	"))
+			 (noonker/flatten-bookmarks bookmarks))))
+	 (url (nth 2 (split-string choice "	"))))
+    (browse-url url)))
 #+end_src
 
 ** Doom Modeline
