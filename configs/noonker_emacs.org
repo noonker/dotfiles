@@ -763,7 +763,6 @@ Common Lisp configs
 (setq inferior-lisp-program "ros -Q run")
 #+end_src
 
-
 ** C/C++ / Platformio-DCMAKE_PREFIX_PATH=/usr/local/opt/llvm
 
 On MacOS you need to add =-DCMAKE_PREFIX_PATH=/usr/local/opt/llvm= after =cmake= to run =install-irony-server= per [[https://github.com/Sarcasm/irony-mode/issues/167][this]] git issue.
@@ -944,6 +943,11 @@ Clojure + LSP
 ** Yaml
 #+begin_src emacs-lisp :tangle ~/.emacs
 (use-package yaml)
+#+end_src
+
+** RMSBolt
+#+begin_src emacs-lisp :tangle ~/.emacs
+(use-package rmsbolt)
 #+end_src
 
 * PDF
