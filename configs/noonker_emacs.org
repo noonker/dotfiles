@@ -370,6 +370,10 @@ Tramp allows for nearly transparent editing of files on remote machines. Run =C-
 (setq projectile-dynamic-mode-line nil)
 #+end_src
 
+** Vterm
+#+begin_src emacs-lisp :tangle ~/.emacs
+(use-package vterm)
+#+end_src
 ** Dired
 
 #+begin_src emacs-lisp  :tangle ~/.emacs
@@ -664,6 +668,10 @@ Spray mode is a speed-reading mode
 #+end_src
 
 * Programming
+** General
+#+begin_src emacs-lisp :tangle ~/.emacs
+(add-hook 'python-mode-hook 'electric-pair-mode)
+#+end_src
 
 ** Treesitter
 #+begin_src emacs-lisp :tangle ~/.emacs
@@ -1183,7 +1191,7 @@ Clojure + LSP
 (use-package org-download
   :init
   (progn
-    (setq org-image-actual-width (list 400))))
+    (setq org-image-actual-width (list 900))))
 #+end_src
 
 *** Org Transclusion
@@ -1198,8 +1206,7 @@ Clojure + LSP
 (use-package ob-typescript)
 (use-package ob-markdown)
 (use-package mermaid-mode)
-(use-package ob-mermaid
-  :config (setq ob-mermaid-cli-path "/usr/local/bin/mmdc"))
+(use-package ob-mermaid)
 #+end_src
 
 *** Org Babel
@@ -1389,6 +1396,8 @@ Clojure + LSP
 (use-package ox-reveal
   :config
   (setq org-reveal-root "file:///home/user/git/reveal.js"))
+
+(use-package ox-confluence)
 
 (setq org-export-with-drawers nil)
 
@@ -1964,16 +1973,15 @@ The doom modeline looks better than the stock emacs modeline.
 
 ** ChatGPT
 #+begin_src emacs-lisp :tangle ~/.emacs
-(if (not im-at-work)
-    (use-package gptel
-      :straight (:host github :repo "karthink/gptel" :files ("dist" "*.el"))
-      :config (setq gptel-api-key (password-store-get "Internet/openai"))
-      (setq
-       gptel-model "mixtral"
-       gptel-backend (gptel-make-ollama "Ollama"
-		       :host "localhost:11434"
-		       :stream t
-		       :models '("mixtral")))))
+(use-package gptel
+  :straight (:host github :repo "karthink/gptel" :files ("dist" "*.el"))
+  :config
+  (setq
+   gptel-model "mixtral"
+   gptel-backend (gptel-make-ollama "Ollama"
+				    :host "localhost:11434"
+				    :stream t
+				    :models '("mixtral:8x7b"))))
 #+end_src
 
 ** Copilot
@@ -1995,11 +2003,25 @@ The doom modeline looks better than the stock emacs modeline.
 
 * Hunting
 #+begin_src emacs-lisp :tangle ~/.emacs
+(use-package yara-mode)
+
+(with-eval-after-load 'lsp-mode
+  (add-to-list 'lsp-language-id-configuration
+	       '(yara-mode . "yara"))
+
+  (lsp-register-client
+   (make-lsp-client :new-connection (lsp-stdio-connection "yls")
+                    :activation-fn (lsp-activate-on "yara")
+                    :server-id 'yls)))
+#+end_src
+
+
+#+begin_src emacs-lisp :tangle ~/.emacs
 (use-package deferred)
 ;;(use-package hunting-mode
 ;;  :straight (:local-repo "~/git/hunting-mode"))
 ;; TODO
-;; (add-to-list ' hunting-glyph-hooks
+;; (add-to-list 'hunting-glyph-hooks
 ;; 	       `(,hunting-ipv4-regex-wrapped hunting-misp-ioc-in-misp-p "💢" "💤")
 ;; 	       `(,hunting-md5-regex-wrapped hunting-project-hash-contains-p "✅" "❌")
 ;; 	       `(,hunting-sha1-regex-wrapped hunting-project-hash-contains-p "✅" "❌")

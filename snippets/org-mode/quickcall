@@ -1,0 +1,5 @@
+# -*- mode: snippet -*-
+# name: quickcall 
+# key: cc
+# --
+#+call:${1:$$(yas-choose-value (mapcar 'car org-babel-library-of-babel)))}($2)$0
