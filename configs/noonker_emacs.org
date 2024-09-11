@@ -217,6 +217,7 @@ Random global behavior configs
     (pixel-scroll-precision-mode 1)) ;; Smooth Scrolling
 (global-so-long-mode 1) ;; Stop trying to syntax highlight absurdly long strings
 (global-set-key (kbd "C-s") 'swiper)
+(setq mouse-1-click-follows-link nil) ;; don't accidentally click links
 #+end_src
 
 ** Projectile
@@ -933,6 +934,7 @@ Python + LSP
   (elpy-enable)
   (pyvenv-tracking-mode)
   (setq elpy-rpc-virtualenv-path 'current)
+  (setq elpy-shell-starting-directory 'current-directory) ;; default is 'project-root 
   (setenv "WORKON_HOME" (file-name-concat (file-truename "~") ".virtualenvs"))
   (setq python-shell-interpreter "python"))
 #+end_src
