@@ -411,9 +411,24 @@ IRC for Emacs
 (use-package erc
   :config
   (setq erc-hide-list '("JOIN" "PART" "QUIT")))
+
 (use-package erc-colorize
   :config
   (erc-colorize-mode 1))
+
+(defun libera ()
+  "Connect to IRC"
+  (interactive)
+  (erc-ssl :server "sail.noonker.com" :port "6669" :nick "noonker" :password
+	   (format "noonker/libera:%s" (password-store-get "Internet/ZNC")) )
+  )
+
+(defun nerds ()
+  (interactive)
+  (erc-ssl :server "sail.noonker.com" :port "6669" :nick "noonker" :password
+	   (format "noonker/nerds:%s" (password-store-get "Internet/ZNC"))))
+
+(setq erc-rename-buffers t)
 #+end_src
 
 ** Elfeed
@@ -502,6 +517,17 @@ Email client for emacs
 			  :type built-in)
 	     :commands (mu4e)
 	     :init
+	     (setq user-mail-address "noonker@pm.me"
+		   user-full-name  "Joshua Person")
+
+	     (setq send-mail-function 'smtpmail-send-it
+		   starttls-use-gnutls t
+		   smtpmail-smtp-server "127.0.0.1"
+		   smtpmail-smtp-service 1025
+		   smtpmail-auth-credentials "~/.authinfo.gpg"
+		   smtpmail-stream-type 'starttls
+		   smtpmail-smtp-user "noonker@pm.me")
+
 	     (setq
 	      mu4e-attachment-dir "~/Downloads"
 	      mu4e-sent-folder   "/Sent"       ;; folder for sent messages
@@ -2020,8 +2046,8 @@ The doom modeline looks better than the stock emacs modeline.
 
 #+begin_src emacs-lisp :tangle ~/.emacs
 (use-package deferred)
-;;(use-package hunting-mode
-;;  :straight (:local-repo "~/git/hunting-mode"))
+(use-package hunting-mode
+ :straight (:local-repo "~/git/hunting-mode"))
 ;; TODO
 ;; (add-to-list 'hunting-glyph-hooks
 ;; 	       `(,hunting-ipv4-regex-wrapped hunting-misp-ioc-in-misp-p "💢" "💤")
@@ -2038,6 +2064,340 @@ Load my RSS feeds
 #+begin_src emacs-lisp :tangle ~/.emacs
 (if (not im-at-work)
     (load-file "~/.password-store/Config/elfeed.el.gpg"))
+#+end_src
+
+* Feeds 
+
+** Youtube
+
+#+begin_src emacs-lisp :tangle ~/.emacs
+(setq youtube-feeds
+      '(
+	("https://www.youtube.com/feeds/videos.xml?channel_id=UC5fdssPqmmGhkhsJi4VcckA" innuendo-studios youtube)
+	("https://www.youtube.com/feeds/videos.xml?channel_id=UCDsElQQt_gCZ9LgnW-7v-cQ" kirsten-dirksen youtube)
+	("https://www.youtube.com/feeds/videos.xml?channel_id=UCsXVk37bltHxD1rDPwtNM8Q" kurzgesagt youtube)
+	("https://www.youtube.com/feeds/videos.xml?channel_id=UC8gFadPgK2r1ndqLI04Xvvw" maangchi youtube)
+	("https://www.youtube.com/feeds/videos.xml?channel_id=UCV5vCi3jPJdURZwAOO_FNfQ" thought-emporium youtube)
+	("https://www.youtube.com/feeds/videos.xml?channel_id=UCe2JAC5FUfbxLCfAvBWmNJA" food-lab youtube)
+	("https://www.youtube.com/feeds/videos.xml?channel_id=UCWZ3HFiJkxG1K8C4HVnyBvQ" vic-berger youtube)
+	("https://www.youtube.com/feeds/videos.xml?channel_id=UCWjmAUHmajb1-eo5WKk_22A" audioTree youtube)
+	("https://www.youtube.com/feeds/videos.xml?channel_id=UC9-y-6csu5WGm29I7JiwpnA" computerphile youtube)
+	("https://www.youtube.com/feeds/videos.xml?channel_id=UCSkzHxIcfoEr69MWBdo0ppg" cuck-philosophy youtube)
+	("https://www.youtube.com/feeds/videos.xml?channel_id=UCo-3ThNQmPmQSQL_L6Lx1_w" deepsky-videos youtube)
+	("https://www.youtube.com/feeds/videos.xml?channel_id=UC554eY5jNUfDq3yDOJYirOQ" destiny youtube)
+	("https://www.youtube.com/feeds/videos.xml?channel_id=UC-yuWVUplUJZvieEligKBkA" javidx9 youtube)
+	("https://www.youtube.com/feeds/videos.xml?channel_id=UCa_8y96THr7LzMg8BsU-sUw" just-wondering youtube)
+	("https://www.youtube.com/feeds/videos.xml?channel_id=UC3I2GFN_F8WudD_2jUZbojA" KEXP youtube music)
+	("https://www.youtube.com/feeds/videos.xml?channel_id=UCJgBqh3tYway5A5VgV4dZRw" mr-bill youtube music)
+	("https://www.youtube.com/feeds/videos.xml?channel_id=UCoxcjq-8xIDTYp3uz647V5A" numberphile youtube)
+	("https://www.youtube.com/feeds/videos.xml?channel_id=UC--DwaiMV-jtO-6EvmKOnqg" oa-labs youtube)
+	("https://www.youtube.com/feeds/videos.xml?channel_id=UCvBqzzvUBLCs8Y7Axb-jZew" sixety-symbols youtube)
+	("https://www.youtube.com/feeds/videos.xml?channel_id=UCGaVdbSav8xWuFWTadK6loA" vlogbrothers youtube)
+	("https://www.youtube.com/feeds/videos.xml?channel_id=UCy-AwzC0US6T_DALeiqnLHQ" yan-z youtube music)
+	("https://www.youtube.com/feeds/videos.xml?channel_id=UC4eYXhJI4-7wSWc8UNRwD4A" tiny-desk youtube  music)
+	("https://www.youtube.com/feeds/videos.xml?channel_id=UCG29FnXZm4F5U8xpqs1cs1Q" empire-files youtube )
+	("https://www.youtube.com/feeds/videos.xml?channel_id=UCvB3solmhqtgDeLpD-yTtfg" hickok45 youtube )
+	("https://www.youtube.com/feeds/videos.xml?channel_id=UCdBnxYbzwu5CypEdMfu4_jA" leeya-katrina youtube music )
+	("https://www.youtube.com/feeds/videos.xml?channel_id=UCzIlUODCqKo7Og_OIp66x9g" lucy-riddett youtube music)
+	("https://www.youtube.com/feeds/videos.xml?channel_id=UCaB0Vx7zrGJRrOQb42bI99g" milan youtube  music)
+	("https://www.youtube.com/feeds/videos.xml?channel_id=UCtc5INMrIDrDEbv2FLK4bVg" natalie-chami youtube )
+	("https://www.youtube.com/feeds/videos.xml?channel_id=UCO8yPl56VVCnRM7qnnBIDew" peter-neils youtube )
+	("https://www.youtube.com/feeds/videos.xml?channel_id=UCdsLnOiepq0GEPpGY14V5Rg" piotr-jagielski youtube music)
+	("https://www.youtube.com/feeds/videos.xml?channel_id=UCchFx5hTGnhjya-odX_6Fpw" rory-hoffman youtube )
+	("https://www.youtube.com/feeds/videos.xml?channel_id=UCl-WbRCwODSd2BRQSxJcq2g" tenebrae-chior youtube music)
+	("https://www.youtube.com/feeds/videos.xml?channel_id=UC8fqt_PDhDDszL5Zi8EauqA" terminal-passage youtube music)
+	("https://www.youtube.com/feeds/videos.xml?channel_id=UCg6IiNQqZWJH3ZFfJhXRMsg" octavism youtube music)
+	("https://www.youtube.com/feeds/videos.xml?channel_id=UCrfKGpvbEQXcbe68dzXgJuA" forgotten-weapons youtube)
+	("https://www.youtube.com/feeds/videos.xml?channel_id=UCpbx4wlyihmnsBy9uAE_kdA" stick-in-the-wheel youtube music)
+	("https://www.youtube.com/feeds/videos.xml?channel_id=UCeUNM9NqJqZXfRNeuW4_2sg" inrangetv youtube)
+	("https://www.youtube.com/feeds/videos.xml?channel_id=UCC6KehJqUUrWLlfPCWh7lTA" moshe-zuchter youtube   music)
+	("https://www.youtube.com/feeds/videos.xml?channel_id=UCnPl-b0Xw-A20ukIQEJ0_Nw" yuri-charyguine youtube)
+	("https://www.youtube.com/feeds/videos.xml?channel_id=UClcE-kVhqyiHCcjYwcpfj9w" liveoverflow youtube)
+	("https://www.youtube.com/feeds/videos.xml?channel_id=UCIA8TCSZ-BaBX-aJv92tpRQ" tim-heidecker youtube)
+	("https://www.youtube.com/feeds/videos.xml?channel_id=UCCd1Cwjp3hK1tTxevgnHD3g" aline-gingertail youtube music)
+	("https://www.youtube.com/feeds/videos.xml?channel_id=UC-_SoG6x0XvcQRgQEh7Ce9Q" dj-cummerbund youtube  music)
+	("https://www.youtube.com/feeds/videos.xml?channel_id=UCcXhhVwCT6_WqjkEniejRJQ" wintergatan youtube)
+	("https://www.youtube.com/feeds/videos.xml?channel_id=UCw2Veg8X4aCUitGn9xTMi8A" cassie-accordion youtube)
+	("https://www.youtube.com/feeds/videos.xml?channel_id=UCltmf0pqjXyLtNsF2vek_wQ" guqin youtube music)
+	("https://www.youtube.com/feeds/videos.xml?channel_id=UCdutJyKPX5uOJxNN0wM4g-A" classic-documentary youtube)
+	("https://www.youtube.com/feeds/videos.xml?channel_id=UCtaeUJpmgpnfk-827BYHhEg" hrafna youtube)
+	("https://www.youtube.com/feeds/videos.xml?channel_id=UCF3I2RRLRVh_HuXP9sNlhNg" weltmeister youtube)
+	("https://www.youtube.com/feeds/videos.xml?channel_id=UC-AQKm7HUNMmxjdS371MSwg" channel-5 youtube)
+	("https://www.youtube.com/feeds/videos.xml?channel_id=UC4eYXhJI4-7wSWc8UNRwD4A" npr-music youtube)
+	("https://www.youtube.com/feeds/videos.xml?channel_id=UCk0tHQym-zIaxjrVuTzojdg" embahn youtube)
+	("https://www.youtube.com/feeds/videos.xml?channel_id=UCigygyPkHm07o-wQvkET7Og" george-collier youtube)
+	("https://www.youtube.com/feeds/videos.xml?channel_id=UCm9K6rby98W8JigLoZOh6FQ" lock-picking-lawyer youtube)
+	("https://www.youtube.com/feeds/videos.xml?channel_id=UCposMD82i8gEmpnSG-rrO1g" mojca youtube)
+	("https://www.youtube.com/feeds/videos.xml?channel_id=UCq6gYeqi8RIvVeF-sJwdaBg" coffee-chess youtube)
+	("https://www.youtube.com/feeds/videos.xml?channel_id=UCqLLqbclDQ6IQg39Wsgy-4w" atlanta-chess-club youtube)
+	("https://www.youtube.com/feeds/videos.xml?channel_id=UCrCTC5_t-HaVJ025DbYITiw" alice-capelle youtube)
+	("https://www.youtube.com/feeds/videos.xml?channel_id=UCuVLTxl-I0glJYPfcPKJg7w" heymun youtube)
+	("https://www.youtube.com/feeds/videos.xml?channel_id=UCAzPN3ilUBKEU0hcQ0vuxpw" george-secor youtube music)
+	("https://www.youtube.com/feeds/videos.xml?channel_id=UCHP9CdeguNUI-_nBv_UXBhw" daniel-naroditsky youtube)
+	("https://www.youtube.com/feeds/videos.xml?channel_id=UCJjFX23mI0oZaZirtIgyE-Q" david-lange youtube)
+	("https://www.youtube.com/feeds/videos.xml?channel_id=UCzJVGqsvZ3ti197NMIjE5ig" elina-spitsa youtube music)
+	("https://www.youtube.com/feeds/videos.xml?channel_id=UC6EnFbK-P5q0zeaqI5yobKg" benjamin-finegold youtube)
+	("https://www.youtube.com/feeds/videos.xml?channel_id=UC7shUDSkHjuQNegPhGdANQQ" art-of-listening youtube music)
+	("https://www.youtube.com/feeds/videos.xml?channel_id=UC8TZwtZ17WKFJSmwTZQpBTA" my-analogue-journal youtube music)
+	("https://www.youtube.com/feeds/videos.xml?channel_id=UCweCc7bSMX5J4jEH7HFImng" hikaru youtube)
+	("https://www.youtube.com/feeds/videos.xml?channel_id=UCXy10-NEFGxQ3b4NVrzHw1Q" eric-rosen youtube)
+	("https://www.youtube.com/feeds/videos.xml?channel_id=UCWamialv2ZhqR7BPPu0Niug" side-channel-security youtube)
+	("https://www.youtube.com/feeds/videos.xml?channel_id=UCQB04t2hxSBVTjxpbIHdI-w" sam-aaron youtube music)
+	("https://www.youtube.com/feeds/videos.xml?channel_id=UCM-ONC2bCHytG2mYtKDmIeA" st-louis-chess-club youtube)
+	("https://www.youtube.com/feeds/videos.xml?channel_id=UCLOPC6bOBuiSBAJ16JXLAHg" lnod youtube)
+	("https://www.youtube.com/feeds/videos.xml?channel_id=UCL5YbN5WLFD8dLIegT5QAbA" agadmator youtube)
+	("https://www.youtube.com/feeds/videos.xml?channel_id=UCwfYU2M8TBAus0TIaNtjxlQ" jam-in-the-van youtube music)
+	("https://www.youtube.com/feeds/videos.xml?channel_id=UCd2KNtfphz8HvYzM4pwtHmg" like-a-version youtube music)
+	("https://www.youtube.com/feeds/videos.xml?channel_id=UCz5RHlX7cGeayKn4FU6u7tA" little-elephant youtube music)
+	("https://www.youtube.com/feeds/videos.xml?channel_id=UCBQ8NG_fqzmAmGEriQW1XZQ" our-vinyl youtube music)
+	("https://www.youtube.com/feeds/videos.xml?channel_id=UCOCjoq4cms20Ik39r1aOqXA" cardinal-sessions youtube music)
+	("https://www.youtube.com/feeds/videos.xml?channel_id=UCfKl318qMJ2p8TUmfL4wdPQ" songs-from-the-shed youtube music)
+	("https://www.youtube.com/feeds/videos.xml?channel_id=UChsZje1ssMSDgWoxm4VQn_w" wild-honey-pie youtube music)
+	("https://www.youtube.com/feeds/videos.xml?channel_id=UCG36u-k09zdIPQh5EEdVgTA" mahogany-music youtube  Mahogany music)
+	("https://www.youtube.com/feeds/videos.xml?channel_id=UCRLZb8PpI9N7COmYqHiDH7A" sofar-sounds youtube music)
+	("https://www.youtube.com/feeds/videos.xml?channel_id=UC_VZvcOjwfLK0BY79tB-moQ" melodart youtube music)
+	("https://www.youtube.com/feeds/videos.xml?channel_id=UCASM0cgfkJxQ1ICmRilfHLw" patrick-boyle youtube music)
+	))
+#+end_src
+
+** Podcasts
+#+begin_src emacs-lisp :tangle ~/.emacs
+(setq podcast-feeds
+      '(
+	("http://feeds.99percentinvisible.org/99percentinvisible" 99pi podcast)
+	("https://feeds.buzzsprout.com/244372.rss" crazy-town podcast)
+	("http://rss.acast.com/nature" nature podcast)
+	("http://feeds.feedburner.com/birdnote/OYfP" bird-note podcast) 
+	("https://www.kcrw.com/culture/shows/nocturne/rss.xml" nocturne podcast)
+	("http://feeds.wnyc.org/onthemedia" on-the-media podcast)
+	("https://www.npr.org/rss/podcast.php?id=510289" planet-money podcast)
+	("http://rss.acast.com/pulseoftheplanet" pulse-of-the-planet podcast) 
+	("http://feeds.wnyc.org/radiolab" radiolab  podcast)
+	("https://anchor.fm/s/7f22824/podcast/rss" sounds-by-nature podcast)
+	("https://www.ecoshock.org/feed/lofi" radio-ecoshock podcast)
+	("http://feeds.wpr.org/wpr-politics" wpr-politics podcast)
+	("http://feeds.wnyc.org/tnypoetry" new-yorker-poetry podcast) 
+	("https://feeds.simplecast.com/p7Q9jZ0K" poem-of-the-day podcast)
+	("https://www.npr.org/rss/podcast.php?id=510019" all-songs-considered podcast)
+	("https://feeds.megaphone.fm/darknetdiaries" darknet-diaries podcast)
+	("https://feeds.acast.com/public/shows/intelligence-fusion" intelligence-fusion podcast)
+	))
+#+end_src
+
+** Listen to this
+#+begin_src emacs-lisp :tangle ~/.emacs
+(setq music-firehose-feeds
+      '(
+      ("https://www.reddit.com/r/listentothis/.rss" listen-to-this music reddit)
+      ))
+#+end_src
+
+** Government Firehoses
+#+begin_src emacs-lisp
+(setq government-feeds
+      '(
+	("https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany&CIK=0001078075&type=&dateb=&owner=include&start=0&count=40&output=atom" sec gov first sec)
+	("https://www.ftc.gov/feeds/press-release.xml" ftc gov first ftc)
+	("https://www.ftc.gov/feeds/press-release-competition.xml" gov first ftc)
+	("https://www.ftc.gov/feeds/press-release-consumer-protection.xml" gov first ftc)
+	("https://api2.fcc.gov/edocs/public/api/v1/rss/" gov first fcc)
+	("https://api2.fcc.gov/edocs/public/api/v1/rss/docTypes/Cit" gov first fcc)
+	("http://licensing.fcc.gov/myibfs/yesterdaysFilingsFeed.do" gov first fcc)
+	("http://licensing.fcc.gov/myibfs/yesterdaysActionsFeed.do" gov first fcc)
+	("http://licensing.fcc.gov/myibfs/recentPNFeed.do" gov first fcc)
+	("http://efilingapps.fec.gov/rss/generate?preDefinedFilingType=ALL" gov first fec)
+	("https://efilingapps.fec.gov/rss/generate?preDefinedFilingType=ALL" gov fec first)
+	("https://www.nsa.gov/DesktopModules/ArticleCS/RSS.ashx?ContentType=1&Site=920&max=20" gov first nsa)
+	))
+#+end_src
+
+** Security Feeds
+#+begin_src emacs-lisp :tangle ~/.emacs
+(setq security-feeds
+      '(
+	("https://www.us-cert.gov/ncas/alerts.xml" us-cert-alerts security second)
+	("https://www.us-cert.gov/ncas/all.xml" us-certs-all security second)
+	("https://securelist.com/feed/" securelist security second)
+	("http://blog.dynamoo.com/feeds/posts/default" dynamoo security second)
+	("http://feeds.feedburner.com/feedburner/Talos?format=xml" cisco-talos security second)
+	("http://feeds.trendmicro.com/Anti-MalwareBlog/" trend-micro security second)
+	("http://researchcenter.paloaltonetworks.com/unit42/feed/" unit42 security second)
+	("https://www.proofpoint.com/rss.xml" proofpoint security second)
+	("http://asert.arbornetworks.com/feed/" arbor-networks security second)
+	("http://blog.0x3a.com/rss" 0x3a security second)
+	("http://addxorrol.blogspot.com/feeds/posts/default" addxorrol security second)
+	("https://www.lookingglasscyber.com/blog/rss" lookingglass security second)
+	("http://herrcore.blogspot.com/feeds/posts/default" herrcore security second)
+	("http://research.zscaler.com/feeds/posts/default" zscalar security second)
+	("http://googleonlinesecurity.blogspot.com/atom.xml" google-security security second)
+	("http://bartblaze.blogspot.com/feeds/posts/default" bartblaze security second)
+	("http://www.exploit-db.com/rss.php" exploit-db security second) 
+	("https://bittherapy.net/post/index.xml" bittherapy security second)
+	("http://malwaredomains.com/?feed=rss2" malware-domains security second)
+	("http://windowsir.blogspot.com/feeds/posts/default" windows-incident-response security second)
+	("http://www.schneier.com/blog/index.rdf" schneier-on-security security second)
+	("http://contagiodump.blogspot.com/feeds/posts/default" contagio security second)
+	("http://feeds.feedburner.com/darknethackers" darknet-hackers security second)
+	("http://securityaffairs.co/wordpress/feed" security-affairs security second)
+	("http://blog.invisiblethings.org/feed.xml" invisible-things security second)
+	("https://threatpost.com/feed" threatpost security second)
+	("http://hackingexposedcomputerforensicsblog.blogspot.com/feeds/posts/default" hacking-exposed security second)
+	("http://feeds.feedburner.com/Imperviews?format=xml" imperviews security second)
+	("http://detect-respond.blogspot.com/feeds/posts/default" detect-respond security second)
+	("http://www.fireeye.com/blog/feed" fireeye security second)
+	("http://www.elsevierscitech.com/feeds/feeds/b2b/14.xml" elsevierscitech security second)
+	("https://malware.dontneedcoffee.com/feed.xml" dont-need-coffee security second)
+	("https://www.darktrace.com/blog/index.xml" darktrace security second)
+	("http://krebsonsecurity.com/feed/" krebs-on-security security second)
+	("http://www.swiftforensics.com/feeds/posts/default" swift-forensics security second)
+	("http://www.darkreading.com/rss/all.xml" dark-reading security second)
+	("http://taosecurity.blogspot.com/atom.xml" tao-security security second)
+	("http://iscxml.sans.org/rssfeed.xml" sans security second)
+	("http://labs.lastline.com/rss.xml" lastline security second)
+	("http://www.symantec.com/xml/rss/srblogs.jsp" symantec security second)
+	("http://blog.malwarebytes.org/feed/" malware-bytes security second)
+	("http://blog.wired.com/defense/atom.xml" wired security second)
+	("http://ryanstillions.blogspot.com/feeds/posts/default" ryan-stillions security second)
+	("http://www.theregister.co.uk/security/headlines.atom" register security second)
+	("https://www.recordedfuture.com/feed/" recorded-future security second)
+	("http://www.malware-traffic-analysis.net/blog-entries.rss" malware-traffic-analysis security second)
+	("http://blogs.technet.com/mmpc/rss.xml" technet security second)
+	("https://www.bellingcat.com/feed/" bellingcat security second)
+	("https://www.clearskysec.com/feed/" clearsky-sec security second)
+	("https://blog.cobaltstrike.com/feed/" cobalt-strike security second)
+	("https://thecomputerperson.wordpress.com/rss" the-computer-person security second)
+	("https://dfir.it/atom.xml" dfir-it re)
+	("https://www.msreverseengineering.com/blog?format=rss" ms-reverse-engineering security second re)
+	("https://www.wired.com/feed/category/security/latest/rss" wired-security tech)
+	("https://www.sentinelone.com/blog/rss" sentinel-one tech security)
+	("https://labs.f-secure.com/blog/rss" f-secure tech security)
+	("https://euvsdisinfo.eu/news/rss" eu-disinfo security)
+	("https://www.megabeets.net/rss" megabeets tech)
+	("https://pluralistic.net/feed/" pluralistic tech)
+	("https://seclists.org/rss/fulldisclosure.rss" seclists tech security)
+	("https://www.404media.co/rss" 404media tech security)
+	))
+#+end_src
+
+** Mobile Feeds
+#+begin_src emacs-lisp :tangle ~/.emacs
+(setq mobile-feeds
+      '(
+        ("https://www.nowsecure.com/blog/category/research-threat-intel/rss" nowsecure mobile)
+        ("https://citizenlab.org/feed/" citizenlab mobile)
+        ("https://blog.lookout.com/topics#/researchers/" lookout mobile)
+        ("https://www.darkreading.com/rss_simple.asp?f_n=651&f_ln=Mobile" dark-reading mobile)
+        ("https://blog.appknox.com/feed" appknox mobile)
+        ("https://www.adaptivemobile.com/blog/rss" adaptive-mobile mobile)
+        ("https://blog.zimperium.com/feed/" zimperium mobile)
+        ("https://blog.pulsesecure.net/feed/" pulse-secure mobile)
+        ("https://cyware.com/category/mobile-security-news/feed" cyware mobile)
+        ("http://www.f-secure.com/weblog/weblog.rss" f-secure mobile)
+        ("https://blog.google/threat-analysis-group/rss/" google-tao mobile)
+	))
+#+end_src
+
+** Comics
+#+begin_src emacs-lisp :tangle ~/.emacs
+(setq comic-feeds '(
+		    ("http://pbfcomics.com/feed/feed.xml" pbfcomics second)
+		    ("http://existentialcomics.com/rss.xml" existential-comics comics)
+		    ("http://xkcd.com/rss.xml" xkcd comics)
+		    ))
+#+end_src
+** Art Feeds
+#+begin_src emacs-lisp :tangle ~/.emacs
+(setq art-feeds
+      '(
+	("https://doorofperception.com/rss" door-of-perception art)
+	("https://www.poetryfoundation.org/rss/harriet" harriet poetry)
+	))
+#+end_src
+** Culture Feeds
+#+begin_src emacs-lisp :tangle ~/.emacs
+(setq culture-feeds
+      '(
+	("https://thebaffler.com/latest/feed" the-baffler lefty news)
+	("https://www.resilience.org/feed/" resillience lefty news)
+	("https://www.newyorker.com/feed/everything" new-yorker lefty)
+	("https://defector.com/feed/" defector lefty)
+	("https://journalofcontroversialideas.org/rss" controvertial-ideas lefty)
+	("https://www.documentjournal.com/category/above-the-fold/rss" document-journal lefty)
+	))
+#+end_src
+
+** Live Feeds
+#+begin_src emacs-lisp :tangle ~/.emacs
+(setq news-live-feeds
+      '(
+	("http://rss.nytimes.com/services/xml/rss/nyt/HomePage.xml" news first)
+	("http://feeds.propublica.org/propublica/main" first)
+	))
+#+end_src
+
+** Local Feeds
+#+begin_src emacs-lisp :tangle ~/.emacs
+(setq local-feeds
+      '(
+	("http://rssfeeds.greenbaypressgazette.com/greenbay/opinion" gb-pg-opinion local)
+	("http://rssfeeds.greenbaypressgazette.com/greenbay/kewaunee" gb-pg-keewaunee local)
+	("http://rssfeeds.greenbaypressgazette.com/greenbay/door" gb-pg-door-county local)
+	("http://rssfeeds.greenbaypressgazette.com/greenbay/oconto" gb-pg-oconto local)
+	("http://rssfeeds.greenbaypressgazette.com/greenbay/news" gb-pg-news local)
+	("http://rssfeeds.greenbaypressgazette.com/greenbay/business" gb-pg-business local)
+	("https://gopresstimes.com/rss" go-press-times local)
+	("http://host.madison.com/search/?f=rss&t=article&c=news/state_and_regional&q=%23wsj&l=25&s=start_time&sd=desc" madison-news local)
+	))
+#+end_src
+
+** Tech Feeds
+#+begin_src emacs-lisp :tangle ~/.emacs
+(setq tech-feeds
+      '(
+	("https://100r.co/links/rss.xml" 100rabbits blog tech)
+	("https://nomasters.io/index.xml" nomasters blog tech)
+	("https://blog.codinghorror.com/rss/" coding-horror tech)
+	("https://www.rtl-sdr.com/feed/" rtl-sdr tech)
+	("https://nullprogram.com/feed/" null-program tech blog emacs)
+	("https://www.theverge.com/policy/rss/index.xml" the-verge tech)
+	("https://wrongbaud.github.io/feed.xml" wrong-baud second tech)
+	("https://usesthis.com/feed.atom" uses-this tech)
+	("https://irreal.org/blog/?feed=rss2" irreal emacs)
+	("https://feeds.sachachua.com/sachac" sachachua emacs)
+	("https://ciechanow.ski/atom.xml" ciechanow tech)
+	("https://cdn.jwz.org/blog/feed/" jwz tech)
+	("https://lwn.net/headlines/rss" lwn tech)
+	("https://blog.onloop.net/rss" onloop tech)
+	("https://blog.oimo.io/rss" oimo tech)
+	("https://johnnydecimal.com/rss.xml" johnnydecimal tech)
+	))
+#+end_src
+
+
+** Combine
+#+begin_src emacs-lisp :tangle ~/.emacs
+(setq elfeed-feeds (append art-feeds
+			   comic-feeds
+			   ;; government-feeds
+			   culture-feeds
+			   local-feeds
+			   mobile-feeds
+			   music-firehose-feeds
+			   news-live-feeds
+			   podcast-feeds
+			   security-feeds
+			   tech-feeds
+			   youtube-feeds))
+#+end_src
+
+** Helper
+#+begin_src emacs-lisp :tangle ~/.emacs
+(defun feed-to-rss2email-feed (feed)
+  (with-temp-buffer (mapcar (lambda (x) (insert (format "[feed.%s]\nurl = %s\n\n"
+							(nth 1 x)
+							(nth 0 x)))) feed)
+		    (kill-region (point-min) (point-max)))
+  )
 #+end_src
 
 * Work Config
