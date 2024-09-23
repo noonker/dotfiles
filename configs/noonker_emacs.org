@@ -73,6 +73,7 @@ Anything in this section can be described in one sentence.
 (use-package transient)
 (use-package emojify
   :config (global-emojify-mode)) ;; Emojis enabled
+(add-hook 'artist-mode-hook (lambda () (setq indent-tabs-mode nil)))
 #+end_src
 
 ** Ace
