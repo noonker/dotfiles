@@ -2044,22 +2044,6 @@ The doom modeline looks better than the stock emacs modeline.
                     :server-id 'yls)))
 #+end_src
 
-
-#+begin_src emacs-lisp :tangle ~/.emacs
-(use-package deferred)
-(use-package hunting-mode
- :straight (:local-repo "~/git/hunting-mode"))
-;; TODO
-;; (add-to-list 'hunting-glyph-hooks
-;; 	       `(,hunting-ipv4-regex-wrapped hunting-misp-ioc-in-misp-p "💢" "💤")
-;; 	       `(,hunting-md5-regex-wrapped hunting-project-hash-contains-p "✅" "❌")
-;; 	       `(,hunting-sha1-regex-wrapped hunting-project-hash-contains-p "✅" "❌")
-;; 	       `(,hunting-sha256-regex-wrapped hunting-project-hash-contains-p "✅" "❌")
-;; )
-;;(hunting-glyph-debug)
-;;(add-hook 'org-mode-hook 'hunting-mode)
-#+end_src
-
 * Finally
 Load my RSS feeds
 #+begin_src emacs-lisp :tangle ~/.emacs
@@ -2277,6 +2261,7 @@ Load my RSS feeds
 	("https://pluralistic.net/feed/" pluralistic tech)
 	("https://seclists.org/rss/fulldisclosure.rss" seclists tech security)
 	("https://www.404media.co/rss" 404media tech security)
+	("https://feeds.feedburner.com/TheHackersNews" thehackernews tech security)
 	))
 #+end_src
 
@@ -2371,6 +2356,7 @@ Load my RSS feeds
 	("https://blog.onloop.net/rss" onloop tech)
 	("https://blog.oimo.io/rss" oimo tech)
 	("https://johnnydecimal.com/rss.xml" johnnydecimal tech)
+	("https://hnrss.org/frontpage" hackernews tech)
 	))
 #+end_src
 
