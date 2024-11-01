@@ -218,7 +218,7 @@ Random global behavior configs
     (pixel-scroll-precision-mode 1)) ;; Smooth Scrolling
 (global-so-long-mode 1) ;; Stop trying to syntax highlight absurdly long strings
 (global-set-key (kbd "C-s") 'swiper)
-(setq mouse-1-click-follows-link nil) ;; don't accidentally click links
+;; (setq mouse-1-click-follows-link nil) ;; don't accidentally click links
 #+end_src
 
 ** Projectile
@@ -1160,6 +1160,8 @@ Clojure + LSP
 (global-set-key (kbd "C-c n r n") 'org-roam-capture)
 (global-set-key (kbd "C-c n r f") 'org-roam-node-find)
 (global-set-key (kbd "C-c n r i") 'org-roam-node-insert)
+
+(evil-global-set-key 'normal "gl" 'org-store-link)
 
 (setq personal/node-types '('ctf
 			    'investigation
@@ -2317,6 +2319,7 @@ Load my RSS feeds
 	("https://blog.oimo.io/rss" oimo tech)
 	("https://johnnydecimal.com/rss.xml" johnnydecimal tech)
 	("https://hnrss.org/frontpage" hackernews tech)
+	("https://fossacademic.tech/feed.xml" fossacademic tech)
 	))
 #+end_src
 
