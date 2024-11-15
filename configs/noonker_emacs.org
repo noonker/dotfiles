@@ -1225,6 +1225,7 @@ Clojure + LSP
 (use-package ob-markdown)
 (use-package mermaid-mode)
 (use-package ob-mermaid)
+(use-package ob-d2)
 #+end_src
 
 *** Org Babel
@@ -1235,6 +1236,7 @@ Clojure + LSP
    (python . t)
    (verb . t)
    (mermaid . t)
+   (d2 . t)
    (plantuml . t)
    (shell . t)
    (sql . t)
