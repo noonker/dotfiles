@@ -1922,12 +1922,6 @@ The doom modeline looks better than the stock emacs modeline.
 ;; When non-nil, always show the register name when recording an evil macro.
 (setq doom-modeline-always-show-macro-register nil)
 
-;; Whether display the mu4e notifications. It requires `mu4e-alert' package.
-(setq doom-modeline-mu4e nil)
-
-;; also enable the start of mu4e-alert
-(if (not im-at-work) (mu4e-alert-enable-mode-line-display))
-
 ;; Whether display the gnus notifications.
 (setq doom-modeline-gnus t)
 
@@ -1982,7 +1976,7 @@ The doom modeline looks better than the stock emacs modeline.
 
 ;; By default, almost all segments are displayed only in the active window. To
 ;; display such segments in all windows, specify e.g.
-(setq doom-modeline-always-visible-segments '(mu4e irc))
+(setq doom-modeline-always-visible-segments '(irc))
 
 ;; Hooks that run before/after the modeline version string is updated
 (setq doom-modeline-before-update-env-hook nil)
@@ -2132,6 +2126,9 @@ Load my RSS feeds
 	("https://www.youtube.com/feeds/videos.xml?channel_id=UCG36u-k09zdIPQh5EEdVgTA" mahogany-music youtube  Mahogany music)
 	("https://www.youtube.com/feeds/videos.xml?channel_id=UCRLZb8PpI9N7COmYqHiDH7A" sofar-sounds youtube music)
 	("https://www.youtube.com/feeds/videos.xml?channel_id=UC_VZvcOjwfLK0BY79tB-moQ" melodart youtube music)
+	("https://www.youtube.com/feeds/videos.xml?channel_id=UC7kIy8fZavEni8Gzl8NLjOQ" alexoconnor youtube)
+	("https://www.youtube.com/feeds/videos.xml?channel_id=UCDIJ45Bba6nzrGL5v8b7fMw" conneromalley youtube)
+	("https://www.youtube.com/feeds/videos.xml?channel_id=UCNAxrHudMfdzNi6NxruKPLw" samharris youtube)
 	("https://www.youtube.com/feeds/videos.xml?channel_id=UCASM0cgfkJxQ1ICmRilfHLw" patrick-boyle youtube music)
 	))
 #+end_src
@@ -2298,6 +2295,7 @@ Load my RSS feeds
 	("https://www.resilience.org/feed/" resillience lefty news)
 	("https://www.newyorker.com/feed/everything" new-yorker lefty)
 	("https://defector.com/feed/" defector lefty)
+	("http://jacobinmag.com/feed" jacobin lefty)
 	("https://journalofcontroversialideas.org/rss" controvertial-ideas lefty)
 	("https://www.documentjournal.com/category/above-the-fold/rss" document-journal lefty)
 	))
