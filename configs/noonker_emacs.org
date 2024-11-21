@@ -778,6 +778,11 @@ Lispy mode makes lisp-mode editing significantly more efficent
   :config
   (evil-collection-init))
 
+(use-package evil-surround
+  :ensure t
+  :config
+  (global-evil-surround-mode 1))
+
 (use-package paredit)
 
 (use-package evil-paredit)
@@ -2246,9 +2251,9 @@ Load my RSS feeds
 	("https://euvsdisinfo.eu/news/rss" eu-disinfo security)
 	("https://www.megabeets.net/rss" megabeets tech)
 	("https://pluralistic.net/feed/" pluralistic tech)
-	("https://seclists.org/rss/fulldisclosure.rss" seclists tech security)
+	("https://seclists.org/rss/fulldisclosure.rss" second seclists tech security)
 	("https://www.404media.co/rss" 404media tech security)
-	("https://feeds.feedburner.com/TheHackersNews" thehackernews tech security)
+	("https://feeds.feedburner.com/TheHackersNews" second thehackernews tech security)
 	))
 #+end_src
 
