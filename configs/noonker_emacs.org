@@ -1624,6 +1624,21 @@ These functions enable options where you can have one buffer of commands to run 
 (use-package rainbow-delimiters)
 #+end_src
 
+** Keycast
+#+begin_src emacs-lisp :tangle ~/.emacs
+(use-package keycast
+  :hook (after-init . keycast-mode)
+  :config
+  (define-minor-mode keycast-mode
+	"Show current command and its key binding in the mode line (fix for use with doom-modeline)."
+	:global t
+	(if keycast-mode
+		(add-hook 'pre-command-hook 'keycast--update t)
+      (remove-hook 'pre-command-hook 'keycast--update)))
+
+  (add-to-list 'global-mode-string '("" keycast-mode-line)))
+#+end_src
+
 ** Misc
 
 These functions are helpers and should be self explanitory
@@ -1986,6 +2001,8 @@ The doom modeline looks better than the stock emacs modeline.
 ;; Hooks that run before/after the modeline version string is updated
 (setq doom-modeline-before-update-env-hook nil)
 (setq doom-modeline-after-update-env-hook nil)
+
+(add-to-list 'global-mode-string '("" mode-line-keycast))
 #+end_src
 
 * AI
@@ -2001,6 +2018,12 @@ The doom modeline looks better than the stock emacs modeline.
 				    :host "localhost:11434"
 				    :stream t
 				    :models '("mixtral:8x7b"))))
+
+(evil-global-set-key 'normal "gsm" 'gptel-menu)
+(evil-global-set-key 'normal "gss" 'gptel-send)
+(evil-global-set-key 'normal "gso" 'gptel)
+(evil-global-set-key 'normal "gsp" 'gptel-system-prompt)
+(evil-global-set-key 'normal "gsc" 'gptel--read-crowdsourced-prompt)
 #+end_src
 
 ** Copilot
