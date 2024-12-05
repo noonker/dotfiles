@@ -799,6 +799,8 @@ Lispy mode makes lisp-mode editing significantly more efficent
   (interactive)
   (save-buffer)
   (kill-current-buffer))
+
+(evil-set-initial-state 'magit-status-mode 'emacs)
 #+end_src
 
 ** SBCL
@@ -2013,7 +2015,6 @@ The doom modeline looks better than the stock emacs modeline.
   :straight (:host github :repo "karthink/gptel" :files ("dist" "*.el"))
   :config
   (setq
-   gptel-model "mixtral"
    gptel-backend (gptel-make-ollama "Ollama"
 				    :host "localhost:11434"
 				    :stream t
