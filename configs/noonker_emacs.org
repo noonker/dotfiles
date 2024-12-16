@@ -801,6 +801,7 @@ Lispy mode makes lisp-mode editing significantly more efficent
   (kill-current-buffer))
 
 (evil-set-initial-state 'magit-status-mode 'emacs)
+(evil-set-initial-state 'kubel-mode 'emacs)
 #+end_src
 
 ** SBCL
@@ -2157,7 +2158,7 @@ Load my RSS feeds
 	("https://www.youtube.com/feeds/videos.xml?channel_id=UC7kIy8fZavEni8Gzl8NLjOQ" alexoconnor youtube)
 	("https://www.youtube.com/feeds/videos.xml?channel_id=UCDIJ45Bba6nzrGL5v8b7fMw" conneromalley youtube)
 	("https://www.youtube.com/feeds/videos.xml?channel_id=UCNAxrHudMfdzNi6NxruKPLw" samharris youtube)
-	("https://www.youtube.com/feeds/videos.xml?channel_id=UCASM0cgfkJxQ1ICmRilfHLw" patrick-boyle youtube music)
+	("https://www.youtube.com/feeds/videos.xml?channel_id=UCASM0cgfkJxQ1ICmRilfHLw" patrick-boyle youtube)
 	))
 #+end_src
 
