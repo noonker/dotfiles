@@ -58,17 +58,6 @@ This section sets up [[https://github.com/radian-software/straight.el][straight.
 	:init (exec-path-from-shell-initialize)))
 #+end_src
 
-
-** One Liners
-
-Anything in this section can be described in one sentence.
-
-#+begin_src emacs-lisp :tangle ~/.emacs
-(use-package magit)
-(use-package transient)
-(add-hook 'artist-mode-hook (lambda () (setq indent-tabs-mode nil)))
-#+end_src
-
 ** Vertico
 
 #+begin_src emacs-lisp :tangle ~/.emacs
@@ -169,7 +158,15 @@ Anything in this section can be described in one sentence.
 Leuven Theme and Comic Mono
 
 #+begin_src emacs-lisp :tangle ~/.emacs
-(load-theme 'leuven t)
+(defvar how-ya-feeling 'dark-tbh)
+
+(cond
+ ((eq how-ya-feeling 'dark-tbh)
+    (use-package cyberpunk-theme)
+     (load-theme 'cyberpunk t))
+  ((eq how-ya-feeling 'burn-my-eyes)
+   (load-theme 'leuven)
+    ))
 
 (set-face-attribute 'default nil :font "JetBrains Mono" :height 150)
 #+end_src
@@ -180,6 +177,7 @@ Random global behavior configs
 
 #+begin_src emacs-lisp :tangle ~/.emacs
 (setq display-line-numbers-type 'relative) ;; Relative line numbers
+(add-hook 'artist-mode-hook (lambda () (setq indent-tabs-mode nil)))
 (global-display-line-numbers-mode) ;; Enable line numbers
 (custom-set-variables '(linum-format 'dynamic)) ;; Automatically align line numbers
 (global-hl-line-mode) ;; Highlight the current line
@@ -236,6 +234,8 @@ Emacs can nearly transparently use .gpg encrypted files in emacs. These settings
 Anything in this section can be described in one sentence.
 
 #+begin_src emacs-lisp :tangle ~/.emacs
+(use-package magit)
+(use-package transient)
 (use-package pass
   :config (global-set-key (kbd "<f12>") 'password-store-copy)) ;; Password Store
 (use-package plantuml-mode) ;; Define graphs in code
@@ -519,7 +519,6 @@ IRC for Emacs
               ("C-c C-w" . elfeed-tube-mpv-where)))
 #+end_src
 
-
 ** Gnus
 
 Email client for emacs
@@ -535,6 +534,13 @@ Email client for emacs
 						  (reply-to-text	. (text)))
 		   org-msg-convert-citation t)
 	     (org-msg-mode))
+#+end_src
+
+** Mastodon
+#+begin_src emasc-lisp :tangle ~/.emacs
+(use-package mastodon)
+(setq mastodon-instance-url "https://infosec.exchange"
+      mastodon-active-user "noonker")
 #+end_src
 
 ** Emacs Lisp Packages
@@ -1133,7 +1139,6 @@ Clojure + LSP
 (setq org-format-latex-options (plist-put org-format-latex-options :scale 2.0))
 #+end_src
 
-
 ** Org Mode
 
 *** Verb
@@ -1585,16 +1590,9 @@ These functions enable options where you can have one buffer of commands to run 
 (global-set-key (kbd "C-c C-.") `cnc-from-file)
 #+end_src
 
-
 ** Typit
 #+begin_src emacs-lisp :tangle ~/.emacs
 (use-package speed-type)
-#+end_src
-
-** Rainbow Delimeters
-
-#+begin_src emacs-lisp :tangle ~/.emacs
-(use-package rainbow-delimiters)
 #+end_src
 
 ** Misc
@@ -1964,7 +1962,6 @@ The doom modeline looks better than the stock emacs modeline.
 #+end_src
 
 * AI
-
 ** ChatGPT
 #+begin_src emacs-lisp :tangle ~/.emacs
 (use-package gptel
