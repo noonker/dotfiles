@@ -64,23 +64,9 @@ This section sets up [[https://github.com/radian-software/straight.el][straight.
 Anything in this section can be described in one sentence.
 
 #+begin_src emacs-lisp :tangle ~/.emacs
-(use-package iedit) ;; Find and edit multiple occurances
-(use-package ibuffer
-  :config
-  (global-set-key (kbd "C-x C-b") 'ibuffer)
-  ) ;; Advanced buffer list
 (use-package magit)
 (use-package transient)
-(use-package emojify
-  :config (global-emojify-mode)) ;; Emojis enabled
 (add-hook 'artist-mode-hook (lambda () (setq indent-tabs-mode nil)))
-#+end_src
-
-** Ace
-
-#+begin_src emacs-lisp :tangle ~/.emacs
-(use-package avy
-  :init (define-key global-map (kbd "M-p") 'avy-goto-char-2))
 #+end_src
 
 ** Vertico
@@ -214,8 +200,6 @@ Random global behavior configs
 (setq auto-save-file-name-transforms '((".*" "~/.emacs.d/auto-save-list/" t))) ;; Store autosaves in this folder instead of next to the file
 (setq inhibit-startup-screen t) ;; Don't show the starup screen
 (setq create-lockfiles nil) ;; I don't work on systems where multiple people are editing the same files with emacs.
-(if (version< "29.0" emacs-version)
-    (pixel-scroll-precision-mode 1)) ;; Smooth Scrolling
 (global-so-long-mode 1) ;; Stop trying to syntax highlight absurdly long strings
 (global-set-key (kbd "C-s") 'swiper)
 ;; (setq mouse-1-click-follows-link nil) ;; don't accidentally click links
@@ -226,6 +210,7 @@ Random global behavior configs
 Projectile enriches Emacs's ability to understand git projects
 
 #+begin_src emacs-lisp :tangle ~/.emacs
+(use-package ag)
 (use-package projectile
   :bind (("s-p" . projectile-command-map)
 	 ("C-c p" . projectile-command-map))
@@ -251,7 +236,6 @@ Emacs can nearly transparently use .gpg encrypted files in emacs. These settings
 Anything in this section can be described in one sentence.
 
 #+begin_src emacs-lisp :tangle ~/.emacs
-(use-package ag)
 (use-package pass
   :config (global-set-key (kbd "<f12>") 'password-store-copy)) ;; Password Store
 (use-package plantuml-mode) ;; Define graphs in code
@@ -372,10 +356,13 @@ Tramp allows for nearly transparent editing of files on remote machines. Run =C-
 (setq projectile-dynamic-mode-line nil)
 #+end_src
 
-** Vterm
+** Eat
 #+begin_src emacs-lisp :tangle ~/.emacs
-(use-package vterm)
+(use-package eat)
+(defun vterm ()
+  (eat))
 #+end_src
+
 ** Dired
 
 #+begin_src emacs-lisp  :tangle ~/.emacs
@@ -648,14 +635,6 @@ Magit is git porcelain for Emacs
 (use-package counsel)
 #+end_src
 
-** Alert
-#+begin_src  emacs-lisp :tangle ~/.emacs
-(use-package alert
-  :config
-  (if (eq system-type 'darwin)
-      (setq alert-default-style 'osx-notifier)))
-#+end_src
-
 ** Kubernetes
 
 #+begin_src emacs-lisp :tangle ~/.emacs
@@ -880,11 +859,6 @@ On MacOS you need to add =-DCMAKE_PREFIX_PATH=/usr/local/opt/llvm= after =cmake=
 
 (add-to-list 'company-backends 'company-c-headers)
 (setq wdired-allow-to-change-permissions t)
-#+end_src
-
-** Swift
-#+begin_src emacs-lisp :tangle ~/.emacs
-(use-package swift-mode)
 #+end_src
 
 ** Rust
@@ -1254,8 +1228,11 @@ Clojure + LSP
    (typescript . t)
    (latex . t)
    (C . t)
+   (org . t)
    (clojure . t)
    ))
+
+(use-package ox-slack)
 
 (setq org-babel-clojure-backend 'cider)
 
@@ -1614,32 +1591,10 @@ These functions enable options where you can have one buffer of commands to run 
 (use-package speed-type)
 #+end_src
 
-** Atomic Chrome
-#+begin_src emacs-lisp :tangle ~/.emacs
-(use-package atomic-chrome)
-(require 'atomic-chrome)
-(atomic-chrome-start-server)
-#+end_src
-
 ** Rainbow Delimeters
 
 #+begin_src emacs-lisp :tangle ~/.emacs
 (use-package rainbow-delimiters)
-#+end_src
-
-** Keycast
-#+begin_src emacs-lisp :tangle ~/.emacs
-(use-package keycast
-  ;; :hook (after-init . keycast-mode)
-  :config
-  (define-minor-mode keycast-mode
-	"Show current command and its key binding in the mode line (fix for use with doom-modeline)."
-	:global t
-	(if keycast-mode
-		(add-hook 'pre-command-hook 'keycast--update t)
-      (remove-hook 'pre-command-hook 'keycast--update)))
-
-  (add-to-list 'global-mode-string '("" keycast-mode-line)))
 #+end_src
 
 ** Misc
@@ -2028,23 +1983,6 @@ The doom modeline looks better than the stock emacs modeline.
 (evil-global-set-key 'normal "gsc" 'gptel--read-crowdsourced-prompt)
 #+end_src
 
-** Copilot
-
-#+begin_src emacs-lisp :tangle ~/.emacs
-(if (not im-at-work)
-
-    (use-package copilot
-      :straight (:host github :repo "zerolfx/copilot.el" :files ("dist" "*.el"))
-      :ensure t
-      :bind (:map copilot-completion-map
-		  ("C-c c c" . #'copilot-accept-completion)
-		  ("C-c c n" .  #'copilot-next-completion))
-      :init
-      (add-hook 'prog-mode-hook #'copilot-mode)
-      )
-  )
-#+end_src
-
 * Hunting
 #+begin_src emacs-lisp :tangle ~/.emacs
 (use-package yara-mode)
@@ -2095,7 +2033,6 @@ Load my RSS feeds
 	("https://www.youtube.com/feeds/videos.xml?channel_id=UCGaVdbSav8xWuFWTadK6loA" vlogbrothers youtube)
 	("https://www.youtube.com/feeds/videos.xml?channel_id=UCy-AwzC0US6T_DALeiqnLHQ" yan-z youtube music)
 	("https://www.youtube.com/feeds/videos.xml?channel_id=UC4eYXhJI4-7wSWc8UNRwD4A" tiny-desk youtube  music)
-	("https://www.youtube.com/feeds/videos.xml?channel_id=UCG29FnXZm4F5U8xpqs1cs1Q" empire-files youtube )
 	("https://www.youtube.com/feeds/videos.xml?channel_id=UCvB3solmhqtgDeLpD-yTtfg" hickok45 youtube )
 	("https://www.youtube.com/feeds/videos.xml?channel_id=UCdBnxYbzwu5CypEdMfu4_jA" leeya-katrina youtube music )
 	("https://www.youtube.com/feeds/videos.xml?channel_id=UCzIlUODCqKo7Og_OIp66x9g" lucy-riddett youtube music)
@@ -2360,7 +2297,6 @@ Load my RSS feeds
 	("https://fossacademic.tech/feed.xml" fossacademic tech)
 	))
 #+end_src
-
 
 ** Combine
 #+begin_src emacs-lisp :tangle ~/.emacs
