@@ -1971,7 +1971,7 @@ The doom modeline looks better than the stock emacs modeline.
    gptel-backend (gptel-make-ollama "Ollama"
 				    :host "localhost:11434"
 				    :stream t
-				    :models '("mixtral:8x7b"))))
+				    :models '("mixtral:instruct"))))
 
 (evil-global-set-key 'normal "gsm" 'gptel-menu)
 (evil-global-set-key 'normal "gss" 'gptel-send)
