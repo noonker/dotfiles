@@ -2151,6 +2151,7 @@ Load my RSS feeds
 #+begin_src emacs-lisp :tangle ~/.emacs
 (setq security-feeds
       '(
+       ("https://www.amnesty.org/en/latest/feed/" amnesty security second)
 	("https://media.ccc.de/updates.rdf" ccc security second)
 	("https://www.us-cert.gov/ncas/alerts.xml" us-cert-alerts security second)
 	("https://www.cisa.gov/cybersecurity-advisories/all.xml" us-certs-all security second)
