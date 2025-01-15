@@ -2188,6 +2188,9 @@ Load my RSS feeds
 	("http://feeds.99percentinvisible.org/99percentinvisible" 99pi podcast)
 	("https://feeds.buzzsprout.com/244372.rss" crazy-town podcast)
 	("http://rss.acast.com/nature" nature podcast)
+	("https://feeds.eff.org/howtofixtheinternet" how-to-fix-the-internet podcast)
+	("https://feeds.megaphone.fm/search-engine" search-engine podcast)
+	("https://feeds.megaphone.fm/TBIEA2761282490" four-oh-four podcast)
 	("http://feeds.feedburner.com/birdnote/OYfP" bird-note podcast) 
 	("https://www.kcrw.com/culture/shows/nocturne/rss.xml" nocturne podcast)
 	("http://feeds.wnyc.org/onthemedia" on-the-media podcast)
@@ -2201,7 +2204,6 @@ Load my RSS feeds
 	("https://feeds.simplecast.com/p7Q9jZ0K" poem-of-the-day podcast)
 	("https://www.npr.org/rss/podcast.php?id=510019" all-songs-considered podcast)
 	("https://feeds.megaphone.fm/darknetdiaries" darknet-diaries podcast)
-	("https://feeds.acast.com/public/shows/intelligence-fusion" intelligence-fusion podcast)
 	))
 #+end_src
 
