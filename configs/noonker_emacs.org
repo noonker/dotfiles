@@ -2379,8 +2379,10 @@ Load my RSS feeds
 	("https://johnnydecimal.com/rss.xml" johnnydecimal tech)
 	("https://hnrss.org/frontpage" hackernews tech)
 	("https://fossacademic.tech/feed.xml" fossacademic tech)
+	("https://www.stallman.org/rss/rss.xml" stallman emacs tech gnu)
 	))
 #+end_src
+
 
 ** Combine
 #+begin_src emacs-lisp :tangle ~/.emacs
