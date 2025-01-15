@@ -995,6 +995,35 @@ Python + LSP
   (setq elpy-shell-starting-directory 'current-directory) ;; default is 'project-root 
   (setenv "WORKON_HOME" (file-name-concat (file-truename "~") ".virtualenvs"))
   (setq python-shell-interpreter "python"))
+
+(add-hook 'elpy-mode-hook (lambda ()
+                            (add-hook 'before-save-hook
+                                      'elpy-black-fix-code nil t)))
+
+(use-package dap-mode
+  :after lsp-mode
+  :commands dap-debug
+  :hook ((python-mode . dap-ui-mode)
+	 (python-mode . dap-mode))
+  :config
+  (eval-when-compile
+    (require 'cl))
+  (require 'dap-python)
+  (require 'dap-lldb)
+  (dap-auto-configure-mode)
+  (setq dap-python-debugger 'debugpy)
+  )
+
+(evil-define-key 'normal python-mode-map "gjd" 'dap-debug)
+(evil-define-key 'normal python-mode-map "gjl" 'dap-continue)
+(evil-define-key 'normal python-mode-map "gjj" 'dap-step-in)
+(evil-define-key 'normal python-mode-map "gjk" 'dap-step-out)
+(evil-define-key 'normal python-mode-map "gjn" 'dap-next)
+(evil-define-key 'normal python-mode-map "gjD" 'dap-disconnect)
+(evil-define-key 'normal python-mode-map "gjb" 'dap-breakpoint-toggle)
+(evil-define-key 'normal python-mode-map "gjr" 'dap-ui-repl)
+(evil-define-key 'visual python-mode-map "gje" 'dap-eval-region)
+(evil-define-key 'visual python-mode-map "gjr" 'dap-eval-variable-in-buffer)
 #+end_src
 
 ** Platformio
