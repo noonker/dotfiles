@@ -483,6 +483,7 @@ IRC for Emacs
 (use-package elfeed
   :bind (:map elfeed-search-mode-map
 	      ("m" . elfeed-mail-todo)
+	      ("v" . elfeed-mpv-open)
 	      ("t" . elfeed-w3m-open)
 	      ("w" . elfeed-eww-open)
 	      ("f" . elfeed-firefox-open)
@@ -502,6 +503,18 @@ IRC for Emacs
 	       do (todo it (elfeed-entry-link entry)))
       (mapc #'elfeed-search-update-entry entries)
       (unless (use-region-p) (forward-line))))
+
+  (defun elfeed-mpv-open (&optional use-generic-p)
+    (interactive "P")
+    (let ((entries (elfeed-search-selected)))
+      (cl-loop for entry in entries
+	       do (elfeed-untag entry 'unread)
+	       when (caar (elfeed-entry-enclosures entry))
+	       do (async-shell-command (format "echo \"%s\" && mpv \"%s\"" it it)
+				       (format "*elfeed-mpv: %s*" it)))
+      (mapc #'elfeed-search-update-entry entries)
+      (unless (use-region-p) (forward-line)))
+    )
 
   (defun elfeed-eww-open (&optional use-generic-p)
     "open with eww"
