@@ -52,6 +52,10 @@ This section sets up [[https://github.com/radian-software/straight.el][straight.
   "im-at-work can be used to conditionally disable code which may not be suitable for work environments. ChatGPT, copilot, etc"
   :type '(boolean))
 
+(if (string= (system-name)
+	     "blep")
+    (setq im-at-work nil))
+
 (if (string= (current-platform)
 	     "mac")
       (use-package exec-path-from-shell
@@ -209,7 +213,10 @@ Leuven Theme and Comic Mono
    (load-theme 'leuven)
     ))
 
-(set-face-attribute 'default nil :font "JetBrains Mono" :height 150)
+;; Better font on my home computer :)
+(if im-at-work
+    (set-face-attribute 'default nil :font "JetBrains Mono" :height 150)
+(set-face-attribute 'default nil :font "Comic Code" :height 130))
 #+end_src
 
 ** Global Config
