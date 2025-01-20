@@ -54,7 +54,8 @@ This section sets up [[https://github.com/radian-software/straight.el][straight.
 
 (if (string= (system-name)
 	     "blep")
-    (setq im-at-work nil))
+    (progn (setq im-at-work nil)
+	   (add-to-list 'tramp-remote-path 'tramp-own-remote-path))
 
 (if (string= (current-platform)
 	     "mac")
