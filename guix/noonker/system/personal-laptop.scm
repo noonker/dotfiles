@@ -9,6 +9,7 @@
 (define-module (noonker system personal-laptop)
   #:use-module (gnu)
   #:use-module (gnu packages linux)
+  #:use-module (gnu packages ssh)
   #:use-module (guix records)
   #:use-module (noonker services boltd)
   #:use-module (noonker services podman)
@@ -51,6 +52,7 @@
   ;; under their own account: use 'guix search KEYWORD' to search
   ;; for packages and 'guix install PACKAGE' to install a package.
    (packages (append (list (specification->package "nss-certs"))
+		     (list bolt openssh)
 		     %base-packages))
 
   ;; Below is the list of system services.  To search for available

@@ -48,6 +48,7 @@
                                            "kubectl"
                                            "font-jetbrains-mono"
                                            "pinentry"
+					   "gnuradio"
                                            "file"
                                            "gnome-tweaks"
                                            "password-store"
