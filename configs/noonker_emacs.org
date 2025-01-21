@@ -54,8 +54,7 @@ This section sets up [[https://github.com/radian-software/straight.el][straight.
 
 (if (string= (system-name)
 	     "blep")
-    (progn (setq im-at-work nil)
-	   (add-to-list 'tramp-remote-path 'tramp-own-remote-path))
+    (setq im-at-work nil))
 
 (if (string= (current-platform)
 	     "mac")
@@ -390,6 +389,11 @@ Tramp allows for nearly transparent editing of files on remote machines. Run =C-
 
 #+begin_src emacs-lisp :tangle ~/.emacs
 ;;; no vc in tramp
+(require 'tramp)
+
+(if (not im-at-work)
+    (add-to-list 'tramp-remote-path 'tramp-own-remote-path))
+
 (setq remote-file-name-inhibit-cache nil)
 (setq vc-ignore-dir-regexp
       (format "\\(%s\\)\\|\\(%s\\)"
