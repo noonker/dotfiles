@@ -44,6 +44,7 @@
                                            "make"
                                            "openssh"
                                            "git"
+					   "mpv"
                                            "nss-certs"
                                            "kubectl"
                                            "font-jetbrains-mono"
