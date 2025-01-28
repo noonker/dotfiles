@@ -154,7 +154,8 @@ This section sets up [[https://github.com/radian-software/straight.el][straight.
 (use-package consult-ag)
 (use-package consult-dir)
 (use-package consult-org-roam)
-(global-set-key (kbd "C-2") 'consult-buffer)
+(global-set-key (kbd "C-2") #'consult-buffer)
+(global-set-key (kbd "C-3") #'yank-from-kill-ring)
 
 (use-package corfu
   ;; Optional customizations
@@ -294,11 +295,50 @@ Anything in this section can be described in one sentence.
 Emacs shell settings
 
 #+begin_src emacs-lisp :tangle ~/.emacs
+;; https://timmydouglas.com/2020/12/17/eshell-counsel.html
+(defun timmy/counsel-eshell-history-action (cmd)
+  "Insert cmd into the buffer"
+  (interactive)
+  (insert cmd))
+
+(defun timmy/counsel-eshell-history (&optional initial-input)
+  "Find command from eshell history.
+INITIAL-INPUT can be given as the initial minibuffer input."
+  (interactive)
+    (ivy-read "Find cmd: " (timmy/eshell-history-list)
+              :initial-input initial-input
+              :action #'timmy/counsel-eshell-history-action
+              :caller 'timmy/counsel-eshell-history))
+
+(defun timmy/eshell-history-list ()
+  "return the eshell history as a list"
+  (and (or (not (ring-p eshell-history-ring))
+	   (ring-empty-p eshell-history-ring))
+       (error "No history"))
+  (let* ((index (1- (ring-length eshell-history-ring)))
+	 (ref (- (ring-length eshell-history-ring) index))
+	 (items (list)))
+    (while (>= index 0)
+      (setq items (cons (format "%s" (eshell-get-history index)) items)
+	    index (1- index)
+	    ref (1+ ref)))
+    items))
+;; end
+
 (use-package eshell-git-prompt)
+
 (use-package eshell
   :bind (("C-c e" . counsel-esh-history)
-	 ("C-<tab>" . yas-expand-from-trigger-key))
-  )
+	 ("C-<tab>" . yas-expand-from-trigger-key)
+	 ("C-r" . timmy/counsel-eshell-history)
+	 ))
+
+(add-hook 'eshell-mode-hook
+          (lambda ()
+            (progn
+	      (evil-local-set-key 'normal (kbd "gr") #'timmy/counsel-eshell-history)
+	      (evil-local-set-key 'insert (kbd "C-r") #'timmy/counsel-eshell-history))))
+
 (eshell-git-prompt-use-theme 'robbyrussell) ;; Eshell theme
 
 (setq eshell-error-if-no-glob t
@@ -378,8 +418,14 @@ Emacs shell settings
   (eat-eshell-mode)
 )
 
-(add-hook `eat-mode-hook (lambda () (setq-local scroll-conservatively 10000)))
+(use-package esh-autosuggest
+  :hook (eshell-mode . esh-autosuggest-mode)
+  ;; If you have use-package-hook-name-suffix set to nil, uncomment and use the
+  ;; line below instead:
+  ;; :hook (eshell-mode-hook . esh-autosuggest-mode)
+  :ensure t)
 
+(add-hook `eat-mode-hook (lambda () (setq-local scroll-conservatively 10000)))
 #+end_src
 
 
@@ -2075,19 +2121,24 @@ The doom modeline looks better than the stock emacs modeline.
 ** ChatGPT
 #+begin_src emacs-lisp :tangle ~/.emacs
 (use-package gptel
-  :straight (:host github :repo "karthink/gptel" :files ("dist" "*.el"))
-  :config
-  (setq
-   gptel-backend (gptel-make-ollama "Ollama"
-				    :host "localhost:11434"
-				    :stream t
-				    :models '("mixtral:instruct"))))
+  :straight (:host github :repo "karthink/gptel" :files ("dist" "*.el")))
+
+(let ((mixtral (gptel-make-ollama "Ollama"
+		 :host "localhost:11434"
+		 :stream t
+		 :models '("mixtral:instruct"))))
+  (if (not im-at-work)
+      (set gptel-backend mixtral)
+    nil))
 
 (evil-global-set-key 'normal "gsm" 'gptel-menu)
 (evil-global-set-key 'normal "gss" 'gptel-send)
 (evil-global-set-key 'normal "gso" 'gptel)
 (evil-global-set-key 'normal "gsp" 'gptel-system-prompt)
 (evil-global-set-key 'normal "gsc" 'gptel--read-crowdsourced-prompt)
+
+(global-set-key (kbd "C-'") #'gptel-send)
+
 #+end_src
 
 * Hunting
