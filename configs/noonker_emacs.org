@@ -405,27 +405,12 @@ INITIAL-INPUT can be given as the initial minibuffer input."
   (magit-status (pop args) nil)
   (eshell/echo))   ;; The echo command suppresses output
 
-(use-package eat
-  :straight (:type git
-	     :host codeberg
-             :repo "akib/emacs-eat"
-	     :files ("*.el" ("term" "term/*.el") "*.texi"
-		     "*.ti" ("terminfo/e" "terminfo/e/*")
-		     ("terminfo/65" "terminfo/65/*")
-		     ("integration" "integration/*")
-		     (:exclude ".dir-locals.el" "*-tests.el")))
-  :config
-  (eat-eshell-mode)
-)
-
 (use-package esh-autosuggest
   :hook (eshell-mode . esh-autosuggest-mode)
   ;; If you have use-package-hook-name-suffix set to nil, uncomment and use the
   ;; line below instead:
   ;; :hook (eshell-mode-hook . esh-autosuggest-mode)
   :ensure t)
-
-(add-hook `eat-mode-hook (lambda () (setq-local scroll-conservatively 10000)))
 #+end_src
 
 
@@ -470,11 +455,9 @@ Tramp allows for nearly transparent editing of files on remote machines. Run =C-
 (setq projectile-dynamic-mode-line nil)
 #+end_src
 
-** Eat
+** Vterm
 #+begin_src emacs-lisp :tangle ~/.emacs
-(use-package eat)
-(defun vterm ()
-  (eat))
+(use-package vterm)
 #+end_src
 
 ** Dired
