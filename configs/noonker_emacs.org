@@ -503,6 +503,22 @@ Drone Zone >>> All Else
 
 #+begin_src emacs-lisp :tangle ~/.emacs
 (use-package somafm)
+
+(defun somafm-volume-control (steps direction)
+  (let ((steps (if steps steps 1))
+	(direction-key (if (string= "up" direction)
+			   "0"
+			 "9")))
+    (dotimes (foo steps)
+      (process-send-string "somafm player" direction-key))))
+
+(defun somafm-volume-up (arg)
+  (interactive "P")
+  (somafm-volume-control arg "up"))
+
+(defun somafm-volume-down (arg)
+  (interactive "P")
+  (somafm-volume-control arg "down"))
 #+end_src
 
 ** ERC
