@@ -23,6 +23,7 @@ fi
 # source /etc/bashrc
 
 PATH="$PATH:$HOME/.local/share/yabridge"
+PATH="$PATH:$HOME/.local/bin"
 
 # Adjust the prompt depending on whether we're in 'guix environment'.
 if [ -n "$GUIX_ENVIRONMENT" ]

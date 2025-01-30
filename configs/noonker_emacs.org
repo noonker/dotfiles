@@ -1164,7 +1164,7 @@ Clojure + LSP
 	cider-overlays-use-font-lock t)
   (cider-repl-toggle-pretty-printing))
 
-(add-hook 'clojure-mode-hook #'lispy-mode)
+(add-hook 'clojure-mode-hook #'paredit-mode)
 (add-hook 'clojure-mode-hook #'subword-mode)
 (add-hook 'clojure-mode-hook #'eldoc-mode)
 #+end_src
@@ -1293,6 +1293,9 @@ Clojure + LSP
   (ox-extras-activate '(ignore-headlines)))
 
 (setq org-format-latex-options (plist-put org-format-latex-options :scale 2.0))
+
+
+(evil-define-key 'normal org-mode-map "gjl" 'org-latex-preview)
 #+end_src
 
 ** Org Mode

@@ -45,6 +45,7 @@
                                            "openssh"
                                            "git"
 					   "mpv"
+					   "imagemagick"
                                            "nss-certs"
                                            "kubectl"
                                            "font-jetbrains-mono"
@@ -56,7 +57,13 @@
                                            "flatpak"
                                            "emacs-next"
                                            "signal-desktop"
-                                           "firefox")))
+                                           "firefox"
+					   "clojure"
+					   "coreutils"
+					   "openjdk"
+					   "clojure-tools"
+					   )))
+ 
 
   ;; Below is the list of Home services.  To search for available
   ;; services, run 'guix home search KEYWORD' in a terminal.
@@ -65,9 +72,10 @@
                   (home-bash-configuration
                    (aliases '(("grep" . "grep --color=auto") ("ll" . "ls -l")
                               ("ls" . "ls -p --color=auto")))
+		   (environment-variables '(("PATH" . "$PATH:$HOME/.local/bin")))
                    (bashrc (list (local-file
-                                  "/home/person/git/dotfiles/guix/noonker/home//.bashrc"
+                                  "/home/person/git/dotfiles/guix/noonker/home/.bashrc"
                                   "bashrc")))
                    (bash-profile (list (local-file
-                                        "/home/person/git/dotfiles/guix/noonker/home//.bash_profile"
+                                        "/home/person/git/dotfiles/guix/noonker/home/.bash_profile"
                                         "bash_profile"))))))))
