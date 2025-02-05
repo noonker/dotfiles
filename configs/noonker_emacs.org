@@ -2276,6 +2276,7 @@ Load my RSS feeds
 	("https://feeds.simplecast.com/p7Q9jZ0K" poem-of-the-day podcast)
 	("https://www.npr.org/rss/podcast.php?id=510019" all-songs-considered podcast)
 	("https://feeds.megaphone.fm/darknetdiaries" darknet-diaries podcast)
+	("https://feeds.simplecast.com/dxZsm5kX" pod-save-america podcast)
 	))
 #+end_src
 
