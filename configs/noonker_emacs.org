@@ -1045,6 +1045,8 @@ On MacOS you need to add =-DCMAKE_PREFIX_PATH=/usr/local/opt/llvm= after =cmake=
 Python + LSP
 
 #+begin_src emacs-lisp :tangle ~/.emacs
+(use-package jupyter)
+
 (use-package envrc
   :hook (after-init . envrc-global-mode))
 
@@ -1327,8 +1329,17 @@ Clojure + LSP
 (use-package hl-todo)
 (setq org-src-fontify-natively t)
 
+(defun refile-to-today ()
+  "Refile current heading to Today.org/Today without prompting"
+  (interactive)
+  (let ((pos (save-window-excursion
+               (find-file "Today.org")
+               (org-find-exact-headline-in-buffer "Today"))))
+    (org-refile nil nil (list "Today" "Today.org" nil pos))))
+
 (global-set-key (kbd "C-c a") 'org-agenda)
 (global-set-key (kbd "C-c n n") 'org-capture)
+(global-set-key (kbd "C-c n c") 'refile-to-today)
 (global-set-key (kbd "C-c n r n") 'org-roam-capture)
 (global-set-key (kbd "C-c n r f") 'org-roam-node-find)
 (global-set-key (kbd "C-c n r i") 'org-roam-node-insert)
@@ -1370,7 +1381,7 @@ Clojure + LSP
 (use-package ob-markdown)
 (use-package mermaid-mode)
 (use-package ob-mermaid)
-(use-package ob-d2)
+(use-package ob-mongo)
 #+end_src
 
 *** Org Babel
@@ -1381,7 +1392,6 @@ Clojure + LSP
    (python . t)
    (verb . t)
    (mermaid . t)
-   (d2 . t)
    (plantuml . t)
    (shell . t)
    (sql . t)
@@ -1393,6 +1403,7 @@ Clojure + LSP
    (C . t)
    (org . t)
    (clojure . t)
+   (jupyter . t) 
    ))
 
 (use-package ox-slack)
@@ -2455,6 +2466,7 @@ Load my RSS feeds
 	("https://hnrss.org/frontpage" hackernews tech)
 	("https://fossacademic.tech/feed.xml" fossacademic tech)
 	("https://www.stallman.org/rss/rss.xml" stallman emacs tech gnu)
+	("https://joshblais.com/index.xml" joshua-blais emacs tech)
 	))
 #+end_src
 
