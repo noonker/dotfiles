@@ -313,6 +313,7 @@ Anything in this section can be described in one sentence.
 
 #+begin_src emacs-lisp :tangle ~/.emacs
 (use-package magit)
+(setopt magit-format-file-function #'magit-format-file-nerd-icons)  
 (use-package transient)
 (use-package pass
   :config (global-set-key (kbd "<f12>") 'password-store-copy)) ;; Password Store
