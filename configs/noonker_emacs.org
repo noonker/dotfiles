@@ -302,7 +302,8 @@ Projectile enriches Emacs's ability to understand git projects
 Emacs can nearly transparently use .gpg encrypted files in emacs. These settings enrich it slightly or make it less effort.
 
 #+begin_src emacs-lisp :tangle ~/.emacs
-(setq epa-file-encrypt-to "noonker@gmail.com") ;; Encrypt to my gpg key
+(if (not im-at-work)
+    (setq epa-file-encrypt-to "noonker@gmail.com") ;; Encrypt to my gpg key )
 (setf epa-pinentry-mode 'loopback) ;; No UI popup. Ask for password in modeline
 #+end_src
 
@@ -1411,7 +1412,23 @@ Clojure + LSP
 (use-package ob-markdown)
 (use-package mermaid-mode)
 (use-package ob-mermaid)
-(use-package ob-mongo)
+(setq ob-mermaid-cli-path "/opt/homebrew/bin/mmdc")
+(use-package ob-d2)
+(use-package d2-mode)
+
+(defvar d2-mode-map
+  (let ((map (make-sparse-keymap)))
+    (define-key map (kbd "C-c C-c") 'd2-compile)
+    (define-key map (kbd "C-c C-f") 'd2-compile-file)
+    (define-key map (kbd "C-c C-b") 'd2-compile-buffer)
+    (define-key map (kbd "C-c C-r") 'd2-compile-region)
+    (define-key map (kbd "C-c C-h") 'd2-compile-file-and-browse)
+    (define-key map (kbd "C-c C-j") 'd2-compile-buffer-and-browse)
+    (define-key map (kbd "C-c C-k") 'd2-compile-region-and-browse)
+    (define-key map (kbd "C-c C-o") 'd2-open-browser)
+    (define-key map (kbd "C-x C-o") 'd2-view-current-svg)
+    (define-key map (kbd "C-c C-d") 'd2-open-doc)
+    map))
 #+end_src
 
 *** Org Babel
@@ -1433,7 +1450,8 @@ Clojure + LSP
    (C . t)
    (org . t)
    (clojure . t)
-   (jupyter . t) 
+   (jupyter . t)
+   (d2 . t)
    ))
 
 (use-package ox-slack)
@@ -1530,11 +1548,11 @@ Clojure + LSP
 (setq org-capture-templates
       `(("b" "Backlog" entry (file+headline (lambda () (format "%s/backlog.org" org-agenda-basedir)) "Backlog")
 	 "** TODO %?\n  %i\n  %a")
-	("t" "Today" entry (file+headline (lambda () (format "%s/today.org" org-agenda-basedir)) "Tasks")
+	("t" "Today" entry (file+olp (lambda () (format "%s/today.org" org-agenda-basedir)) "Tasks" "Uncategorized")
 	 "\n** TODO %?\n SCHEDULED: %t")
-	("n" "Now" entry (file+headline (lambda () (format "%s/today.org" org-agenda-basedir)) "Tasks")
+	("n" "Now" entry (file+headline (lambda () (format "%s/today.org" org-agenda-basedir)) ,(if im-at-work "Today" "Tasks"))
 	 "\n** TODO %?\n SCHEDULED: %t" :clock-in t :clock-keep t)
-	("i" "Interrupt" entry (file+headline (lambda () (format "%s/today.org" org-agenda-basedir)) "Tasks")
+	("i" "Interrupt" entry (file+headline (lambda () (format "%s/today.org" org-agenda-basedir)) ,(if im-at-work "Today" "Tasks"))
 	 "\n** TODO %?\n SCHEDULED: %t" :clock-in t :clock-resume t)
 	("c" "Cookbook" entry (file "~/org/cookbook.org")
 	 "%(org-chef-get-recipe-from-url)"
