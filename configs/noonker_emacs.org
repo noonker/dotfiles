@@ -303,7 +303,8 @@ Emacs can nearly transparently use .gpg encrypted files in emacs. These settings
 
 #+begin_src emacs-lisp :tangle ~/.emacs
 (if (not im-at-work)
-    (setq epa-file-encrypt-to "noonker@gmail.com") ;; Encrypt to my gpg key )
+    (setq epa-file-encrypt-to "noonker@gmail.com") ;; Encrypt to my gpg key
+)
 (setf epa-pinentry-mode 'loopback) ;; No UI popup. Ask for password in modeline
 #+end_src
 
