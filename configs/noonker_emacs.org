@@ -2235,6 +2235,8 @@ Load my RSS feeds
 	("https://www.youtube.com/feeds/videos.xml?channel_id=UCDsElQQt_gCZ9LgnW-7v-cQ" kirsten-dirksen youtube)
 	("https://www.youtube.com/feeds/videos.xml?channel_id=UCsXVk37bltHxD1rDPwtNM8Q" kurzgesagt youtube)
 	("https://www.youtube.com/feeds/videos.xml?channel_id=UCJXa3_WNNmIpewOtCHf3B0g" laurie-wired youtube)
+	("https://www.youtube.com/feeds/videos.xml?channel_id=UCUyeluBRhGPCW4rPe_UvBZQ" prime-time youtube)
+	("https://www.youtube.com/feeds/videos.xml?channel_id=UCwHwDuNd9lCdA7chyyquDXw" bread-on-penguins youtube)
 	("https://www.youtube.com/feeds/videos.xml?channel_id=UC8gFadPgK2r1ndqLI04Xvvw" maangchi youtube)
 	("https://www.youtube.com/feeds/videos.xml?channel_id=UCV5vCi3jPJdURZwAOO_FNfQ" thought-emporium youtube)
 	("https://www.youtube.com/feeds/videos.xml?channel_id=UCe2JAC5FUfbxLCfAvBWmNJA" food-lab youtube)
