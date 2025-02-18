@@ -947,17 +947,6 @@ Lispy mode makes lisp-mode editing significantly more efficent
 (evil-set-initial-state 'kubel-mode 'emacs)
 #+end_src
 
-** SBCL
-
-Common Lisp configs
-
-#+begin_src emacs-lisp :tangle ~/.emacs
-(setq slime-contribs '(slime-fancy))
-(if (file-exists-p "~/.roswell/helper.el")
-    (load (expand-file-name "~/.roswell/helper.el")))
-(setq inferior-lisp-program "ros -Q run")
-#+end_src
-
 ** C/C++ / Platformio-DCMAKE_PREFIX_PATH=/usr/local/opt/llvm
 
 On MacOS you need to add =-DCMAKE_PREFIX_PATH=/usr/local/opt/llvm= after =cmake= to run =install-irony-server= per [[https://github.com/Sarcasm/irony-mode/issues/167][this]] git issue.
@@ -2185,12 +2174,14 @@ The doom modeline looks better than the stock emacs modeline.
 (use-package gptel
   :straight (:host github :repo "karthink/gptel" :files ("dist" "*.el")))
 
-(let ((mixtral (gptel-make-ollama "Ollama"
-		 :host "localhost:11434"
+(let ((anthropic (gptel-make-anthropic "Anthropic" 
 		 :stream t
-		 :models '("mixtral:instruct"))))
+		 :key (password-store-get "Internet/anthropic"))))
   (if (not im-at-work)
-      (set gptel-backend mixtral)
+      (progn
+       (setq gptel-model 'claude-3-5-sonnet-20241022)
+       (setq gptel-backend anthropic)
+       )
     nil))
 
 (evil-global-set-key 'normal "gsm" 'gptel-menu)
