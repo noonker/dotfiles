@@ -489,7 +489,20 @@ Tramp allows for nearly transparent editing of files on remote machines. Run =C-
 
 ** Vterm
 #+begin_src emacs-lisp :tangle ~/.emacs
-(use-package vterm)
+(straight-use-package
+ '(eat :type git
+       :host codeberg
+       :repo "akib/emacs-eat"
+       :files ("*.el" ("term" "term/*.el") "*.texi"
+               "*.ti" ("terminfo/e" "terminfo/e/*")
+               ("terminfo/65" "terminfo/65/*")
+               ("integration" "integration/*")
+               (:exclude ".dir-locals.el" "*-tests.el"))))
+
+(add-hook `eat-mode-hook (lambda () (setq-local scroll-conservatively 10000)))
+
+(defun vterm ()
+  eat)
 #+end_src
 
 ** Dired
