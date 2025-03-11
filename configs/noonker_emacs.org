@@ -36,36 +36,6 @@ This section sets up [[https://github.com/radian-software/straight.el][straight.
 #+end_src
 
 * Behavior
-** Activities.el
-#+begin_src emacs-lisp :tangle ~/.emacs
-(use-package activities
-  :init
-  (activities-mode)
-  ;; Prevent `edebug' default bindings from interfering.
-  (setq edebug-inhibit-emacs-lisp-mode-bindings t)
-  
-  (defun noonker/activities-switch (arg)
-    (interactive "P")
-    (let ((activity (activities-completing-read)))
-      (activities--switch activity)
-      (run-hook-with-args 'activities-after-switch-functions activity)
-      (if arg
-	  (activities-resume activity :resetp t)
-	(activities-resume activity))))
-  
-  :bind
-  (("C-4" . noonker/activities-switch)
-   ("C-x C-a C-n" . activities-new)
-   ("C-x C-a C-d" . activities-define)
-   ("C-x C-a C-a" . activities-resume)
-   ("C-x C-a C-s" . activities-suspend)
-   ("C-x C-a C-k" . activities-kill)
-   ("C-x C-a RET" . activities-switch)
-   ("C-x C-a b" . activities-switch-buffer)
-   ("C-x C-a g" . activities-revert)
-   ("C-x C-a l" . activities-list)))
-#+end_src
-
 ** Platform Check
 #+begin_src emacs-lisp :tangle ~/.emacs
 (defun current-platform ()
@@ -319,7 +289,6 @@ Anything in this section can be described in one sentence.
 (use-package transient)
 (use-package pass
   :config (global-set-key (kbd "<f12>") 'password-store-copy)) ;; Password Store
-(use-package plantuml-mode) ;; Define graphs in code
 #+end_src
 
 ** Shell
@@ -816,13 +785,6 @@ Magit is git porcelain for Emacs
 
 #+begin_src emacs-lisp :tangle ~/.emacs
 (use-package kubel)
-#+end_src
-
-** Docker
-#+begin_src emacs-lisp :tangle ~/.emacs
-(use-package docker
-  :ensure t
-  :bind ("C-c d" . docker))
 #+end_src
 
 ** Spray Mode
@@ -1442,7 +1404,6 @@ Clojure + LSP
    (python . t)
    (verb . t)
    (mermaid . t)
-   (plantuml . t)
    (shell . t)
    (sql . t)
    (js . t)
@@ -1457,12 +1418,7 @@ Clojure + LSP
    (d2 . t)
    ))
 
-(use-package ox-slack)
-
 (setq org-babel-clojure-backend 'cider)
-
-(setq org-plantuml-jar-path
-      (expand-file-name  "/opt/homebrew/Cellar/plantuml/1.2022.6/libexec/plantuml.jar"))
 
 (setq org-confirm-babel-evaluate nil)
 #+end_src
@@ -1623,12 +1579,6 @@ Clojure + LSP
 
 *** Org eXport
 #+begin_src emacs-lisp :tangle ~/.emacs
-(use-package ox-reveal
-  :config
-  (setq org-reveal-root "file:///home/user/git/reveal.js"))
-
-(use-package ox-confluence)
-
 (setq org-export-with-drawers nil)
 
 (setq org-src-fontify-natively t)
@@ -1808,11 +1758,6 @@ These functions enable options where you can have one buffer of commands to run 
 
 (global-set-key (kbd "C-c y") `cnc-prompt)
 (global-set-key (kbd "C-c C-.") `cnc-from-file)
-#+end_src
-
-** Typit
-#+begin_src emacs-lisp :tangle ~/.emacs
-(use-package speed-type)
 #+end_src
 
 ** Misc
@@ -2204,7 +2149,6 @@ The doom modeline looks better than the stock emacs modeline.
 (evil-global-set-key 'normal "gsc" 'gptel--read-crowdsourced-prompt)
 
 (global-set-key (kbd "C-'") #'gptel-send)
-
 #+end_src
 
 * Hunting
