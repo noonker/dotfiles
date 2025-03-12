@@ -47,18 +47,35 @@ This section sets up [[https://github.com/radian-software/straight.el][straight.
    ((string-equal system-type "gnu/linux") "linux"))
   )
 
-(defcustom im-at-work t
+(defcustom im-at-work nil
   "im-at-work can be used to conditionally disable code which may not be suitable for work environments. ChatGPT, copilot, etc"
   :type '(boolean))
 
-(if (string= (system-name)
-	     "blep")
-    (setq im-at-work nil))
+(defcustom is-mobile nil
+  "is-mobile can be used to conditionally disable code which may not be suitable for mobile environments."
+  :type '(boolean))
+
+(defcustom is-gui nil
+  "is-gui can be used to conditionally disable code which may not be suitable for gui environments"
+  :type '(boolean))
+
+(defcustom is-guix nil
+  "is-guix can be used to conditionally disable code which may not be suitable for guix environments"
+  :type '(boolean))
+
+(if (string= "mac" (current-platform))
+    (setq im-at-work t))
+
+(if (display-graphic-p)
+    (setq is-gui t))
+
+(if (executable-find "guix")
+    (setq is-guix t))
 
 (if (string= (current-platform)
 	     "mac")
-      (use-package exec-path-from-shell
-	:init (exec-path-from-shell-initialize)))
+    (use-package exec-path-from-shell
+      :init (exec-path-from-shell-initialize)))
 #+end_src
 
 ** Vertico
@@ -203,7 +220,7 @@ This section sets up [[https://github.com/radian-software/straight.el][straight.
 Leuven Theme and Comic Mono
 
 #+begin_src emacs-lisp :tangle ~/.emacs
-(defvar how-ya-feeling 'burn-my-eyes)
+(defvar how-ya-feeling 'dark-tbh)
 
 (cond
  ((eq how-ya-feeling 'dark-tbh)
@@ -216,7 +233,7 @@ Leuven Theme and Comic Mono
 ;; Better font on my home computer :)
 (if im-at-work
     (set-face-attribute 'default nil :font "JetBrains Mono" :height 150)
-(set-face-attribute 'default nil :font "Comic Code" :height 130))
+(if (string= "blep" (system-name)) (set-face-attribute 'default nil :font "Comic Code" :height 130)))
 #+end_src
 
 ** Global Config
@@ -285,7 +302,7 @@ Anything in this section can be described in one sentence.
 
 #+begin_src emacs-lisp :tangle ~/.emacs
 (use-package magit)
-(setopt magit-format-file-function #'magit-format-file-nerd-icons)  
+(if is-gui (setopt magit-format-file-function #'magit-format-file-nerd-icons))  
 (use-package transient)
 (use-package pass
   :config (global-set-key (kbd "<f12>") 'password-store-copy)) ;; Password Store
@@ -1161,9 +1178,15 @@ Clojure + LSP
 	cider-overlays-use-font-lock t)
   (cider-repl-toggle-pretty-printing))
 
+
+
 (add-hook 'clojure-mode-hook #'paredit-mode)
 (add-hook 'clojure-mode-hook #'subword-mode)
 (add-hook 'clojure-mode-hook #'eldoc-mode)
+(add-hook 'clojure-mode-hook (lambda ()
+                            (add-hook 'before-save-hook
+                                      'cider-format-buffer nil t)))
+
 #+end_src
 
 ** Json
@@ -1557,8 +1580,9 @@ Clojure + LSP
 	org-roam-ui-update-on-save t
 	org-roam-ui-open-on-start t
 	))
-
-(org-roam-db-autosync-mode) ;; Automatically update the org roam database 
+(if im-at-work
+    (org-roam-db-autosync-mode) ;; Automatically update the org roam database 
+)
 #+end_src
 
 *** Org Protocol
@@ -1760,141 +1784,14 @@ These functions enable options where you can have one buffer of commands to run 
 (global-set-key (kbd "C-c C-.") `cnc-from-file)
 #+end_src
 
-** Misc
-
-These functions are helpers and should be self explanitory
-
-#+begin_src emacs-lisp :tangle ~/.emacs
-(defun is-tramp-window ()
-  (if (file-remote-p default-directory) t nil))
-
-(defun no-fonts-pls ()
-  (interactive)
-  (let ((inhibit-read-only t))
-    (set-text-properties (point-min) (point-max) nil)))
-
-(defun what-is-my-ip ()
-  (interactive)
-  (message "IP: %s"
-	   (with-current-buffer (url-retrieve-synchronously "https://api.`ipify.org")
-	     (buffer-substring (+ 1 url-http-end-of-headers) (point-max)))))
-
-(defun character-below ()
-  (save-excursion
-    (next-line)
-    (string (char-after (point)))))
-
-(defun replace-below (cur rep bel)
-  (interactive)
-  (let ((pos 1)
-	(tmp))
-    (while (< pos (point-max))
-      (if (equal cur (string (char-after pos)))
-	  (if (equal bel (character-above))
-	      (progn (delete-char 1) (insert rep))
-	    ))
-      (setq pos (+ 1 pos))
-      (goto-char pos)
-      )))
-
-(defun ruthless-kill ()
-  "Kill the line without copying it"
-  (interactive)
-  (delete-region (point) (line-end-position)))
-
-(global-set-key (kbd "C-x j") 'kill-current-buffer)
-(global-set-key (kbd "C-c k") 'ruthless-kill)
-
-(defun insert-current-date ()
-  "Insert the current date"
-  (interactive)
-  (insert (shell-command-to-string "echo -n $(date +%Y-%m-%d)")))
-
-(defun selenium()
-  (interactive)
-  (save-excursion
-    (async-shell-command "java -jar $HOME/Documents/selenium.jar")))
-
-(defun toggle-maximize-buffer ()
-  "Maximize buffer"
-  (interactive)
-  (if (= 1 (length (window-list)))
-      (jump-to-register '_)
-    (progn
-      (set-register '_ (list (current-window-configuration)))
-      (delete-other-windows))))
-
-(defun untabify-buffer ()
-  (interactive)
-  (untabify (point-min) (point-max)))
-
-(defun indent-buffer ()
-  (interactive)
-  (indent-region (point-min) (point-max)))
-
-(defun cleanup-buffer ()
-  "Perform a bunch of operations on the whitespace content of a buffer."
-  (interactive)
-  (indent-buffer)
-  (untabify-buffer)
-  (delete-trailing-whitespace))
-
-;; Easy window splitting
-(defun split-maj-min (number)
-  (interactive "N")
-  "Function to split windows into one major window and multiple minor windows"
-  (split-window-horizontally)
-  (other-window 1)
-  (while (> number 1)
-    (setq number (+ -1 number))
-    (split-window-vertically))
-  (balance-windows))
-
-(defun sudo ()
-  "Use TRAMP to `sudo' the current buffer"
-  (interactive)
-  (when buffer-file-name
-    (find-alternate-file
-     (concat "/sudo:root@localhost:"
-	     buffer-file-name))))
-
-(defun proxy (text &optional port)
-  (interactive "sHost: ")
-  (async-shell-command (format "ssh -D 1337 -C -q -N %s" text) (format "*proxy: %s*" text)))
-
-(defun todo (text &optional body)
-  (interactive "sTodo: ")
-  (compose-mail-other-window "noonker@pm.me" text)
-  (mail-text)
-  (if body
-      (insert body))
-  (message-send-and-exit)
-  )
-
-(global-set-key (kbd "C-c C-t") 'todo)
-
-(defun noonker/flatten-category (category)
-  (mapcar (lambda (item) (cons (car category) item)) (cadr category)))
-
-(defun noonker/flatten-bookmarks (bookmarks)
-  (mapcan 'noonker/flatten-category bookmarks))
-
-(defun noonker/bookmarks-complete (bookmarks)
-  (let* ((choice (completing-read
-		 "Bookmarks:"
-		 (mapcar (lambda (item) (string-join item "	"))
-			 (noonker/flatten-bookmarks bookmarks))))
-	 (url (nth 2 (split-string choice "	"))))
-    (browse-url url)))
-#+end_src
-
 ** Doom Modeline
-
 The doom modeline looks better than the stock emacs modeline.
 
 #+begin_src emacs-lisp :tangle ~/.emacs
-(use-package doom-modeline
-  :config (doom-modeline-mode 1))
+(if is-gui
+  (progn
+    (use-package doom-modeline
+      :config (doom-modeline-mode 1))
 
 ;; If non-nil, cause imenu to see `doom-modeline' declarations.
 ;; This is done by adjusting `lisp-imenu-generic-expression' to
@@ -2123,7 +2020,135 @@ The doom modeline looks better than the stock emacs modeline.
 (setq doom-modeline-before-update-env-hook nil)
 (setq doom-modeline-after-update-env-hook nil)
 
-(add-to-list 'global-mode-string '("" mode-line-keycast))
+))
+#+end_src
+
+** Misc
+
+These functions are helpers and should be self explanitory
+
+#+begin_src emacs-lisp :tangle ~/.emacs
+(defun is-tramp-window ()
+  (if (file-remote-p default-directory) t nil))
+
+(defun no-fonts-pls ()
+  (interactive)
+  (let ((inhibit-read-only t))
+    (set-text-properties (point-min) (point-max) nil)))
+
+(defun what-is-my-ip ()
+  (interactive)
+  (message "IP: %s"
+	   (with-current-buffer (url-retrieve-synchronously "https://api.`ipify.org")
+	     (buffer-substring (+ 1 url-http-end-of-headers) (point-max)))))
+
+(defun character-below ()
+  (save-excursion
+    (next-line)
+    (string (char-after (point)))))
+
+(defun replace-below (cur rep bel)
+  (interactive)
+  (let ((pos 1)
+	(tmp))
+    (while (< pos (point-max))
+      (if (equal cur (string (char-after pos)))
+	  (if (equal bel (character-above))
+	      (progn (delete-char 1) (insert rep))
+	    ))
+      (setq pos (+ 1 pos))
+      (goto-char pos)
+      )))
+
+(defun ruthless-kill ()
+  "Kill the line without copying it"
+  (interactive)
+  (delete-region (point) (line-end-position)))
+
+(global-set-key (kbd "C-x j") 'kill-current-buffer)
+(global-set-key (kbd "C-c k") 'ruthless-kill)
+
+(defun insert-current-date ()
+  "Insert the current date"
+  (interactive)
+  (insert (shell-command-to-string "echo -n $(date +%Y-%m-%d)")))
+
+(defun selenium()
+  (interactive)
+  (save-excursion
+    (async-shell-command "java -jar $HOME/Documents/selenium.jar")))
+
+(defun toggle-maximize-buffer ()
+  "Maximize buffer"
+  (interactive)
+  (if (= 1 (length (window-list)))
+      (jump-to-register '_)
+    (progn
+      (set-register '_ (list (current-window-configuration)))
+      (delete-other-windows))))
+
+(defun untabify-buffer ()
+  (interactive)
+  (untabify (point-min) (point-max)))
+
+(defun indent-buffer ()
+  (interactive)
+  (indent-region (point-min) (point-max)))
+
+(defun cleanup-buffer ()
+  "Perform a bunch of operations on the whitespace content of a buffer."
+  (interactive)
+  (indent-buffer)
+  (untabify-buffer)
+  (delete-trailing-whitespace))
+
+;; Easy window splitting
+(defun split-maj-min (number)
+  (interactive "N")
+  "Function to split windows into one major window and multiple minor windows"
+  (split-window-horizontally)
+  (other-window 1)
+  (while (> number 1)
+    (setq number (+ -1 number))
+    (split-window-vertically))
+  (balance-windows))
+
+(defun sudo ()
+  "Use TRAMP to `sudo' the current buffer"
+  (interactive)
+  (when buffer-file-name
+    (find-alternate-file
+     (concat "/sudo:root@localhost:"
+	     buffer-file-name))))
+
+(defun proxy (text &optional port)
+  (interactive "sHost: ")
+  (async-shell-command (format "ssh -D 1337 -C -q -N %s" text) (format "*proxy: %s*" text)))
+
+(defun todo (text &optional body)
+  (interactive "sTodo: ")
+  (compose-mail-other-window "noonker@pm.me" text)
+  (mail-text)
+  (if body
+      (insert body))
+  (message-send-and-exit)
+  )
+
+(global-set-key (kbd "C-c C-t") 'todo)
+
+(defun noonker/flatten-category (category)
+  (mapcar (lambda (item) (cons (car category) item)) (cadr category)))
+
+(defun noonker/flatten-bookmarks (bookmarks)
+  (mapcan 'noonker/flatten-category bookmarks))
+
+(defun noonker/bookmarks-complete (bookmarks)
+  (let* ((choice (completing-read
+		 "Bookmarks:"
+		 (mapcar (lambda (item) (string-join item "	"))
+			 (noonker/flatten-bookmarks bookmarks))))
+	 (url (nth 2 (split-string choice "	"))))
+    (browse-url url)))
 #+end_src
 
 * AI
@@ -2149,6 +2174,20 @@ The doom modeline looks better than the stock emacs modeline.
 (evil-global-set-key 'normal "gsc" 'gptel--read-crowdsourced-prompt)
 
 (global-set-key (kbd "C-'") #'gptel-send)
+#+end_src
+
+** Copilot
+#+begin_src emacs-lisp :tangle ~/.emacs
+(if (not im-at-work)
+    (progn
+      (use-package copilot
+      :straight (:host github :repo "copilot-emacs/copilot.el" :files ("*.el"))
+      :ensure t)
+
+      (add-hook 'prog-mode-hook 'copilot-mode)
+
+      (define-key copilot-completion-map (kbd "<tab>") 'copilot-accept-completion)
+      (define-key copilot-completion-map (kbd "TAB") 'copilot-accept-completion)))
 #+end_src
 
 * Hunting
