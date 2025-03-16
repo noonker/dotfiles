@@ -676,29 +676,55 @@ IRC for Emacs
               ("C-c C-w" . elfeed-tube-mpv-where)))
 #+end_src
 
-** Gnus
-
-Email client for emacs
-
-#+begin_src emacs-lisp :tangle ~/.emacs
-(use-package org-msg
-	     :init
-	     (setq mail-user-agent 'gnus-user-agent)
-	     (setq org-msg-options "html-postamble:nil H:5 num:nil ^:{} toc:nil author:nil email:nil \\n:t"
-		   org-msg-startup "hidestars indent inlineimages"
-		   org-msg-default-alternatives '((new		. (text html))
-						  (reply-to-html	. (text html))
-						  (reply-to-text	. (text)))
-		   org-msg-convert-citation t)
-	     (org-msg-mode))
-#+end_src
-
 ** Mastodon
 #+begin_src emasc-lisp :tangle ~/.emacs
 (use-package mastodon)
 (setq mastodon-instance-url "https://infosec.exchange"
       mastodon-active-user "noonker")
 #+end_src
+
+** Gnus
+
+#+begin_src emacs-lisp :tangle ~/.emacs
+(setq user-mail-address "noonker@pm.me"
+      user-full-name  "Joshua Person")
+
+(setq send-mail-function 'smtpmail-send-it
+      starttls-use-gnutls t
+      smtpmail-smtp-server "127.0.0.1"
+      smtpmail-smtp-service 1025
+      smtpmail-auth-credentials "~/.authinfo.gpg"
+      smtpmail-stream-type 'starttls
+      smtpmail-smtp-user "noonker@pm.me")
+
+(setq gnus-select-method '(nnimap "protonmail"
+				  (nnimap-address "127.0.0.1")
+				  (nnimap-server-port 1143)
+				  (nnimap-stream starttls)
+				  (nnimap-authinfo-file "~/.authinfo.gpg")))
+#+end_src
+
+Email client for emacs
+
+#+begin_src emacs-lisp
+ (setq mail-user-agent 'gnus-user-agent)
+ (require 'org-msg)
+ (setq org-msg-options "html-postamble:nil H:5 num:nil ^:{} toc:nil author:nil email:nil \\n:t"
+	org-msg-startup "hidestars indent inlineimages"
+	org-msg-greeting-fmt "\nHello,%s,\n\n"
+	org-msg-greeting-name-limit 3
+	org-msg-default-alternatives '((new		. (text html))
+				       (reply-to-html	. (text html))
+				       (reply-to-text	. (text)))
+	org-msg-convert-citation t
+	org-msg-signature "
+Joshua ✌️
+This message was composed without the use of AI I respect our shared humanity
+")
+ (org-msg-mode)
+#+end_src
+
+#+RESULTS:
 
 ** Emacs Lisp Packages
 
@@ -2228,6 +2254,28 @@ These functions are helpers and should be self explanitory
    :category "shell")
 
   
+  (gptel-make-tool
+   :function (lambda (emailto subject body)
+	       (progn
+		 (compose-mail-other-window emailto subject)
+		 (mail-text)
+		 (if body
+		     (insert body))
+		 (message-send-and-exit)))
+   :name "send_email"
+   :description "Send an email to a specified address with a subject and body"
+   :args (list '(:name "emailto"
+		       :type "string"
+		       :description "The email address to send the email to")
+	       '(:name "subject"
+		       :type "string"
+		       :description "The subject of the email")
+	       '(:name "body"
+		       :type "string"
+		       :description "The body of the email")
+	       )
+   :category "web")
+
   (gptel-make-tool
    :function (lambda (buffer text)
                (with-current-buffer (get-buffer-create buffer)
