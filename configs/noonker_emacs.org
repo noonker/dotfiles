@@ -2157,13 +2157,32 @@ These functions are helpers and should be self explanitory
 (use-package gptel
   :straight (:host github :repo "karthink/gptel" :files ("dist" "*.el")))
 
+
+
+
 (let ((anthropic (gptel-make-anthropic "Anthropic" 
 		 :stream t
-		 :key (password-store-get "Internet/anthropic"))))
+		 :key (password-store-get "Internet/anthropic")))
+      (chatgpt
+
+       (gptel-make-openai "ChatGPT"
+         :key (password-store-get "Internet/openai")
+         :stream t
+         :models
+         '((gpt-4o-mini
+            :capabilities (media tool json url)
+            :description "Affordable and intelligent small model for fast, lightweight tasks"
+            :mime-types ("image/jpeg" "image/png" "image/gif" "image/webp"))
+           (gpt-4o
+            :capabilities (media tool json url)
+            :description "High-intelligence flagship model for complex, multi-step tasks"
+            :mime-types ("image/jpeg" "image/png" "image/gif" "image/webp"))))
+       )
+      )
   (if (not im-at-work)
       (progn
-       (setq gptel-model 'claude-3-5-sonnet-20241022)
-       (setq gptel-backend anthropic)
+       (setq gptel-model 'gpt-4o)
+       (setq gptel-backend chatgpt)
        )
     nil))
 
@@ -2178,6 +2197,7 @@ These functions are helpers and should be self explanitory
 
 *** Gptel Tools
 #+begin_src emacs-lisp :tangle ~/.emacs
+(setq gptel-log-level 'debug)
 
 (with-eval-after-load 'gptel
   (gptel-make-tool
@@ -2196,6 +2216,18 @@ These functions are helpers and should be self explanitory
                        :description "The URL to read"))
    :category "web")
 
+  ;; Run a shell command
+  (gptel-make-tool
+   :function (lambda (command)
+	       (shell-command-to-string command))
+   :name "run_shell_command"
+   :description "Run a shell command and return the output"
+   :args (list '(:name "command"
+		       :type "string"
+		       :description "The shell command to run"))
+   :category "shell")
+
+  
   (gptel-make-tool
    :function (lambda (buffer text)
                (with-current-buffer (get-buffer-create buffer)
@@ -2214,14 +2246,14 @@ These functions are helpers and should be self explanitory
    :category "emacs")
 
   ;; List buffers
-  (gptel-make-tool
-   :function (lambda () (buffer-list))
-   :name "list_buffers"
-   :description "List the currently open emacs buffers"
-   :args (list '())
-   :category "emacs")
+  ;; (gptel-make-tool
+  ;;  :function (lambda () (buffer-list))
+  ;;  :name "list_buffers"
+  ;;  :description "List the currently open emacs buffers"
+  ;;  :args (list '())
+  ;;  :category "emacs")
 
-  ;; Todo, prompt user
+  ;; ;; Todo, prompt user
   (gptel-make-tool
    :function (lambda (prompt)
                (completing-read prompt '()))
@@ -2232,12 +2264,31 @@ These functions are helpers and should be self explanitory
                        :description "The text to display in the prompt"))
    :category "emacs")
 
-  
-  ;; Todo, switch buffer
+  ;; Update guix system config
+  ;; Config is created from a makefile located at ~/git/dotfiles/guix/Makefile with the argument laptop to rebuild
+  (gptel-make-tool
+   :function (lambda (config)
+	       (let ((default-directory "~/git/dotfiles/guix"))
+		 (async-shell-command (format "make %s" config))))
+   :name "update_guix_system"
+   :description "Update the guix system configuration"
+   :args (list '(:name "config"
+		       :type "string"
+		       :description "The configuration to update. It's always laptop"))
+   :category "guix")
 
-  ;; Todo, sleep
-  
-  
+  ;; Same as above, but make home
+  (gptel-make-tool
+   :function (lambda (config)
+	       (let ((default-directory "~/git/dotfiles/guix"))
+		 (async-shell-command (format "make %s" config))))
+   :name "update_guix_home"
+   :description "Update the guix home configuration"
+   :args (list '(:name "config"
+		       :type "string"
+		       :description "The configuration to update. It's always home"))
+   :category "guix")
+
   ;; Message buffer logging tool
   (gptel-make-tool
    :function (lambda (text)
