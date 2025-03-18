@@ -282,6 +282,12 @@ Projectile enriches Emacs's ability to understand git projects
   (define-key projectile-mode-map (kbd "s-p") 'projectile-command-map)
   (define-key projectile-mode-map (kbd "C-c p") 'projectile-command-map)
   (projectile-mode +1))
+
+(defun noonker/open-all-project-files ()
+  (interactive)
+  (let ((project-files (projectile-project-files (projectile-project-root))))
+    (dolist (file project-files)
+      (find-file (expand-file-name file (projectile-project-root))))))
 #+end_src
 
 ** GPG Config
