@@ -170,8 +170,9 @@ This section sets up [[https://github.com/radian-software/straight.el][straight.
 (use-package consult-ag)
 (use-package consult-dir)
 (use-package consult-org-roam)
-(global-set-key (kbd "C-2") #'consult-buffer)
+(global-set-key (kbd "C-2") #'switch-to-buffer)
 (global-set-key (kbd "C-3") #'yank-from-kill-ring)
+(global-set-key (kbd "C-4") #'bookmark-jump)
 
 (use-package corfu
   ;; Optional customizations
@@ -184,7 +185,7 @@ This section sets up [[https://github.com/radian-software/straight.el][straight.
   ;; (corfu-on-exact-match nil)     ;; Configure handling of exact matches
 
   ;; Enable Corfu only for certain modes. See also `global-corfu-modes'.
-  ;; :hook ((prog-mode . corfu-mode)
+ ;; :hook ((prog-mode . corfu-mode)
   ;;        (shell-mode . corfu-mode)
   ;;        (eshell-mode . corfu-mode))
 
@@ -220,7 +221,7 @@ This section sets up [[https://github.com/radian-software/straight.el][straight.
 Leuven Theme and Comic Mono
 
 #+begin_src emacs-lisp :tangle ~/.emacs
-(defvar how-ya-feeling 'dark-tbh)
+(defvar how-ya-feeling 'burn-my-eyes)
 
 (cond
  ((eq how-ya-feeling 'dark-tbh)
@@ -523,22 +524,6 @@ Drone Zone >>> All Else
 
 #+begin_src emacs-lisp :tangle ~/.emacs
 (use-package somafm)
-
-(defun somafm-volume-control (steps direction)
-  (let ((steps (if steps steps 1))
-	(direction-key (if (string= "up" direction)
-			   "0"
-			 "9")))
-    (dotimes (foo steps)
-      (process-send-string "somafm player" direction-key))))
-
-(defun somafm-volume-up (arg)
-  (interactive "P")
-  (somafm-volume-control arg "up"))
-
-(defun somafm-volume-down (arg)
-  (interactive "P")
-  (somafm-volume-control arg "down"))
 #+end_src
 
 ** ERC
@@ -1702,19 +1687,6 @@ Blogging with hugo
 	    (lambda ()
 	      (flyspell-prog-mode)
 	      ))
-  )
-#+end_src
-
-** Languagetool
-
-Run =brew install languagetool= to install on mac
-
-#+begin_src emacs-lisp :tangle ~/.emacs
-(use-package langtool
-  :config
-  (setq langtool-bin "/usr/local/bin/languagetool")
-  (setq langtool-http-server-host "localhost"
-	langtool-http-server-port 8081)
   )
 #+end_src
 
