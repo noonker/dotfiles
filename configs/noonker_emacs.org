@@ -8,6 +8,22 @@ It is broken up into several sections:
  - Programming - Packages & tweaks to programming modes
  - Text - Any packages which are used primarily for writing of text (mostly org-mode)
  - Custom Functions - Any simple functions I've added to enrich my emacs life
+* Mobile
+#+begin_src emacs-lisp :tangle ~/.emacs
+(when (string-equal system-type "android")
+  ;; Add Termux binaries to PATH environment
+  (let ((termuxpath "/data/data/com.termux/files/usr/bin"))
+    (setenv "PATH" (concat (getenv "PATH") ":" termuxpath))
+    (setq exec-path (append exec-path (list termuxpath)))))
+
+(push "/data/data/com.termux/files/usr/bin" exec-path)
+
+;; Not ideal workaround
+
+;; (shell-command-to-string "gpgconf --kill gpg-agent") 
+
+(add-hook 'after-change-major-mode-hook (lambda () (set-text-conversion-style nil)))
+#+end_src
 
 * Bootstrap Straight.el
 
@@ -46,12 +62,11 @@ This section sets up [[https://github.com/radian-software/straight.el][straight.
    ((string-equal system-type "darwin") "mac")
    ((string-equal system-type "gnu/linux") "linux"))
   )
-
 (defcustom im-at-work nil
   "im-at-work can be used to conditionally disable code which may not be suitable for work environments. ChatGPT, copilot, etc"
   :type '(boolean))
 
-(defcustom is-mobile nil
+(defcustom is-mobile (if (string= system-type "android") t nil)
   "is-mobile can be used to conditionally disable code which may not be suitable for mobile environments."
   :type '(boolean))
 
@@ -232,8 +247,9 @@ Leuven Theme and Comic Mono
     ))
 
 ;; Better font on my home computer :)
+(if is-mobile (set-face-attribute 'default nil :height 60))
 (if im-at-work
-    (set-face-attribute 'default nil :font "JetBrains Mono" :height 150)
+    (set-face-attribute 'default nil :height 60)
 (if (string= "blep" (system-name)) (set-face-attribute 'default nil :font "Comic Code" :height 130)))
 #+end_src
 
@@ -299,7 +315,7 @@ Emacs can nearly transparently use .gpg encrypted files in emacs. These settings
 (if (not im-at-work)
     (setq epa-file-encrypt-to "noonker@gmail.com") ;; Encrypt to my gpg key
 )
-(setf epa-pinentry-mode 'loopback) ;; No UI popup. Ask for password in modeline
+(setf epg-pinentry-mode 'loopback) ;; No UI popup. Ask for password in modeline
 #+end_src
 
 * Tools
@@ -309,10 +325,20 @@ Anything in this section can be described in one sentence.
 
 #+begin_src emacs-lisp :tangle ~/.emacs
 (use-package magit)
-(if is-gui (setopt magit-format-file-function #'magit-format-file-nerd-icons))  
+(if (not is-mobile) (setopt magit-format-file-function #'magit-format-file-nerd-icons))  
 (use-package transient)
 (use-package pass
   :config (global-set-key (kbd "<f12>") 'password-store-copy)) ;; Password Store
+
+(defalias 'original-password-store-get (symbol-function 'password-store-get))
+
+;; Nasty mobile hack
+(defun password-store-get (entry &optional callback)
+  (interactive)
+  (progn
+    (shell-command-to-string "gpgconf --kill gpg-agent")
+    (original-password-store-get entry callback)
+      ))
 #+end_src
 
 ** Shell
@@ -494,8 +520,8 @@ Tramp allows for nearly transparent editing of files on remote machines. Run =C-
 
 (add-hook `eat-mode-hook (lambda () (setq-local scroll-conservatively 10000)))
 
-(defun vterm ()
-  eat)
+(use-package vterm
+    :ensure t)
 #+end_src
 
 ** Dired
@@ -1227,12 +1253,14 @@ Clojure + LSP
 
 ** PDF Tools
 #+begin_src emacs-lisp :tangle ~/.emacs
-(use-package pdf-tools
-  :straight t
-  :config
-  (pdf-tools-install))
-
-(add-hook 'pdf-view-mode-hook (lambda () (progn (display-line-numbers-mode -1))))
+(if (not is-mobile)
+    (progn
+      (use-package pdf-tools
+	:straight t
+	:config
+	(pdf-tools-install))
+      (add-hook 'pdf-view-mode-hook (lambda () (progn (display-line-numbers-mode -1))))
+      ))
 #+end_src
 
 ** \LaTeX
@@ -1792,7 +1820,7 @@ These functions enable options where you can have one buffer of commands to run 
 The doom modeline looks better than the stock emacs modeline.
 
 #+begin_src emacs-lisp :tangle ~/.emacs
-(if is-gui
+(if nil
   (progn
     (use-package doom-modeline
       :config (doom-modeline-mode 1))
@@ -2162,33 +2190,33 @@ These functions are helpers and should be self explanitory
   :straight (:host github :repo "karthink/gptel" :files ("dist" "*.el")))
 
 
+(defun noonker/init-ai ()
+  (interactive)
+  (let ((anthropic (gptel-make-anthropic "Anthropic" 
+		     :stream t
+		     :key (password-store-get "Internet/anthropic")))
+	(chatgpt
 
-
-(let ((anthropic (gptel-make-anthropic "Anthropic" 
-		 :stream t
-		 :key (password-store-get "Internet/anthropic")))
-      (chatgpt
-
-       (gptel-make-openai "ChatGPT"
-         :key (password-store-get "Internet/openai")
-         :stream t
-         :models
-         '((gpt-4o-mini
-            :capabilities (media tool json url)
-            :description "Affordable and intelligent small model for fast, lightweight tasks"
-            :mime-types ("image/jpeg" "image/png" "image/gif" "image/webp"))
-           (gpt-4o
-            :capabilities (media tool json url)
-            :description "High-intelligence flagship model for complex, multi-step tasks"
-            :mime-types ("image/jpeg" "image/png" "image/gif" "image/webp"))))
-       )
-      )
-  (if (not im-at-work)
-      (progn
-       (setq gptel-model 'gpt-4o)
-       (setq gptel-backend chatgpt)
-       )
-    nil))
+	 (gptel-make-openai "ChatGPT"
+	   :key (password-store-get "Internet/openai")
+	   :stream t
+	   :models
+	   '((gpt-4o-mini
+	      :capabilities (media tool json url)
+	      :description "Affordable and intelligent small model for fast, lightweight tasks"
+	      :mime-types ("image/jpeg" "image/png" "image/gif" "image/webp"))
+	     (gpt-4o
+	      :capabilities (media tool json url)
+	      :description "High-intelligence flagship model for complex, multi-step tasks"
+	      :mime-types ("image/jpeg" "image/png" "image/gif" "image/webp"))))
+	 )
+	)
+    (if (not im-at-work)
+	(progn
+	  (setq gptel-model 'gpt-4o)
+	  (setq gptel-backend chatgpt)
+	  )
+      nil)))
 
 (evil-global-set-key 'normal "gsm" 'gptel-menu)
 (evil-global-set-key 'normal "gss" 'gptel-send)
@@ -2409,7 +2437,7 @@ These functions are helpers and should be self explanitory
 
 
 ** Copilot
-#+begin_src emacs-lisp :tangle ~/.emacs
+#+begin_src emacs-lisp
 (if (not im-at-work)
     (progn
       (use-package copilot
@@ -2420,6 +2448,16 @@ These functions are helpers and should be self explanitory
 
       (define-key copilot-completion-map (kbd "<tab>") 'copilot-accept-completion)
       (define-key copilot-completion-map (kbd "TAB") 'copilot-accept-completion)))
+
+(use-package org-ai
+ :straight ( :type git :host github :repo "rksm/org-ai"
+          :local-repo "org-ai"
+          :files ("*.el" "README.md" "snippets")))
+
+(setq org-ai-default-chat-model "gpt-4") ; if you are on the gpt-4 beta:
+(org-ai-install-yasnippets)
+
+(setq org-ai-openai-api-token (password-store-get "Internet/openai"))
 #+end_src
 
 * Hunting
@@ -2439,8 +2477,10 @@ These functions are helpers and should be self explanitory
 * Finally
 Load my RSS feeds
 #+begin_src emacs-lisp :tangle ~/.emacs
-(if (not im-at-work)
-    (load-file "~/.password-store/Config/elfeed.el.gpg"))
+(defun noonker/init-other ()
+  (interactive)
+  (if (not im-at-work)
+      (load-file "~/.password-store/Config/elfeed.el.gpg")))
 #+end_src
 
 * Feeds 
