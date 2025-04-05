@@ -1,5 +1,6 @@
 #+title: Noonker's Config
 
+
 Below is my configuration for Emacs. It is a literate config that can be installed by running =org-babel-tangle= or by using the hotkey =C-c C-v C-t=.
 It is broken up into several sections:
  - Bootstrap - Code that instantiates the package manager
@@ -247,7 +248,7 @@ Leuven Theme and Comic Mono
     ))
 
 ;; Better font on my home computer :)
-(if is-mobile (set-face-attribute 'default nil :height 60))
+(if is-mobile (set-face-attribute 'default nil :height 100))
 (if im-at-work
     (set-face-attribute 'default nil :height 60)
 (if (string= "blep" (system-name)) (set-face-attribute 'default nil :font "Comic Code" :height 130)))
@@ -1820,7 +1821,7 @@ These functions enable options where you can have one buffer of commands to run 
 The doom modeline looks better than the stock emacs modeline.
 
 #+begin_src emacs-lisp :tangle ~/.emacs
-(if nil
+(if (not is-mobile)
   (progn
     (use-package doom-modeline
       :config (doom-modeline-mode 1))
@@ -2215,6 +2216,7 @@ These functions are helpers and should be self explanitory
 	(progn
 	  (setq gptel-model 'gpt-4o)
 	  (setq gptel-backend chatgpt)
+	  (setq org-ai-openai-api-token (password-store-get "Internet/openai"))
 	  )
       nil)))
 
@@ -2437,27 +2439,16 @@ These functions are helpers and should be self explanitory
 
 
 ** Copilot
-#+begin_src emacs-lisp
-(if (not im-at-work)
-    (progn
-      (use-package copilot
-      :straight (:host github :repo "copilot-emacs/copilot.el" :files ("*.el"))
-      :ensure t)
-
-      (add-hook 'prog-mode-hook 'copilot-mode)
-
-      (define-key copilot-completion-map (kbd "<tab>") 'copilot-accept-completion)
-      (define-key copilot-completion-map (kbd "TAB") 'copilot-accept-completion)))
-
+#+begin_src emacs-lisp :tangle ~/.emacs
 (use-package org-ai
  :straight ( :type git :host github :repo "rksm/org-ai"
           :local-repo "org-ai"
           :files ("*.el" "README.md" "snippets")))
-
+(require 'org-ai)
+(add-hook 'org-mode-hook #'org-ai-mode)
+(org-ai-global-mode)
 (setq org-ai-default-chat-model "gpt-4") ; if you are on the gpt-4 beta:
 (org-ai-install-yasnippets)
-
-(setq org-ai-openai-api-token (password-store-get "Internet/openai"))
 #+end_src
 
 * Hunting
