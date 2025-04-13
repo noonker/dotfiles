@@ -718,8 +718,12 @@ IRC for Emacs
 (setq gnus-select-method '(nnimap "protonmail"
 				  (nnimap-address "127.0.0.1")
 				  (nnimap-server-port 1143)
+ 				      (nnimap-inbox "INBOX")
+				  (nnimap-subscribed-newsgroups ("nnimap+protonmail:INBOX"))
 				  (nnimap-stream starttls)
 				  (nnimap-authinfo-file "~/.authinfo.gpg")))
+
+;; (setq gnus-check-new-newsgroups nil)
 #+end_src
 
 Email client for emacs
