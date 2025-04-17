@@ -62,6 +62,14 @@
 					   "coreutils"
 					   "openjdk"
 					   "clojure-tools"
+					   "remmina"
+					   "blender"
+					   "supercollider"
+					   "ollama-linux-amd64"
+					   "carla"
+					   "wine64"
+					   "tmux"
+					   "alsa-utils"
 					   )))
  
 

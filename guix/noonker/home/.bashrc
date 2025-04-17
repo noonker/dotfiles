@@ -24,6 +24,7 @@ fi
 
 PATH="$PATH:$HOME/.local/share/yabridge"
 PATH="$PATH:$HOME/.local/bin"
+PATH="$PATH:$HOME/bin"
 
 # Adjust the prompt depending on whether we're in 'guix environment'.
 if [ -n "$GUIX_ENVIRONMENT" ]

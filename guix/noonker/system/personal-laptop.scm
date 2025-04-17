@@ -62,6 +62,7 @@
           (service cups-service-type)
           (service boltd-service-type)
 	  (service bluetooth-service-type)
+	  (service nftables-service-type)
           (set-xorg-configuration
            (xorg-configuration (keyboard-layout keyboard-layout)))
 	  audio-realtime-service
