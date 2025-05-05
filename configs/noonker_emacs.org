@@ -13,17 +13,43 @@ It is broken up into several sections:
 #+begin_src emacs-lisp :tangle ~/.emacs
 (when (string-equal system-type "android")
   ;; Add Termux binaries to PATH environment
-  (let ((termuxpath "/data/data/com.termux/files/usr/bin"))
+  (let ((termuxpath "/data/data/com.termux/files/usr/bin")
+	(userpath "/data/data/org.gnu.emacs/files/bin")
+	(clojurepath "/data/data/org.gnu.emacs/files/bin/bin/"))
     (setenv "PATH" (concat (getenv "PATH") ":" termuxpath))
-    (setq exec-path (append exec-path (list termuxpath)))))
+    (setenv "PATH" (concat (getenv "PATH") ":" userpath))
+    (setenv "PATH" (concat (getenv "PATH") ":" clojurepath))
+    (setq exec-path (append exec-path (list termuxpath clojurepath userpath)))
+    (getenv "PATH")
 
-(push "/data/data/com.termux/files/usr/bin" exec-path)
+    ;; LaTeX
 
-;; Not ideal workaround
+    (let ((texpath "/data/data/com.termux/files/usr/bin/texlive")
+	  (texmfroot "/data/data/com.termux/files/usr/share/texlive/2025")
+	  (texmflocal "/data/data/com.termux/files/usr/share/texlive/texmf-local")
+	  (texfontdir "/data/data/com.termux/files/usr/share/fonts/TTF")
+	  (textrfont "/data/data/com.termux/files/usr/share/groff/{current/font,site-font}/devps"))
 
-;; (shell-command-to-string "gpgconf --kill gpg-agent") 
+      (setenv "PATH" (concat (getenv "PATH") ":" texpath))
+      (setq exec-path (append exec-path (list texpath)))
+      (setenv "TEXMFROOT" texmfroot)
+      (setenv "TEXMFLOCAL" texmflocal)
+      (setenv "OSFONTDIR" texfontdir)
+      (setenv "TRFONTS" textrfont)
+      )
 
-(add-hook 'after-change-major-mode-hook (lambda () (set-text-conversion-style nil)))
+    ;; Enable Emojis on Android 😀
+    (set-fontset-font t 'emoji '("Noto Emoji" . "iso10646-1") nil 'prepend)
+
+    ;; (push "/data/data/com.termux/files/usr/bin" exec-path)
+
+    ;; Not ideal workaround
+
+    ;; (shell-command-to-string "gpgconf --kill gpg-agent") 
+
+    (add-hook 'after-change-major-mode-hook (lambda () (set-text-conversion-style nil)))
+
+    (setenv "JAVA_CMD" "/data/data/com.termux/files/usr/bin/java")))
 #+end_src
 
 * Bootstrap Straight.el
@@ -247,8 +273,25 @@ Leuven Theme and Comic Mono
    (load-theme 'leuven)
     ))
 
+;; LaTeX previews are a better size
+;; Googlers, if you find that you're getting blank preview
+;; return it may be that it's just rendering it inperceptably
+;; small. 
+(if is-mobile
+    (setq org-format-latex-options
+	  (plist-put org-format-latex-options :scale 70.0))
+    )
+
 ;; Better font on my home computer :)
-(if is-mobile (set-face-attribute 'default nil :height 100))
+(if is-mobile
+    (progn
+      (use-package nerd-icons
+	:config
+	(setq nerd-icons-font-family "Monoid Nerd Font Mono")
+	(set-face-attribute 'default nil :font "Monoid Nerd Font Mono" :height 60)
+	)
+      
+      ))
 (if im-at-work
     (set-face-attribute 'default nil :height 60)
 (if (string= "blep" (system-name)) (set-face-attribute 'default nil :font "Comic Code" :height 130)))
@@ -259,7 +302,10 @@ Leuven Theme and Comic Mono
 Random global behavior configs
 
 #+begin_src emacs-lisp :tangle ~/.emacs
-(setq display-line-numbers-type 'relative) ;; Relative line numbers
+(setq-default display-line-numbers 'visual
+	    display-line-numbers-current-absolute t
+	    display-line-numbers-width 4 
+	    display-line-numbers-widen t)
 (add-hook 'artist-mode-hook (lambda () (setq indent-tabs-mode nil)))
 (global-display-line-numbers-mode) ;; Enable line numbers
 (custom-set-variables '(linum-format 'dynamic)) ;; Automatically align line numbers
@@ -334,12 +380,12 @@ Anything in this section can be described in one sentence.
 (defalias 'original-password-store-get (symbol-function 'password-store-get))
 
 ;; Nasty mobile hack
-(defun password-store-get (entry &optional callback)
-  (interactive)
-  (progn
-    (shell-command-to-string "gpgconf --kill gpg-agent")
-    (original-password-store-get entry callback)
-      ))
+;; (defun password-store-get (entry &optional callback)
+;;   (interactive)
+;;   (progn
+;;     (shell-command-to-string "gpgconf --kill gpg-agent")
+;;     (original-password-store-get entry callback)
+;;       ))
 #+end_src
 
 ** Shell
@@ -412,8 +458,8 @@ INITIAL-INPUT can be given as the initial minibuffer input."
       		 (with-face ")" 'eshell-git-prompt-robyrussell-git-face)))
       	  (setq git-dirty
       		(when (eshell-git-prompt--collect-status)
-      		  (with-face "✗" 'eshell-git-prompt-robyrussell-git-dirty-face)))
-      	  (concat git-branch git-dirty)) "☮" )))
+      		  (with-face "🫠" 'eshell-git-prompt-robyrussell-git-dirty-face)))
+      	  (concat git-branch git-dirty)) "🤚" )))
 
 (setq eshell-prompt-function
       (lambda ()
@@ -1191,9 +1237,10 @@ Clojure + LSP
 (use-package lsp-treemacs)
 (use-package clj-refactor)
 
-(add-hook 'clojure-mode-hook 'lsp)
-(add-hook 'clojurescript-mode-hook 'lsp)
-(add-hook 'clojurec-mode-hook 'lsp)
+(if (not is-mobile)
+  (add-hook 'clojure-mode-hook 'lsp)
+  (add-hook 'clojurescript-mode-hook 'lsp)
+  (add-hook 'clojurec-mode-hook 'lsp))
 
 (setq gc-cons-threshold (* 100 1024 1024)
       read-process-output-max (* 1024 1024)
@@ -1362,8 +1409,9 @@ Clojure + LSP
   :config (require 'ox-extra)
   (ox-extras-activate '(ignore-headlines)))
 
-(setq org-format-latex-options (plist-put org-format-latex-options :scale 2.0))
-
+;; For desktop, a 2.0 scaling is appropriate
+(if (not is-mobile)
+    (setq org-format-latex-options (plist-put org-format-latex-options :scale 2.0)))
 
 (evil-define-key 'normal org-mode-map "gjl" 'org-latex-preview)
 #+end_src
@@ -1384,7 +1432,6 @@ Clojure + LSP
 (setq org-directory "~/org")
 (setq org-agenda-basedir "~/org/tasks")
 
-(add-hook 'org-mode-hook (lambda () (org-bullets-mode 1))) ;; Add special bullets
 (setq org-startup-align-all-tables t) ;; Aligns tables when a file is opened
 (setq org-startup-shrink-all-tables t) ;; Shrinks tables according to <x> tags in the column headers
 (setq org-clock-out-switch-to-state "TODO")
@@ -1487,7 +1534,6 @@ Clojure + LSP
    (C . t)
    (org . t)
    (clojure . t)
-   (jupyter . t)
    (d2 . t)
    ))
 
@@ -1647,7 +1693,6 @@ Clojure + LSP
 
 *** Org Packages
 #+begin_src emacs-lisp :tangle ~/.emacs
-(use-package org-bullets)
 (use-package org-web-tools)
 #+end_src
 
@@ -1712,8 +1757,7 @@ Blogging with hugo
 #+begin_src emacs-lisp :tangle ~/.emacs
 (use-package flyspell
   :config
-  (setq ispell-program-name "aspell"
-	ispell-list-command "--list")
+  (setq ispell-program-name "hunspell")
   (dolist (hook '(text-mode-hook))
     (add-hook hook (lambda () (flyspell-mode 1))))
   (add-hook 'python-mode-hook
@@ -2453,6 +2497,17 @@ These functions are helpers and should be self explanitory
 (org-ai-global-mode)
 (setq org-ai-default-chat-model "gpt-4") ; if you are on the gpt-4 beta:
 (org-ai-install-yasnippets)
+
+;; Make mobile programming somewhat possible with a virtual keyboard
+(if is-mobile
+    (use-package copilot
+      :straight (:host github :repo "copilot-emacs/copilot.el" :files ("*.el"))
+      :ensure t
+      :config
+      (add-hook 'prog-mode-hook 'copilot-mode)
+      (define-key copilot-completion-map (kbd "<tab>") 'copilot-accept-completion)
+      (define-key copilot-completion-map (kbd "TAB") 'copilot-accept-completion)
+      ))
 #+end_src
 
 * Hunting
