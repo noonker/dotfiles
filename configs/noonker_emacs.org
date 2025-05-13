@@ -290,11 +290,14 @@ Leuven Theme and Comic Mono
 	(setq nerd-icons-font-family "Monoid Nerd Font Mono")
 	(set-face-attribute 'default nil :font "Monoid Nerd Font Mono" :height 60)
 	)
+      )
+  )
       
-      ))
+(if (string= "blep" (system-name))
+    (set-face-attribute 'default nil :font "Comic Code" :height 130))
+
 (if im-at-work
-    (set-face-attribute 'default nil :height 60)
-(if (string= "blep" (system-name)) (set-face-attribute 'default nil :font "Comic Code" :height 130)))
+    (set-face-attribute 'default nil :font "Roboto Mono" :height 140))
 #+end_src
 
 ** Global Config
@@ -1031,6 +1034,105 @@ Lispy mode makes lisp-mode editing significantly more efficent
 
 (evil-set-initial-state 'magit-status-mode 'emacs)
 (evil-set-initial-state 'kubel-mode 'emacs)
+
+;; Trying out leader
+(use-package which-key
+  :ensure t
+  :config
+  (which-key-mode))
+
+(evil-set-leader 'visual (kbd "SPC"))
+(evil-set-leader 'normal (kbd "SPC"))
+
+;; Create prefix maps for organization
+(define-prefix-command 'noonker-file-map)
+(define-prefix-command 'noonker-buffer-map)
+(define-prefix-command 'noonker-window-map)
+(define-prefix-command 'noonker-search-map)
+(define-prefix-command 'noonker-help-map)
+(define-prefix-command 'noonker-project-map)
+(define-prefix-command 'noonker-code-map)
+(define-prefix-command 'noonker-toggle-map)
+(define-prefix-command 'noonker-org-map)
+
+;; Bind prefix maps to leader key
+(evil-define-key '(normal visual) 'global (kbd "<leader>f") noonker-file-map)
+(evil-define-key '(normal visual) 'global (kbd "<leader>b") noonker-buffer-map)
+(evil-define-key '(normal visual) 'global (kbd "<leader>w") noonker-window-map)
+(evil-define-key '(normal visual) 'global (kbd "<leader>s") noonker-search-map)
+(evil-define-key '(normal visual) 'global (kbd "<leader>h") noonker-help-map)
+(evil-define-key '(normal visual) 'global (kbd "<leader>p") noonker-project-map)
+(evil-define-key '(normal visual) 'global (kbd "<leader>c") noonker-code-map)
+(evil-define-key '(normal visual) 'global (kbd "<leader>t") noonker-toggle-map)
+(evil-define-key '(normal visual) 'global (kbd "<leader>o") noonker-org-map)
+
+;; Set which-key prefixes for better organization
+(which-key-add-key-based-replacements "SPC f" "files")
+(which-key-add-key-based-replacements "SPC b" "buffers")
+(which-key-add-key-based-replacements "SPC w" "windows")
+(which-key-add-key-based-replacements "SPC s" "search")
+(which-key-add-key-based-replacements "SPC h" "help")
+(which-key-add-key-based-replacements "SPC p" "projects")
+(which-key-add-key-based-replacements "SPC c" "code")
+(which-key-add-key-based-replacements "SPC t" "toggles")
+(which-key-add-key-based-replacements "SPC o" "org")
+
+;; File commands
+(define-key noonker-file-map (kbd "f") 'find-file)
+(define-key noonker-file-map (kbd "r") 'recentf-open-files)
+(define-key noonker-file-map (kbd "s") 'save-buffer)
+(define-key noonker-file-map (kbd "S") 'write-file)
+(define-key noonker-file-map (kbd "d") 'dired-jump)
+
+;; Buffer commands
+(define-key noonker-buffer-map (kbd "b") 'switch-to-buffer)
+(define-key noonker-buffer-map (kbd "d") 'kill-current-buffer)
+(define-key noonker-buffer-map (kbd "n") 'next-buffer)
+(define-key noonker-buffer-map (kbd "p") 'previous-buffer)
+(define-key noonker-buffer-map (kbd "R") 'revert-buffer)
+
+;; Window commands
+(define-key noonker-window-map (kbd "v") 'split-window-right)
+(define-key noonker-window-map (kbd "s") 'split-window-below)
+(define-key noonker-window-map (kbd "d") 'delete-window)
+(define-key noonker-window-map (kbd "m") 'delete-other-windows)
+(define-key noonker-window-map (kbd "w") 'other-window)
+
+;; Search commands
+(define-key noonker-search-map (kbd "s") 'isearch-forward)  ;; Or swiper if you have it
+(define-key noonker-search-map (kbd "r") 'query-replace)
+
+;; Help commands
+(define-key noonker-help-map (kbd "f") 'describe-function)
+(define-key noonker-help-map (kbd "v") 'describe-variable)
+(define-key noonker-help-map (kbd "k") 'describe-key)
+(define-key noonker-help-map (kbd "m") 'describe-mode)
+
+;; Project commands 
+(define-key noonker-project-map (kbd "f") 'projectile-find-file)
+(define-key noonker-project-map (kbd "p") 'projectile-switch-project)
+(define-key noonker-project-map (kbd "b") 'projectile-switch-to-buffer)
+
+;; Code commands 
+(define-key noonker-code-map (kbd "d") 'lsp-find-definition)
+(define-key noonker-code-map (kbd "r") 'lsp-find-references)
+(define-key noonker-code-map (kbd "f") 'lsp-format-buffer)
+(define-key noonker-code-map (kbd "c") 'compile)
+
+;; Toggle commands
+(define-key noonker-toggle-map (kbd "l") 'display-line-numbers-mode)
+(define-key noonker-toggle-map (kbd "w") 'whitespace-mode)
+(define-key noonker-toggle-map (kbd "n") 'global-display-line-numbers-mode)
+
+;; Org commands 
+(define-key noonker-org-map (kbd "a") 'org-agenda)
+(define-key noonker-org-map (kbd "c") 'org-capture)
+(define-key noonker-org-map (kbd "r") 'org-roam-capture)
+
+;; Add a few direct bindings to leader for common operations 
+(evil-define-key '(normal visual) 'global (kbd "<leader>.") 'find-file) ;; Quick access to find-file
+(evil-define-key '(normal visual) 'global (kbd "<leader>,") 'switch-to-buffer) ;; Quick buffer switch
+(evil-define-key '(normal visual) 'global (kbd "SPC SPC") 'execute-extended-command)
 #+end_src
 
 ** C/C++ / Platformio-DCMAKE_PREFIX_PATH=/usr/local/opt/llvm
