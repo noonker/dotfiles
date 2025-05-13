@@ -293,6 +293,9 @@ Leuven Theme and Comic Mono
       )
   )
       
+
+(set-fontset-font t 'emoji '("Noto Emoji" . "iso10646-1") nil 'prepend)
+
 (if (string= "blep" (system-name))
     (set-face-attribute 'default nil :font "Comic Code" :height 130))
 
@@ -1136,6 +1139,7 @@ Lispy mode makes lisp-mode editing significantly more efficent
 (evil-define-key '(normal visual) 'global (kbd "<leader>4") 'bookmark-jump) ;; Quick buffer switch
 (evil-define-key '(normal visual) 'global (kbd "SPC SPC") 'execute-extended-command)
 (evil-define-key '(normal visual) 'global (kbd "SPC ESC") 'keyboard-quit) 
+(evil-define-key '(normal visual) 'global (kbd "SPC e") 'emoji-insert)
 #+end_src
 
 ** C/C++ / Platformio-DCMAKE_PREFIX_PATH=/usr/local/opt/llvm
