@@ -1131,8 +1131,11 @@ Lispy mode makes lisp-mode editing significantly more efficent
 
 ;; Add a few direct bindings to leader for common operations 
 (evil-define-key '(normal visual) 'global (kbd "<leader>.") 'find-file) ;; Quick access to find-file
-(evil-define-key '(normal visual) 'global (kbd "<leader>,") 'switch-to-buffer) ;; Quick buffer switch
+(evil-define-key '(normal visual) 'global (kbd "<leader>2") 'switch-to-buffer) ;; Quick buffer switch
+(evil-define-key '(normal visual) 'global (kbd "<leader>3") 'yank-from-kill-ring) ;; Quick buffer switch
+(evil-define-key '(normal visual) 'global (kbd "<leader>4") 'bookmark-jump) ;; Quick buffer switch
 (evil-define-key '(normal visual) 'global (kbd "SPC SPC") 'execute-extended-command)
+(evil-define-key '(normal visual) 'global (kbd "SPC ESC") 'keyboard-quit) 
 #+end_src
 
 ** C/C++ / Platformio-DCMAKE_PREFIX_PATH=/usr/local/opt/llvm
