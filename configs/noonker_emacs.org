@@ -757,25 +757,26 @@ IRC for Emacs
 ** Gnus
 
 #+begin_src emacs-lisp :tangle ~/.emacs
-(setq user-mail-address "noonker@pm.me"
-      user-full-name  "Joshua Person")
+(if (not im-at-work) 
+    (progn
+      (setq user-mail-address "noonker@pm.me"
+	    user-full-name  "Joshua Person")
 
-(setq send-mail-function 'smtpmail-send-it
-      starttls-use-gnutls t
-      smtpmail-smtp-server "127.0.0.1"
-      smtpmail-smtp-service 1025
-      smtpmail-auth-credentials "~/.authinfo.gpg"
-      smtpmail-stream-type 'starttls
-      smtpmail-smtp-user "noonker@pm.me")
+      (setq send-mail-function 'smtpmail-send-it
+	    starttls-use-gnutls t
+	    smtpmail-smtp-server "127.0.0.1"
+	    smtpmail-smtp-service 1025
+	    smtpmail-auth-credentials "~/.authinfo.gpg"
+	    smtpmail-stream-type 'starttls
+	    smtpmail-smtp-user "noonker@pm.me")
 
-(setq gnus-select-method '(nnimap "protonmail"
-				  (nnimap-address "127.0.0.1")
-				  (nnimap-server-port 1143)
- 				      (nnimap-inbox "INBOX")
-				  (nnimap-subscribed-newsgroups ("nnimap+protonmail:INBOX"))
-				  (nnimap-stream starttls)
-				  (nnimap-authinfo-file "~/.authinfo.gpg")))
-
+      (setq gnus-select-method '(nnimap "protonmail"
+					(nnimap-address "127.0.0.1")
+					(nnimap-server-port 1143)
+ 					(nnimap-inbox "INBOX")
+					(nnimap-subscribed-newsgroups ("nnimap+protonmail:INBOX"))
+					(nnimap-stream starttls)
+					(nnimap-authinfo-file "~/.authinfo.gpg")))))
 ;; (setq gnus-check-new-newsgroups nil)
 #+end_src
 
@@ -787,16 +788,15 @@ Email client for emacs
 (require 'org-msg)
 (setq org-msg-options "html-postamble:nil H:5 num:nil ^:{} toc:nil author:nil email:nil \\n:t"
       org-msg-startup "hidestars indent inlineimages"
-      org-msg-greeting-fmt "\nHello,%s,\n\n"
+      org-msg-greeting-fmt "\nHello,\n\n"
       org-msg-greeting-name-limit 3
       org-msg-default-alternatives '((new		. (text html))
   				     (reply-to-html	. (text html))
   				     (reply-to-text	. (text)))
       org-msg-convert-citation t
       org-msg-signature "
-  Joshua ✌️
-  This message was composed without the use of AI I respect our shared humanity
-  ")
+Joshua ✌️
+This message was composed without the use of AI I respect our shared humanity")
 (org-msg-mode)
 #+end_src
 
