@@ -300,7 +300,7 @@ Leuven Theme and Comic Mono
     (set-face-attribute 'default nil :font "Comic Code" :height 130))
 
 (if im-at-work
-    (set-face-attribute 'default nil :font "Roboto Mono" :height 140))
+    (set-face-attribute 'default nil :font "JetBrains Mono" :height 140))
 #+end_src
 
 ** Global Config
@@ -315,6 +315,7 @@ Random global behavior configs
 (add-hook 'artist-mode-hook (lambda () (setq indent-tabs-mode nil)))
 (global-display-line-numbers-mode) ;; Enable line numbers
 (custom-set-variables '(linum-format 'dynamic)) ;; Automatically align line numbers
+(setq display-line-numbers-type 'relative)
 (global-hl-line-mode) ;; Highlight the current line
 (tool-bar-mode -1) ;; Don't show the ugly emacs toolbar
 (scroll-bar-mode -1) ;; No scroll bars
@@ -780,22 +781,23 @@ IRC for Emacs
 
 Email client for emacs
 
-#+begin_src emacs-lisp
- (setq mail-user-agent 'gnus-user-agent)
- (require 'org-msg)
- (setq org-msg-options "html-postamble:nil H:5 num:nil ^:{} toc:nil author:nil email:nil \\n:t"
-	org-msg-startup "hidestars indent inlineimages"
-	org-msg-greeting-fmt "\nHello,%s,\n\n"
-	org-msg-greeting-name-limit 3
-	org-msg-default-alternatives '((new		. (text html))
-				       (reply-to-html	. (text html))
-				       (reply-to-text	. (text)))
-	org-msg-convert-citation t
-	org-msg-signature "
-Joshua ✌️
-This message was composed without the use of AI I respect our shared humanity
-")
- (org-msg-mode)
+#+begin_src emacs-lisp :tangle ~/.emacs
+(use-package org-msg)
+(setq mail-user-agent 'gnus-user-agent)
+(require 'org-msg)
+(setq org-msg-options "html-postamble:nil H:5 num:nil ^:{} toc:nil author:nil email:nil \\n:t"
+      org-msg-startup "hidestars indent inlineimages"
+      org-msg-greeting-fmt "\nHello,%s,\n\n"
+      org-msg-greeting-name-limit 3
+      org-msg-default-alternatives '((new		. (text html))
+  				     (reply-to-html	. (text html))
+  				     (reply-to-text	. (text)))
+      org-msg-convert-citation t
+      org-msg-signature "
+  Joshua ✌️
+  This message was composed without the use of AI I respect our shared humanity
+  ")
+(org-msg-mode)
 #+end_src
 
 #+RESULTS:
@@ -1327,6 +1329,8 @@ Platformio is for programming embedded devices
 Typescript + LSP
 
 #+begin_src emacs-lisp :tangle ~/.emacs
+(use-package rjsx-mode)
+
 (use-package typescript-mode)
 
 (use-package tide
@@ -2890,6 +2894,7 @@ Load my RSS feeds
 	("http://jacobinmag.com/feed" jacobin lefty)
 	("https://journalofcontroversialideas.org/rss" controvertial-ideas lefty)
 	("https://www.documentjournal.com/category/above-the-fold/rss" document-journal lefty)
+	("https://dansinker.com/feed.xml" dansinker)
 	))
 #+end_src
 
