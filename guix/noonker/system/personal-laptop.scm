@@ -9,6 +9,7 @@
 (define-module (noonker system personal-laptop)
   #:use-module (gnu)
   #:use-module (gnu packages linux)
+  #:use-module (gnu packages radio)
   #:use-module (gnu packages ssh)
   #:use-module (guix records)
   #:use-module (noonker services boltd)
@@ -21,6 +22,11 @@
 )
 
 (use-service-modules cups desktop networking ssh xorg)
+
+(define %bladerf-udev-rule
+  (udev-rule
+   "90-bladerf-xA4.rules"
+   (string-append "SUBSYSTEM==\"usb\", ATTRS{idVendor}==\"2cf0\", ATTRS{idProduct}==\"5250\", MODE=\"0660\", GROUP=\"input\"")))
 
 (operating-system
   (locale "en_US.utf8")
@@ -52,7 +58,7 @@
   ;; under their own account: use 'guix search KEYWORD' to search
   ;; for packages and 'guix install PACKAGE' to install a package.
    (packages (append (list (specification->package "nss-certs"))
-		     (list bolt openssh)
+		     (list bolt openssh bladerf)
 		     %base-packages))
 
   ;; Below is the list of system services.  To search for available
@@ -63,6 +69,7 @@
           (service boltd-service-type)
 	  (service bluetooth-service-type)
 	  (service nftables-service-type)
+          (udev-rules-service 'bladerf %bladerf-udev-rule)
           (set-xorg-configuration
            (xorg-configuration (keyboard-layout keyboard-layout)))
 	  audio-realtime-service

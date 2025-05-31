@@ -59,6 +59,7 @@
                                            "signal-desktop"
                                            "firefox"
 					   "clojure"
+					   "babashka"
 					   "coreutils"
 					   "openjdk"
 					   "clojure-tools"

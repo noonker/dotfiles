@@ -114,10 +114,8 @@ This section sets up [[https://github.com/radian-software/straight.el][straight.
 (if (executable-find "guix")
     (setq is-guix t))
 
-(if (string= (current-platform)
-	     "mac")
-    (use-package exec-path-from-shell
-      :init (exec-path-from-shell-initialize)))
+(use-package exec-path-from-shell
+  :init (exec-path-from-shell-initialize))
 #+end_src
 
 ** Vertico

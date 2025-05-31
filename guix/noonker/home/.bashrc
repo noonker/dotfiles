@@ -25,6 +25,11 @@ fi
 PATH="$PATH:$HOME/.local/share/yabridge"
 PATH="$PATH:$HOME/.local/bin"
 PATH="$PATH:$HOME/bin"
+PATH="$HOME/clojure/bin:$PATH"
+
+export JAVA_HOME=$HOME/jdk24
+PATH=$JAVA_HOME/bin:$PATH
+export PATH
 
 # Adjust the prompt depending on whether we're in 'guix environment'.
 if [ -n "$GUIX_ENVIRONMENT" ]
