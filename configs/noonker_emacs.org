@@ -571,9 +571,6 @@ Tramp allows for nearly transparent editing of files on remote machines. Run =C-
                (:exclude ".dir-locals.el" "*-tests.el"))))
 
 (add-hook `eat-mode-hook (lambda () (setq-local scroll-conservatively 10000)))
-
-(use-package vterm
-    :ensure t)
 #+end_src
 
 ** Dired
