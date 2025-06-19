@@ -7,8 +7,14 @@
 (use-modules (gnu home)
              (gnu packages)
              (gnu services)
+             (gnu home services desktop)
+	     (gnu home services sound)
              (guix gexp)
              (gnu home services shells))
+
+(define pipewire-config
+  (home-pipewire-configuration
+   (enable-pulseaudio? #t)))
 
 (home-environment
  ;; Below is the list of packages that will show up in your
@@ -71,13 +77,31 @@
 					   "wine64"
 					   "tmux"
 					   "alsa-utils"
+					   ;; Guile Hacking
+					   "guile"
+					   "emacs-geiser"
+					   "emacs-geiser-guile"
+					   ;; Radio
+					   "gnuradio"
+
+					   ;; Needed to build gr-bladeRF
+					   "spdlog"
+					   "gmp"
+					   "boost"
+					   "volk"
+					   "pybind11"
+					   "gr-osmosdr"
+					   "mako"
 					   )))
  
 
   ;; Below is the list of Home services.  To search for available
   ;; services, run 'guix home search KEYWORD' in a terminal.
   (services
-   (list (service home-bash-service-type
+   (list
+    (service home-pipewire-service-type pipewire-config)
+    (service home-dbus-service-type)
+    (service home-bash-service-type
                   (home-bash-configuration
                    (aliases '(("grep" . "grep --color=auto") ("ll" . "ls -l")
                               ("ls" . "ls -p --color=auto")))
@@ -87,4 +111,5 @@
                                   "bashrc")))
                    (bash-profile (list (local-file
                                         "/home/person/git/dotfiles/guix/noonker/home/.bash_profile"
-                                        "bash_profile"))))))))
+                                        "bash_profile")))))
+    )))

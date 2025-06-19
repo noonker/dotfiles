@@ -941,6 +941,29 @@ Spray mode is a speed-reading mode
 	(yaml "https://github.com/ikatyang/tree-sitter-yaml")))
 #+end_src
 
+** Guile
+#+begin_src emacs-lisp :tangle ~/.emacs
+;; Assuming the Guix checkout is in ~/git/guix.
+(if is-guix
+    (progn
+      (with-eval-after-load 'geiser-guile
+	(add-to-list 'geiser-guile-load-path "~/git/guix"))
+      
+      ;; Assuming the Guix checkout is in ~/git/guix.
+      ;; Yasnippet configuration
+      (with-eval-after-load 'yasnippet
+	(add-to-list 'yas-snippet-dirs "~/git/guix/etc/snippets/yas"))
+      ;; Tempel configuration
+      (with-eval-after-load 'tempel
+	;; Ensure tempel-path is a list -- it may also be a string.
+	(unless (listp 'tempel-path)
+	  (setq tempel-path (list tempel-path)))
+	(add-to-list 'tempel-path "~/git/guix/etc/snippets/tempel/*"))
+      
+      (load-file "~/git/guix/etc/copyright.el")
+      ))
+#+end_src
+
 ** LSP
 #+begin_src emacs-lisp :tangle ~/.emacs
 (use-package lsp-ui

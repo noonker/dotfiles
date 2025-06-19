@@ -31,6 +31,9 @@ export JAVA_HOME=$HOME/jdk24
 PATH=$JAVA_HOME/bin:$PATH
 export PATH
 
+# Python
+source $HOME/.virtualenvs/system/bin/activate
+
 # Adjust the prompt depending on whether we're in 'guix environment'.
 if [ -n "$GUIX_ENVIRONMENT" ]
 then
