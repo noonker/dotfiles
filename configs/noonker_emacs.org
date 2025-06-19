@@ -398,6 +398,14 @@ Anything in this section can be described in one sentence.
 Emacs shell settings
 
 #+begin_src emacs-lisp :tangle ~/.emacs
+(defun noonker/simple-password (&optional prefix-len)
+  (interactive "P")
+  (let ((len (if prefix-len prefix-len 10)))
+  (kill-new
+   (shell-command-to-string
+    (concat "tr -dc \'A-Za-z0-9!?%=\' < /dev/urandom | head -c "
+	    (number-to-string len))))))
+
 ;; https://timmydouglas.com/2020/12/17/eshell-counsel.html
 (defun timmy/counsel-eshell-history-action (cmd)
   "Insert cmd into the buffer"
