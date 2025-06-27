@@ -499,9 +499,11 @@ INITIAL-INPUT can be given as the initial minibuffer input."
 
 (setq eshell-visual-commands '("htop" "vi" "screen" "top" "less"
       			       "more" "lynx" "ncftp" "pine" "tin" "trn" "elm"
-      			       "vim" "mitmproxy"))
+      			       "vim" "mitmproxy" "aider" "r2" "ssh"))
 
-(setq eshell-visual-subcommands '("git" "log" "diff" "show" "ssh"))
+(setq eshell-visual-subcommands '())
+(add-to-list 'eshell-visual-subcommands '("git" "log" "diff" "show"))
+(add-to-list 'eshell-visual-subcommands '("docker" "build"))
 
 (setenv "PAGER" "cat")
 
@@ -577,6 +579,11 @@ Tramp allows for nearly transparent editing of files on remote machines. Run =C-
                ("terminfo/65" "terminfo/65/*")
                ("integration" "integration/*")
                (:exclude ".dir-locals.el" "*-tests.el"))))
+;; For `eat-eshell-mode'.
+(add-hook 'eshell-load-hook #'eat-eshell-mode)
+
+;; For `eat-eshell-visual-command-mode'.
+(add-hook 'eshell-load-hook #'eat-eshell-visual-command-mode)
 
 (add-hook `eat-mode-hook (lambda () (setq-local scroll-conservatively 10000)))
 #+end_src
@@ -1896,7 +1903,7 @@ Blogging with hugo
 #+begin_src emacs-lisp :tangle ~/.emacs
 (use-package flyspell
   :config
-  (setq ispell-program-name "hunspell")
+  (setq ispell-program-name "aspell")
   (dolist (hook '(text-mode-hook))
     (add-hook hook (lambda () (flyspell-mode 1))))
   (add-hook 'python-mode-hook

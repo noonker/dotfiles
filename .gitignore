@@ -2,3 +2,4 @@
 josh.py
 josh.pyc
 *.pyc
+.aider*
