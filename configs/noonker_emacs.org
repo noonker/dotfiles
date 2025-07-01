@@ -2656,6 +2656,17 @@ These functions are helpers and should be self explanitory
       ))
 #+end_src
 
+** Aidermacs
+
+#+begin_src emacs-lisp :tangle ~/.emacs
+(use-package aidermacs
+  :bind (("C-c m" . aidermacs-transient-menu))
+  :custom
+  ; See the Configuration section below
+  (aidermacs-default-chat-mode 'architect)
+  (aidermacs-default-model "sonnet"))
+#+end_src
+
 * Hunting
 #+begin_src emacs-lisp :tangle ~/.emacs
 (use-package yara-mode)
