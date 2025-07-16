@@ -261,6 +261,8 @@ This section sets up [[https://github.com/radian-software/straight.el][straight.
 Leuven Theme and Comic Mono
 
 #+begin_src emacs-lisp :tangle ~/.emacs
+(use-package autothemer)
+
 (defvar how-ya-feeling 'burn-my-eyes)
 
 (cond
@@ -376,8 +378,12 @@ Emacs can nearly transparently use .gpg encrypted files in emacs. These settings
 Anything in this section can be described in one sentence.
 
 #+begin_src emacs-lisp :tangle ~/.emacs
-(use-package magit)
-(if (not is-mobile) (setopt magit-format-file-function #'magit-format-file-nerd-icons))  
+(use-package magit
+  :config
+  (evil-set-initial-state 'magit-status-mode 'emacs)
+  (if (not is-mobile)
+    (setopt magit-format-file-function #'magit-format-file-nerd-icons))  
+  )
 (use-package transient)
 (use-package pass
   :config (global-set-key (kbd "<f12>") 'password-store-copy)) ;; Password Store
@@ -449,6 +455,12 @@ INITIAL-INPUT can be given as the initial minibuffer input."
             (progn
 	      (evil-local-set-key 'normal (kbd "gr") #'timmy/counsel-eshell-history)
 	      (evil-local-set-key 'insert (kbd "C-r") #'timmy/counsel-eshell-history))))
+
+;; For updating VENV information based on .dir-locals.el
+(add-hook 'eshell-directory-change-hook
+	  (lambda ()
+	    (progn
+	      (hack-local-variables))))
 
 (eshell-git-prompt-use-theme 'robbyrussell) ;; Eshell theme
 
@@ -913,7 +925,9 @@ Magit is git porcelain for Emacs
 ** Kubernetes
 
 #+begin_src emacs-lisp :tangle ~/.emacs
-(use-package kubel)
+(use-package kubel
+  :config
+  (evil-set-initial-state 'kubel-mode 'emacs))
 #+end_src
 
 ** Spray Mode
@@ -1069,112 +1083,6 @@ Lispy mode makes lisp-mode editing significantly more efficent
   (interactive)
   (save-buffer)
   (kill-current-buffer))
-
-(evil-set-initial-state 'magit-status-mode 'emacs)
-(evil-set-initial-state 'kubel-mode 'emacs)
-
-;; Trying out leader
-(use-package which-key
-  :ensure t
-  :config
-  (which-key-mode))
-
-(evil-set-leader 'visual (kbd "SPC"))
-(evil-set-leader 'normal (kbd "SPC"))
-
-;; Create prefix maps for organization
-(define-prefix-command 'noonker-file-map)
-(define-prefix-command 'noonker-buffer-map)
-(define-prefix-command 'noonker-window-map)
-(define-prefix-command 'noonker-search-map)
-(define-prefix-command 'noonker-help-map)
-(define-prefix-command 'noonker-project-map)
-(define-prefix-command 'noonker-code-map)
-(define-prefix-command 'noonker-toggle-map)
-(define-prefix-command 'noonker-org-map)
-
-;; Bind prefix maps to leader key
-(evil-define-key '(normal visual) 'global (kbd "<leader>f") noonker-file-map)
-(evil-define-key '(normal visual) 'global (kbd "<leader>b") noonker-buffer-map)
-(evil-define-key '(normal visual) 'global (kbd "<leader>w") noonker-window-map)
-(evil-define-key '(normal visual) 'global (kbd "<leader>s") noonker-search-map)
-(evil-define-key '(normal visual) 'global (kbd "<leader>h") noonker-help-map)
-(evil-define-key '(normal visual) 'global (kbd "<leader>p") noonker-project-map)
-(evil-define-key '(normal visual) 'global (kbd "<leader>c") noonker-code-map)
-(evil-define-key '(normal visual) 'global (kbd "<leader>t") noonker-toggle-map)
-(evil-define-key '(normal visual) 'global (kbd "<leader>o") noonker-org-map)
-
-;; Set which-key prefixes for better organization
-(which-key-add-key-based-replacements "SPC f" "files")
-(which-key-add-key-based-replacements "SPC b" "buffers")
-(which-key-add-key-based-replacements "SPC w" "windows")
-(which-key-add-key-based-replacements "SPC s" "search")
-(which-key-add-key-based-replacements "SPC h" "help")
-(which-key-add-key-based-replacements "SPC p" "projects")
-(which-key-add-key-based-replacements "SPC c" "code")
-(which-key-add-key-based-replacements "SPC t" "toggles")
-(which-key-add-key-based-replacements "SPC o" "org")
-
-;; File commands
-(define-key noonker-file-map (kbd "f") 'find-file)
-(define-key noonker-file-map (kbd "r") 'recentf-open-files)
-(define-key noonker-file-map (kbd "s") 'save-buffer)
-(define-key noonker-file-map (kbd "S") 'write-file)
-(define-key noonker-file-map (kbd "d") 'dired-jump)
-
-;; Buffer commands
-(define-key noonker-buffer-map (kbd "b") 'switch-to-buffer)
-(define-key noonker-buffer-map (kbd "d") 'kill-current-buffer)
-(define-key noonker-buffer-map (kbd "n") 'next-buffer)
-(define-key noonker-buffer-map (kbd "p") 'previous-buffer)
-(define-key noonker-buffer-map (kbd "R") 'revert-buffer)
-
-;; Window commands
-(define-key noonker-window-map (kbd "v") 'split-window-right)
-(define-key noonker-window-map (kbd "s") 'split-window-below)
-(define-key noonker-window-map (kbd "d") 'delete-window)
-(define-key noonker-window-map (kbd "m") 'delete-other-windows)
-(define-key noonker-window-map (kbd "w") 'other-window)
-
-;; Search commands
-(define-key noonker-search-map (kbd "s") 'isearch-forward)  ;; Or swiper if you have it
-(define-key noonker-search-map (kbd "r") 'query-replace)
-
-;; Help commands
-(define-key noonker-help-map (kbd "f") 'describe-function)
-(define-key noonker-help-map (kbd "v") 'describe-variable)
-(define-key noonker-help-map (kbd "k") 'describe-key)
-(define-key noonker-help-map (kbd "m") 'describe-mode)
-
-;; Project commands 
-(define-key noonker-project-map (kbd "f") 'projectile-find-file)
-(define-key noonker-project-map (kbd "p") 'projectile-switch-project)
-(define-key noonker-project-map (kbd "b") 'projectile-switch-to-buffer)
-
-;; Code commands 
-(define-key noonker-code-map (kbd "d") 'lsp-find-definition)
-(define-key noonker-code-map (kbd "r") 'lsp-find-references)
-(define-key noonker-code-map (kbd "f") 'lsp-format-buffer)
-(define-key noonker-code-map (kbd "c") 'compile)
-
-;; Toggle commands
-(define-key noonker-toggle-map (kbd "l") 'display-line-numbers-mode)
-(define-key noonker-toggle-map (kbd "w") 'whitespace-mode)
-(define-key noonker-toggle-map (kbd "n") 'global-display-line-numbers-mode)
-
-;; Org commands 
-(define-key noonker-org-map (kbd "a") 'org-agenda)
-(define-key noonker-org-map (kbd "c") 'org-capture)
-(define-key noonker-org-map (kbd "r") 'org-roam-capture)
-
-;; Add a few direct bindings to leader for common operations 
-(evil-define-key '(normal visual) 'global (kbd "<leader>.") 'find-file) ;; Quick access to find-file
-(evil-define-key '(normal visual) 'global (kbd "<leader>2") 'switch-to-buffer) ;; Quick buffer switch
-(evil-define-key '(normal visual) 'global (kbd "<leader>3") 'yank-from-kill-ring) ;; Quick buffer switch
-(evil-define-key '(normal visual) 'global (kbd "<leader>4") 'bookmark-jump) ;; Quick buffer switch
-(evil-define-key '(normal visual) 'global (kbd "SPC SPC") 'execute-extended-command)
-(evil-define-key '(normal visual) 'global (kbd "SPC ESC") 'keyboard-quit) 
-(evil-define-key '(normal visual) 'global (kbd "SPC e") 'emoji-insert)
 #+end_src
 
 ** C/C++ / Platformio-DCMAKE_PREFIX_PATH=/usr/local/opt/llvm
@@ -1315,7 +1223,7 @@ Python + LSP
   (elpy-enable)
   (pyvenv-tracking-mode)
   (setq elpy-rpc-virtualenv-path 'current)
-  (setq elpy-shell-starting-directory 'current-directory) ;; default is 'project-root 
+  ;; (setq elpy-shell-starting-directory 'current-directory) ;; default is 'project-root 
   (setenv "WORKON_HOME" (file-name-concat (file-truename "~") ".virtualenvs"))
   (setq python-shell-interpreter "python"))
 
@@ -1336,6 +1244,27 @@ Python + LSP
   (dap-auto-configure-mode)
   (setq dap-python-debugger 'debugpy)
   )
+
+(defun noonker/create-virtualenv-files ()
+  "Create .envrc and .dir-locals.el for a selected virtualenv."
+  (interactive)
+  (let* ((venv-dir "~/.virtualenvs/")
+         (venvs (when (file-directory-p (expand-file-name venv-dir))
+                  (directory-files (expand-file-name venv-dir) nil "^[^.]")))
+         (venv (completing-read "Select virtualenv: " venvs))
+         (envrc-content (format "echo \"Activating %s venv\"\nsource ~/.virtualenvs/%s/bin/activate\n"
+                               venv venv))
+         (dirlocals-content (format "((nil . ((pyvenv-workon . \"%s\"))))\n" venv)))
+
+    ;; Write .envrc file
+    (with-temp-file (expand-file-name ".envrc" default-directory)
+      (insert envrc-content))
+
+    ;; Write .dir-locals.el file
+    (with-temp-file (expand-file-name ".dir-locals.el" default-directory)
+      (insert dirlocals-content))
+
+    (message "Created .envrc and .dir-locals.el for %s virtualenv" venv)))
 
 (evil-define-key 'normal python-mode-map "gjd" 'dap-debug)
 (evil-define-key 'normal python-mode-map "gjl" 'dap-continue)
@@ -1562,8 +1491,7 @@ Clojure + LSP
 (evil-define-key 'normal org-mode-map "gjl" 'org-latex-preview)
 #+end_src
 
-** Org Mode
-
+* Org Mode
 *** Verb
 #+begin_src emacs-lisp :tangle ~/.emacs
 (use-package verb)
@@ -1574,6 +1502,7 @@ Clojure + LSP
 (setq org-fontify-whole-heading-line t)
 (setq org-startup-folded t)
 
+(add-hook 'org-mode-hook (lambda () (display-line-numbers-mode -1)))
 
 (setq org-directory "~/org")
 (setq org-agenda-basedir "~/org/tasks")
@@ -1891,7 +1820,9 @@ Blogging with hugo
   :straight (:host github :repo "misohena/el-easydraw" :files ("dist" "*.el"))
   :config (with-eval-after-load 'org
 	    (require 'edraw-org)
-	    (edraw-org-setup-default)))
+	    (edraw-org-setup-default)
+	    (evil-set-initial-state 'edraw-property-editor-mode 'emacs)
+	    ))
 #+end_src
 
 ** Markdown
@@ -3019,4 +2950,113 @@ Load my RSS feeds
     (progn
       (org-babel-lob-ingest "~/org/config.org")
       (org-sbe work-config)))
+#+end_src
+* Shortcuts
+
+#+begin_src emacs-lisp :tangle ~/.emacs
+;; Initial States
+
+;; Trying out leader
+(use-package which-key
+  :ensure t
+  :config
+  (which-key-mode))
+
+(evil-set-leader 'visual (kbd "SPC"))
+(evil-set-leader 'normal (kbd "SPC"))
+
+;; Create prefix maps for organization
+(define-prefix-command 'noonker-file-map)
+(define-prefix-command 'noonker-buffer-map)
+(define-prefix-command 'noonker-window-map)
+(define-prefix-command 'noonker-search-map)
+(define-prefix-command 'noonker-help-map)
+(define-prefix-command 'noonker-project-map)
+(define-prefix-command 'noonker-code-map)
+(define-prefix-command 'noonker-toggle-map)
+(define-prefix-command 'noonker-org-map)
+
+;; Bind prefix maps to leader key
+(evil-define-key '(normal visual) 'global (kbd "<leader>f") noonker-file-map)
+(evil-define-key '(normal visual) 'global (kbd "<leader>b") noonker-buffer-map)
+(evil-define-key '(normal visual) 'global (kbd "<leader>w") noonker-window-map)
+(evil-define-key '(normal visual) 'global (kbd "<leader>s") noonker-search-map)
+(evil-define-key '(normal visual) 'global (kbd "<leader>h") noonker-help-map)
+(evil-define-key '(normal visual) 'global (kbd "<leader>p") noonker-project-map)
+(evil-define-key '(normal visual) 'global (kbd "<leader>c") noonker-code-map)
+(evil-define-key '(normal visual) 'global (kbd "<leader>t") noonker-toggle-map)
+(evil-define-key '(normal visual) 'global (kbd "<leader>o") noonker-org-map)
+
+;; Set which-key prefixes for better organization
+(which-key-add-key-based-replacements "SPC f" "files")
+(which-key-add-key-based-replacements "SPC b" "buffers")
+(which-key-add-key-based-replacements "SPC w" "windows")
+(which-key-add-key-based-replacements "SPC s" "search")
+(which-key-add-key-based-replacements "SPC h" "help")
+(which-key-add-key-based-replacements "SPC p" "projects")
+(which-key-add-key-based-replacements "SPC c" "code")
+(which-key-add-key-based-replacements "SPC t" "toggles")
+(which-key-add-key-based-replacements "SPC o" "org")
+
+;; File commands
+(define-key noonker-file-map (kbd "f") 'find-file)
+(define-key noonker-file-map (kbd "r") 'recentf-open-files)
+(define-key noonker-file-map (kbd "s") 'save-buffer)
+(define-key noonker-file-map (kbd "S") 'write-file)
+(define-key noonker-file-map (kbd "d") 'dired-jump)
+
+;; Buffer commands
+(define-key noonker-buffer-map (kbd "b") 'switch-to-buffer)
+(define-key noonker-buffer-map (kbd "d") 'kill-current-buffer)
+(define-key noonker-buffer-map (kbd "n") 'next-buffer)
+(define-key noonker-buffer-map (kbd "p") 'previous-buffer)
+(define-key noonker-buffer-map (kbd "R") 'revert-buffer)
+
+;; Window commands
+(define-key noonker-window-map (kbd "h") 'split-window-right)
+(define-key noonker-window-map (kbd "j") 'split-window-below)
+(define-key noonker-window-map (kbd "d") 'delete-window)
+(define-key noonker-window-map (kbd "m") 'delete-other-windows)
+(define-key noonker-window-map (kbd "w") 'other-window)
+
+;; Search commands
+(define-key noonker-search-map (kbd "s") 'isearch-forward)  ;; Or swiper if you have it
+(define-key noonker-search-map (kbd "r") 'query-replace)
+
+;; Help commands
+(define-key noonker-help-map (kbd "f") 'describe-function)
+(define-key noonker-help-map (kbd "v") 'describe-variable)
+(define-key noonker-help-map (kbd "k") 'describe-key)
+(define-key noonker-help-map (kbd "m") 'describe-mode)
+
+;; Project commands 
+(define-key noonker-project-map (kbd "f") 'projectile-find-file)
+(define-key noonker-project-map (kbd "p") 'projectile-switch-project)
+(define-key noonker-project-map (kbd "b") 'projectile-switch-to-buffer)
+
+;; Code commands 
+(define-key noonker-code-map (kbd "d") 'lsp-find-definition)
+(define-key noonker-code-map (kbd "r") 'lsp-find-references)
+(define-key noonker-code-map (kbd "f") 'lsp-format-buffer)
+(define-key noonker-code-map (kbd "c") 'compile)
+
+;; Toggle commands
+(define-key noonker-toggle-map (kbd "l") 'display-line-numbers-mode)
+(define-key noonker-toggle-map (kbd "w") 'whitespace-mode)
+(define-key noonker-toggle-map (kbd "n") 'global-display-line-numbers-mode)
+
+;; Org commands 
+(define-key noonker-org-map (kbd "a") 'org-agenda)
+(define-key noonker-org-map (kbd "c") 'org-capture)
+(define-key noonker-org-map (kbd "r") 'org-roam-capture)
+
+;; Add a few direct bindings to leader for common operations 
+(evil-define-key '(normal visual) 'global (kbd "<leader>.") 'find-file) ;; Quick access to find-file
+(evil-define-key '(normal visual) 'global (kbd "<leader>2") 'switch-to-buffer) ;; Quick buffer switch
+(evil-define-key '(normal visual) 'global (kbd "<leader>3") 'yank-from-kill-ring) ;; Quick buffer switch
+(evil-define-key '(normal visual) 'global (kbd "<leader>4") 'bookmark-jump) ;; Quick buffer switch
+(evil-define-key '(normal visual) 'global (kbd "SPC SPC") 'execute-extended-command)
+(evil-define-key '(normal visual) 'global (kbd "SPC ESC") 'keyboard-quit) 
+(evil-define-key '(normal visual) 'global (kbd "SPC e") 'emoji-insert)
+
 #+end_src
