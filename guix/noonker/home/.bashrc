@@ -32,7 +32,7 @@ PATH=$JAVA_HOME/bin:$PATH
 export PATH
 
 # Python
-source $HOME/.virtualenvs/system/bin/activate
+# source $HOME/.virtualenvs/system/bin/activate
 
 # Adjust the prompt depending on whether we're in 'guix environment'.
 if [ -n "$GUIX_ENVIRONMENT" ]

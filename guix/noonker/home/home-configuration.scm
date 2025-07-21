@@ -76,7 +76,11 @@
 					   "carla"
 					   "wine64"
 					   "tmux"
+					   "direnv"
+					   "screen"
+					   ""
 					   "alsa-utils"
+					   "qpwgraph"
 					   ;; Guile Hacking
 					   "guile"
 					   "emacs-geiser"

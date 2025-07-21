@@ -58,14 +58,19 @@
   ;; under their own account: use 'guix search KEYWORD' to search
   ;; for packages and 'guix install PACKAGE' to install a package.
    (packages (append (list (specification->package "nss-certs"))
-		     (list bolt openssh bladerf)
+		     (list bolt openssh bladerf cups
+			   system-config-printer)
 		     %base-packages))
 
   ;; Below is the list of system services.  To search for available
   ;; services, run 'guix system search KEYWORD' in a terminal.
   (services
    (cons* (service gnome-desktop-service-type)
-          (service cups-service-type)
+	  (service cups-service-type
+		   (cups-configuration
+		    (web-interface? #t)
+		    (extensions
+		     (list cups-filters))))
           (service boltd-service-type)
 	  (service bluetooth-service-type)
 	  (service nftables-service-type)
