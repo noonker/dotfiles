@@ -76,6 +76,9 @@ This section sets up [[https://github.com/radian-software/straight.el][straight.
 
 ;; ...without specifying :straight
 (setq straight-use-package-by-default 't)
+
+;; Update builtins too
+(setq package-install-upgrade-built-in t)
 #+end_src
 
 * Behavior
@@ -1225,6 +1228,7 @@ Python + LSP
   (setq elpy-rpc-virtualenv-path 'current)
   ;; (setq elpy-shell-starting-directory 'current-directory) ;; default is 'project-root 
   (setenv "WORKON_HOME" (file-name-concat (file-truename "~") ".virtualenvs"))
+  (setq elpy-shell-echo-output nil)
   (setq python-shell-interpreter "python"))
 
 (add-hook 'elpy-mode-hook (lambda ()
@@ -1610,6 +1614,8 @@ Clojure + LSP
    (org . t)
    (clojure . t)
    (d2 . t)
+   (calc . t)
+   (screen . t)
    ))
 
 (setq org-babel-clojure-backend 'cider)
@@ -3039,6 +3045,7 @@ Load my RSS feeds
 (define-key noonker-code-map (kbd "r") 'lsp-find-references)
 (define-key noonker-code-map (kbd "f") 'lsp-format-buffer)
 (define-key noonker-code-map (kbd "c") 'compile)
+(define-key noonker-code-map (kbd "e") 'emoji-insert)
 
 ;; Toggle commands
 (define-key noonker-toggle-map (kbd "l") 'display-line-numbers-mode)
@@ -3057,6 +3064,5 @@ Load my RSS feeds
 (evil-define-key '(normal visual) 'global (kbd "<leader>4") 'bookmark-jump) ;; Quick buffer switch
 (evil-define-key '(normal visual) 'global (kbd "SPC SPC") 'execute-extended-command)
 (evil-define-key '(normal visual) 'global (kbd "SPC ESC") 'keyboard-quit) 
-(evil-define-key '(normal visual) 'global (kbd "SPC e") 'emoji-insert)
-
+(evil-define-key '(normal visual) 'global (kbd "SPC u") 'undo)
 #+end_src
