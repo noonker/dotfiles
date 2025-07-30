@@ -1004,6 +1004,7 @@ Spray mode is a speed-reading mode
   (setq lsp-ui-doc-enable nil)
   (setq lsp-ui-doc-header t)
   (setq lsp-ui-doc-include-signature t)
+  (setq lsp-apply-edits-after-file-operations nil)
   (setq lsp-ui-doc-border (face-foreground 'default))
   )
 #+end_src
