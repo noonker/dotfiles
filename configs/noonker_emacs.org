@@ -383,10 +383,10 @@ Anything in this section can be described in one sentence.
 #+begin_src emacs-lisp :tangle ~/.emacs
 (use-package magit
   :config
-  (evil-set-initial-state 'magit-status-mode 'emacs)
   (if (not is-mobile)
     (setopt magit-format-file-function #'magit-format-file-nerd-icons))  
   )
+
 (use-package transient)
 (use-package pass
   :config (global-set-key (kbd "<f12>") 'password-store-copy)) ;; Password Store
@@ -400,6 +400,9 @@ Anything in this section can be described in one sentence.
 ;;     (shell-command-to-string "gpgconf --kill gpg-agent")
 ;;     (original-password-store-get entry callback)
 ;;       ))
+
+(setq ediff-split-window-function 'split-window-horizontally)
+(setq ediff-window-setup-function 'ediff-setup-windows-plain)
 #+end_src
 
 ** Shell
@@ -540,7 +543,6 @@ INITIAL-INPUT can be given as the initial minibuffer input."
   ;; :hook (eshell-mode-hook . esh-autosuggest-mode)
   :ensure t)
 #+end_src
-
 
 ** Tramp
 
@@ -928,9 +930,7 @@ Magit is git porcelain for Emacs
 ** Kubernetes
 
 #+begin_src emacs-lisp :tangle ~/.emacs
-(use-package kubel
-  :config
-  (evil-set-initial-state 'kubel-mode 'emacs))
+(use-package kubel)
 #+end_src
 
 ** Spray Mode
@@ -1231,7 +1231,6 @@ Python + LSP
   (setenv "WORKON_HOME" (file-name-concat (file-truename "~") ".virtualenvs"))
   (setq elpy-shell-echo-output nil)
   (setq python-shell-interpreter "python"))
-
 (add-hook 'elpy-mode-hook (lambda ()
                             (add-hook 'before-save-hook
                                       'elpy-black-fix-code nil t)))
@@ -1258,7 +1257,7 @@ Python + LSP
                   (directory-files (expand-file-name venv-dir) nil "^[^.]")))
          (venv (completing-read "Select virtualenv: " venvs))
          (envrc-content (format "echo \"Activating %s venv\"\nsource ~/.virtualenvs/%s/bin/activate\n"
-                               venv venv))
+				venv venv))
          (dirlocals-content (format "((nil . ((pyvenv-workon . \"%s\"))))\n" venv)))
 
     ;; Write .envrc file
@@ -2962,6 +2961,8 @@ Load my RSS feeds
 
 #+begin_src emacs-lisp :tangle ~/.emacs
 ;; Initial States
+(evil-set-initial-state 'magit-status-mode 'emacs)
+(evil-set-initial-state 'kubel-mode 'emacs)
 
 ;; Trying out leader
 (use-package which-key
@@ -2982,9 +2983,11 @@ Load my RSS feeds
 (define-prefix-command 'noonker-code-map)
 (define-prefix-command 'noonker-toggle-map)
 (define-prefix-command 'noonker-org-map)
+(define-prefix-command 'noonker-edit-map)
 
 ;; Bind prefix maps to leader key
 (evil-define-key '(normal visual) 'global (kbd "<leader>f") noonker-file-map)
+(evil-define-key '(normal visual) 'global (kbd "<leader>e") noonker-edit-map)
 (evil-define-key '(normal visual) 'global (kbd "<leader>b") noonker-buffer-map)
 (evil-define-key '(normal visual) 'global (kbd "<leader>w") noonker-window-map)
 (evil-define-key '(normal visual) 'global (kbd "<leader>s") noonker-search-map)
@@ -2996,6 +2999,7 @@ Load my RSS feeds
 
 ;; Set which-key prefixes for better organization
 (which-key-add-key-based-replacements "SPC f" "files")
+(which-key-add-key-based-replacements "SPC e" "edit")
 (which-key-add-key-based-replacements "SPC b" "buffers")
 (which-key-add-key-based-replacements "SPC w" "windows")
 (which-key-add-key-based-replacements "SPC s" "search")
@@ -3046,6 +3050,8 @@ Load my RSS feeds
 (define-key noonker-code-map (kbd "r") 'lsp-find-references)
 (define-key noonker-code-map (kbd "f") 'lsp-format-buffer)
 (define-key noonker-code-map (kbd "c") 'compile)
+(define-key noonker-code-map (kbd "t") 'elpy-test)
+(define-key noonker-code-map (kbd "g") 'magit)
 (define-key noonker-code-map (kbd "e") 'emoji-insert)
 
 ;; Toggle commands
@@ -3058,6 +3064,12 @@ Load my RSS feeds
 (define-key noonker-org-map (kbd "c") 'org-capture)
 (define-key noonker-org-map (kbd "r") 'org-roam-capture)
 
+;; Edit Commands
+(define-key noonker-edit-map (kbd "r") 'query-replace)
+(define-key noonker-edit-map (kbd "R") 'query-replace-regexp)
+(define-key noonker-edit-map (kbd "o") 'occur)
+
+
 ;; Add a few direct bindings to leader for common operations 
 (evil-define-key '(normal visual) 'global (kbd "<leader>.") 'find-file) ;; Quick access to find-file
 (evil-define-key '(normal visual) 'global (kbd "<leader>2") 'switch-to-buffer) ;; Quick buffer switch
@@ -3065,5 +3077,7 @@ Load my RSS feeds
 (evil-define-key '(normal visual) 'global (kbd "<leader>4") 'bookmark-jump) ;; Quick buffer switch
 (evil-define-key '(normal visual) 'global (kbd "SPC SPC") 'execute-extended-command)
 (evil-define-key '(normal visual) 'global (kbd "SPC ESC") 'keyboard-quit) 
-(evil-define-key '(normal visual) 'global (kbd "SPC u") 'undo)
+(evil-define-key '(normal visual) 'global (kbd "<leader>g") 'keyboard-quit) 
+(evil-define-key '(normal visual) 'global (kbd "<leader>x") 'eval-last-sexp) 
+(evil-define-key '(normal visual) 'global (kbd "<leader>u") 'undo)
 #+end_src
