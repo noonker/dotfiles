@@ -303,7 +303,7 @@ Leuven Theme and Comic Mono
     (set-face-attribute 'default nil :font "Comic Code" :height 130))
 
 (if im-at-work
-    (set-face-attribute 'default nil :font "JetBrains Mono" :height 140))
+    (set-face-attribute 'default nil :font "JetBrains Mono" :height 160))
 #+end_src
 
 ** Global Config
