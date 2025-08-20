@@ -2921,6 +2921,7 @@ Load my RSS feeds
 	("https://fossacademic.tech/feed.xml" fossacademic tech)
 	("https://www.stallman.org/rss/rss.xml" stallman emacs tech gnu)
 	("https://joshblais.com/index.xml" joshua-blais emacs tech)
+	("https://aartaka.me/rss.xml" aartaka emacs tech)
 	))
 #+end_src
 
