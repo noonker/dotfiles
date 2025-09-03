@@ -2320,7 +2320,116 @@ These functions are helpers and should be self explanitory
 #+begin_src emacs-lisp :tangle ~/.emacs
 (use-package gptel
   :straight (:host github :repo "karthink/gptel" :files ("dist" "*.el")))
+(use-package gptel-quick
+  :straight (:host github :repo "karthink/gptel-quick" :files ("gptel-quick.el")))
 
+;; Popup question
+(defvar gptel-lookup--history nil)
+
+(defun gptel-lookup (prompt)
+  (interactive (list (read-string "Ask ChatGPT: " nil gptel-lookup--history)))
+  (when (string= prompt "") (user-error "A prompt is required."))
+  (gptel-request
+   prompt
+   :callback
+   (lambda (response info)
+     (if (not response)
+         (message "gptel-lookup failed with message: %s" (plist-get info :status))
+       (with-current-buffer (get-buffer-create "*gptel-lookup*")
+         (let ((inhibit-read-only t))
+           (erase-buffer)
+           (insert response))
+         (special-mode)
+         (display-buffer (current-buffer)
+                         `((display-buffer-in-side-window)
+                           (side . bottom)
+                           (window-height . ,#'fit-window-to-buffer))))))))
+
+(defun gptel-debug ()
+  (interactive)
+  (gptel-request
+   (buffer-substring-no-properties (mark) (point))
+   :system "Can you explain to me why I am getting the following error?"
+   :callback
+   (lambda (response info)
+     (if (not response)
+         (message "gptel-lookup failed with message: %s" (plist-get info :status))
+       (with-current-buffer (get-buffer-create "*gptel-lookup*")
+         (let ((inhibit-read-only t))
+           (erase-buffer)
+           (insert response))
+         (special-mode)
+         (display-buffer (current-buffer)
+                         `((display-buffer-in-side-window)
+                           (side . bottom)
+                           (window-height . ,#'fit-window-to-buffer))))))))
+
+
+(defun gptel-editor-rewrite-and-replace (bounds &optional directive)
+  (interactive
+   (list
+    (cond
+     ((use-region-p) (cons (region-beginning) (region-end)))
+     ((derived-mode-p 'text-mode)
+      (list (bounds-of-thing-at-point 'sentence)))
+     (t (cons (line-beginning-position) (line-end-position))))
+    (and current-prefix-arg
+         (read-string "ChatGPT Directive: "
+                      "You are a prose editor. Rewrite my prompt more professionally."))))
+  (gptel-request
+   (buffer-substring-no-properties (car bounds) (cdr bounds)) ;the prompt
+   :system (or directive "You are a prose editor. Rewrite my prompt more professionally.")
+   :buffer (current-buffer)
+   :context (cons (set-marker (make-marker) (car bounds))
+                  (set-marker (make-marker) (cdr bounds)))
+   :callback
+   (lambda (response info)
+     (if (not response)
+         (message "ChatGPT response failed with: %s" (plist-get info :status))
+       (let* ((bounds (plist-get info :context))
+              (beg (car bounds))
+              (end (cdr bounds))
+              (buf (plist-get info :buffer)))
+         (with-current-buffer buf
+           (save-excursion
+             (goto-char beg)
+             (kill-region beg end)
+             (insert response)
+             (set-marker beg nil)
+             (set-marker end nil)
+             (message "Rewrote line. Original line saved to kill-ring."))))))))
+
+(defun gptel-code-rewrite-and-replace (bounds)
+  (interactive
+   (list
+    (cond
+     ((use-region-p) (cons (region-beginning) (region-end)))
+     ((derived-mode-p 'text-mode)
+      (list (bounds-of-thing-at-point 'sentence)))
+     (t (cons (line-beginning-position) (line-end-position))))))
+  (gptel-request
+
+   (buffer-substring-no-properties (car bounds) (cdr bounds)) ;the prompt
+   :system "You are an expert coder. Take the prompt at point and refactor it. Return only the code. No Commentary."
+   :buffer (current-buffer)
+   :context (cons (set-marker (make-marker) (car bounds))
+                  (set-marker (make-marker) (cdr bounds)))
+   :callback
+   (lambda (response info)
+     (if (not response)
+         (message "ChatGPT response failed with: %s" (plist-get info :status))
+       (let* ((bounds (plist-get info :context))
+              (beg (car bounds))
+              (end (cdr bounds))
+              (buf (plist-get info :buffer)))
+         (with-current-buffer buf
+           (save-excursion
+             (goto-char beg)
+             (kill-region beg end)
+             (insert response)
+             (set-marker beg nil)
+             (set-marker end nil)
+             (message "Rewrote line. Original line saved to kill-ring."))))))))
 
 (defun noonker/init-ai ()
   (interactive)
@@ -2985,6 +3094,7 @@ Load my RSS feeds
 (define-prefix-command 'noonker-toggle-map)
 (define-prefix-command 'noonker-org-map)
 (define-prefix-command 'noonker-edit-map)
+(define-prefix-command 'noonker-ai-map)
 
 ;; Bind prefix maps to leader key
 (evil-define-key '(normal visual) 'global (kbd "<leader>f") noonker-file-map)
@@ -2997,6 +3107,7 @@ Load my RSS feeds
 (evil-define-key '(normal visual) 'global (kbd "<leader>c") noonker-code-map)
 (evil-define-key '(normal visual) 'global (kbd "<leader>t") noonker-toggle-map)
 (evil-define-key '(normal visual) 'global (kbd "<leader>o") noonker-org-map)
+(evil-define-key '(normal visual) 'global (kbd "<leader>a") noonker-ai-map)
 
 ;; Set which-key prefixes for better organization
 (which-key-add-key-based-replacements "SPC f" "files")
@@ -3009,6 +3120,7 @@ Load my RSS feeds
 (which-key-add-key-based-replacements "SPC c" "code")
 (which-key-add-key-based-replacements "SPC t" "toggles")
 (which-key-add-key-based-replacements "SPC o" "org")
+(which-key-add-key-based-replacements "SPC a" "ai")
 
 ;; File commands
 (define-key noonker-file-map (kbd "f") 'find-file)
@@ -3070,15 +3182,24 @@ Load my RSS feeds
 (define-key noonker-edit-map (kbd "R") 'query-replace-regexp)
 (define-key noonker-edit-map (kbd "o") 'occur)
 
+;; AI Commands
+(define-key noonker-ai-map (kbd "q") 'gptel-quick)
+(define-key noonker-ai-map (kbd "a") 'gptel-send)
+(define-key noonker-ai-map (kbd "m") 'gptel-menu)
+(define-key noonker-ai-map (kbd "l") 'gptel-lookup)
+(define-key noonker-ai-map (kbd "d") 'gptel-debug)
+(define-key noonker-ai-map (kbd "r") 'gptel-code-rewrite-and-replace)
+(define-key noonker-ai-map (kbd "e") 'gptel-editor-rewrite-and-replace)
 
 ;; Add a few direct bindings to leader for common operations 
 (evil-define-key '(normal visual) 'global (kbd "<leader>.") 'find-file) ;; Quick access to find-file
 (evil-define-key '(normal visual) 'global (kbd "<leader>2") 'switch-to-buffer) ;; Quick buffer switch
 (evil-define-key '(normal visual) 'global (kbd "<leader>3") 'yank-from-kill-ring) ;; Quick buffer switch
 (evil-define-key '(normal visual) 'global (kbd "<leader>4") 'bookmark-jump) ;; Quick buffer switch
-(evil-define-key '(normal visual) 'global (kbd "SPC SPC") 'execute-extended-command)
-(evil-define-key '(normal visual) 'global (kbd "SPC ESC") 'keyboard-quit) 
+(evil-define-key '(normal visual) 'global (kbd "<leader>SPC") 'execute-extended-command)
+(evil-define-key '(normal visual) 'global (kbd "<leader>ESC") 'keyboard-quit) 
 (evil-define-key '(normal visual) 'global (kbd "<leader>g") 'keyboard-quit) 
 (evil-define-key '(normal visual) 'global (kbd "<leader>x") 'eval-last-sexp) 
 (evil-define-key '(normal visual) 'global (kbd "<leader>u") 'undo)
 #+end_src
+
