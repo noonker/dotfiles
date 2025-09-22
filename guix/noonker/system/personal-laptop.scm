@@ -10,7 +10,9 @@
   #:use-module (gnu)
   #:use-module (gnu packages linux)
   #:use-module (gnu packages radio)
+  #:use-module (gnu packages cups)
   #:use-module (gnu packages ssh)
+  #:use-module (gnu packages gnome)
   #:use-module (guix records)
   #:use-module (noonker services boltd)
   #:use-module (noonker services podman)
@@ -28,10 +30,17 @@
    "90-bladerf-xA4.rules"
    (string-append "SUBSYSTEM==\"usb\", ATTRS{idVendor}==\"2cf0\", ATTRS{idProduct}==\"5250\", MODE=\"0660\", GROUP=\"input\"")))
 
+(define %capslock-hwdb-udev-rule
+  (udev-hardware "99-capslock-remap.hwdb"
+              (string-append
+               "evdev:atkbd:dmi:*\n"
+               " KEYBOARD_KEY_3a=leftctrl\n")))
+
 (operating-system
   (locale "en_US.utf8")
   (timezone "America/Chicago")
-  (keyboard-layout (keyboard-layout "us"))
+  (keyboard-layout (keyboard-layout "us" 
+                                    #:options '("ctrl:nocaps")))
   (host-name "blep")
   (kernel linux)
 ;;  (kernel-arguments
@@ -74,7 +83,8 @@
           (service boltd-service-type)
 	  (service bluetooth-service-type)
 	  (service nftables-service-type)
-          (udev-rules-service 'bladerf %bladerf-udev-rule)
+	  (udev-rules-service 'bladerf %bladerf-udev-rule)
+	  (udev-hardware-service 'capslock %capslock-hwdb-udev-rule)
           (set-xorg-configuration
            (xorg-configuration (keyboard-layout keyboard-layout)))
 	  audio-realtime-service

@@ -4,6 +4,8 @@
 ;; need to capture the channels being used, as returned by "guix describe".
 ;; See the "Replicating Guix" section in the manual.
 
+(define-module (noonker home home-configuration))
+
 (use-modules (gnu home)
              (gnu packages)
              (gnu services)
@@ -72,13 +74,12 @@
 					   "remmina"
 					   "blender"
 					   "supercollider"
-					   "ollama-linux-amd64"
 					   "carla"
 					   "wine64"
 					   "tmux"
 					   "direnv"
 					   "screen"
-					   ""
+					   "bind:utils"
 					   "alsa-utils"
 					   "qpwgraph"
 					   ;; Guile Hacking
@@ -96,6 +97,7 @@
 					   "pybind11"
 					   "gr-osmosdr"
 					   "mako"
+					   "glib:bin"
 					   )))
  
 

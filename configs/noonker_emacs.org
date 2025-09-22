@@ -393,6 +393,8 @@ Anything in this section can be described in one sentence.
 
 (defalias 'original-password-store-get (symbol-function 'password-store-get))
 
+(setq visible-bell t)
+
 ;; Nasty mobile hack
 ;; (defun password-store-get (entry &optional callback)
 ;;   (interactive)
@@ -1579,6 +1581,7 @@ Clojure + LSP
 (setq ob-mermaid-cli-path "/opt/homebrew/bin/mmdc")
 (use-package ob-d2)
 (use-package d2-mode)
+(use-package ob-sclang)
 
 (defvar d2-mode-map
   (let ((map (make-sparse-keymap)))
@@ -1614,7 +1617,7 @@ Clojure + LSP
    (org . t)
    (clojure . t)
    (d2 . t)
-   (calc . t)
+   (sclang . t)
    (screen . t)
    ))
 
@@ -1756,10 +1759,9 @@ Clojure + LSP
 	org-roam-ui-follow t
 	org-roam-ui-update-on-save t
 	org-roam-ui-open-on-start t
-	))
-(if im-at-work
-    (org-roam-db-autosync-mode) ;; Automatically update the org roam database 
-)
+	)
+ (org-roam-db-autosync-mode) ;; Automatically update the org roam database 
+  )
 #+end_src
 
 *** Org Protocol
@@ -2713,6 +2715,17 @@ These functions are helpers and should be self explanitory
   (aidermacs-default-model "sonnet"))
 #+end_src
 
+* Music
+#+begin_src emacs-lisp :tangle ~/.emacs
+(if is-guix
+    (progn
+      (add-to-list 'load-path "/home/person/.local/share/SuperCollider/downloaded-quarks/scel/el")
+      (require 'sclang)))
+
+(load-file "~/git/scel/el/sclang-interp.el")
+(setq sclang-use-pw-jack t)
+#+end_src
+
 * Hunting
 #+begin_src emacs-lisp :tangle ~/.emacs
 (use-package yara-mode)
@@ -2725,6 +2738,23 @@ These functions are helpers and should be self explanitory
    (make-lsp-client :new-connection (lsp-stdio-connection "yls")
                     :activation-fn (lsp-activate-on "yara")
                     :server-id 'yls)))
+(use-package deferred)
+(require 'deferred)
+(use-package hunting-mode
+ :straight (:local-repo "~/git/hunting-mode"
+            :files ("lisp/*.el"))
+ :config
+ (add-to-list 'hunting-glyph-hooks
+	       `(,hunting-md5-regex-wrapped hunting-project-hash-contains-p "✅" "❌")
+	       `(,hunting-sha1-regex-wrapped hunting-project-hash-contains-p "✅" "❌")
+	       `(,hunting-sha256-regex-wrapped hunting-project-hash-contains-p "✅" "❌")
+)
+(add-hook 'org-mode-hook 'hunting-mode)
+(setq hunting-api-key-virustotal (password-store-get "Internet/virustotal"))
+(setq hunting-project-current-project "Example")
+ )
+
+
 #+end_src
 
 * Finally

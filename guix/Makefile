@@ -1,3 +1,5 @@
+pull:
+	guix pull
 laptop:
 	sudo guix system reconfigure -L ${HOME}/git/dotfiles/guix ${HOME}/git/dotfiles/guix/noonker/system/personal-laptop.scm
 home:
