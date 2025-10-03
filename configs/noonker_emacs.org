@@ -340,6 +340,13 @@ Random global behavior configs
 (global-so-long-mode 1) ;; Stop trying to syntax highlight absurdly long strings
 (global-set-key (kbd "C-s") 'swiper)
 ;; (setq mouse-1-click-follows-link nil) ;; don't accidentally click links
+(defun my-electric-pair-inhibit-p (c)
+  "Inhibit electric pairing for the carat character."
+  (if (char-equal c ?<)
+      t
+    (electric-pair-default-inhibit c)))
+
+(setq electric-pair-inhibit-predicate #'my-electric-pair-inhibit-p)
 #+end_src
 
 ** Projectile
