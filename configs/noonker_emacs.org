@@ -2727,10 +2727,10 @@ These functions are helpers and should be self explanitory
 (if is-guix
     (progn
       (add-to-list 'load-path "/home/person/.local/share/SuperCollider/downloaded-quarks/scel/el")
-      (require 'sclang)))
-
-(load-file "~/git/scel/el/sclang-interp.el")
-(setq sclang-use-pw-jack t)
+      (require 'sclang)
+      (load-file "~/git/scel/el/sclang-interp.el")
+      (setq sclang-use-pw-jack t)
+      ))
 #+end_src
 
 * Hunting
@@ -2747,21 +2747,57 @@ These functions are helpers and should be self explanitory
                     :server-id 'yls)))
 (use-package deferred)
 (require 'deferred)
+
 (use-package hunting-mode
- :straight (:local-repo "~/git/hunting-mode"
-            :files ("lisp/*.el"))
- :config
- (add-to-list 'hunting-glyph-hooks
+  :straight (:local-repo "~/git/hunting-mode"
+			 :files ("lisp/*.el"))
+  :config
+  (add-to-list 'hunting-glyph-hooks
 	       `(,hunting-md5-regex-wrapped hunting-project-hash-contains-p "✅" "❌")
 	       `(,hunting-sha1-regex-wrapped hunting-project-hash-contains-p "✅" "❌")
-	       `(,hunting-sha256-regex-wrapped hunting-project-hash-contains-p "✅" "❌")
-)
-(add-hook 'org-mode-hook 'hunting-mode)
-(setq hunting-api-key-virustotal (password-store-get "Internet/virustotal"))
-(setq hunting-project-current-project "Example")
- )
+	       `(,hunting-sha256-regex-wrapped hunting-project-hash-contains-p "✅" "❌"))
 
+  (add-hook 'org-mode-hook 'hunting-mode)
 
+  (setq hunting-project-basedir (file-truename (file-name-concat org-roam-directory "projects")))
+
+  (setq hunting-project-current-project "Example")
+  (setq hunting-paranoia-level hunting-paranoia-level-active)
+  (setq hunting-modeline-toggle 0)
+  )
+
+(defvar noonker/radare-hist '())
+(add-to-list 'savehist-additional-variables noonker/radare-hist)
+
+(defun noonker/open-with-radare2 ()
+  (interactive)
+  (let* ((thing (thing-at-point 'symbol))
+	 (choice (if (and thing (hunting-sha256-p thing)) thing
+		   (completing-read
+		    "Searches: "
+		    noonker/radare-hist)))
+	 (re-buffer-name (format "*[r2]%s:%s*" hunting-project-current-project choice)))
+    (add-to-list 'noonker/radare-hist choice)
+    (if (get-buffer re-buffer-name)
+	(switch-to-buffer re-buffer-name)
+      (let ((eat-buffer-name re-buffer-name))
+	(eat (format "radare2 -e bin.cache=true %s" 
+		     (file-name-concat hunting-project-basedir hunting-project-current-project "samples" choice))))
+      )))
+
+(defun noonker/open-with-ida ()
+  (interactive)
+  (let* ((thing (thing-at-point 'symbol))
+	 (choice (if (and thing (hunting-sha256-p thing)) thing
+		   (completing-read
+		    "Searches: "
+		    noonker/radare-hist))))
+    (add-to-list 'noonker/radare-hist choice)
+    (start-process (format "process: %s" choice)
+		   (format "buffer: %s" choice)
+		   "ida64"
+		   (file-name-concat hunting-project-basedir hunting-project-current-project "samples" choice)
+		   "-a-")))
 #+end_src
 
 * Finally
@@ -3132,6 +3168,7 @@ Load my RSS feeds
 (define-prefix-command 'noonker-org-map)
 (define-prefix-command 'noonker-edit-map)
 (define-prefix-command 'noonker-ai-map)
+(define-prefix-command 'noonker-hunting-map)
 
 ;; Bind prefix maps to leader key
 (evil-define-key '(normal visual) 'global (kbd "<leader>f") noonker-file-map)
@@ -3145,6 +3182,7 @@ Load my RSS feeds
 (evil-define-key '(normal visual) 'global (kbd "<leader>t") noonker-toggle-map)
 (evil-define-key '(normal visual) 'global (kbd "<leader>o") noonker-org-map)
 (evil-define-key '(normal visual) 'global (kbd "<leader>a") noonker-ai-map)
+(evil-define-key '(normal visual) 'global (kbd "<leader>r") noonker-hunting-map)
 
 ;; Set which-key prefixes for better organization
 (which-key-add-key-based-replacements "SPC f" "files")
@@ -3228,6 +3266,13 @@ Load my RSS feeds
 (define-key noonker-ai-map (kbd "r") 'gptel-code-rewrite-and-replace)
 (define-key noonker-ai-map (kbd "e") 'gptel-editor-rewrite-and-replace)
 
+;; Hunting Commands
+(define-key noonker-hunting-map "r" 'noonker/open-with-radare2)
+(define-key noonker-hunting-map "i" 'noonker/open-with-ida)
+(define-key noonker-hunting-map "t" 'hunting-project-test-analyzer)
+(define-key noonker-hunting-map "y" 'hunting-project-test-yara)
+
+
 ;; Add a few direct bindings to leader for common operations 
 (evil-define-key '(normal visual) 'global (kbd "<leader>.") 'find-file) ;; Quick access to find-file
 (evil-define-key '(normal visual) 'global (kbd "<leader>2") 'switch-to-buffer) ;; Quick buffer switch
@@ -3239,4 +3284,3 @@ Load my RSS feeds
 (evil-define-key '(normal visual) 'global (kbd "<leader>x") 'eval-last-sexp) 
 (evil-define-key '(normal visual) 'global (kbd "<leader>u") 'undo)
 #+end_src
-
