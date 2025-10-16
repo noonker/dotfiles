@@ -9,6 +9,7 @@ It is broken up into several sections:
  - Programming - Packages & tweaks to programming modes
  - Text - Any packages which are used primarily for writing of text (mostly org-mode)
  - Custom Functions - Any simple functions I've added to enrich my emacs life
+
 * Mobile
 #+begin_src emacs-lisp :tangle ~/.emacs
 (when (string-equal system-type "android")
@@ -82,6 +83,21 @@ This section sets up [[https://github.com/radian-software/straight.el][straight.
 #+end_src
 
 * Behavior
+** Minibuffer Fix
+#+begin_src emacs-lisp :tangle ~/.emacs
+(defun stop-using-minibuffer (&optional foo)
+  "kill the minibuffer"
+  (when (and (>= (recursion-depth) 1)
+	     (active-minibuffer-window)
+	     (not (eq (selected-window)
+		      (active-minibuffer-window)))
+	     )
+    (abort-recursive-edit)))
+
+(add-hook 'window-selection-change-functions #'stop-using-minibuffer)
+(add-hook 'mouse-leave-buffer-hook 'stop-using-minibuffer)
+#+end_src
+
 ** Platform Check
 #+begin_src emacs-lisp :tangle ~/.emacs
 (defun current-platform ()
@@ -134,11 +150,6 @@ This section sets up [[https://github.com/radian-software/straight.el][straight.
   :init
   (vertico-mode)
   )
-
-;; Persist history over Emacs restarts. Vertico sorts by history position.
-(use-package savehist
-  :init
-  (savehist-mode))
 
 ;; A few more useful configurations...
 (use-package emacs
@@ -836,8 +847,6 @@ This message was composed without the use of AI I respect our shared humanity")
 (org-msg-mode)
 #+end_src
 
-#+RESULTS:
-
 ** Emacs Lisp Packages
 
 These are emacs-lisp packages that I use often enough in scratch-buffers
@@ -1065,6 +1074,7 @@ Lispy mode makes lisp-mode editing significantly more efficent
   (setq evil-want-integration t) ;; This is optional since it's already set to t by default.
   (setq evil-want-keybinding nil)
   :config
+  (setq evil-want-minibuffer t)
   (evil-mode 1)
   (define-key evil-normal-state-map (kbd "C-e") 'move-end-of-line)
   )
@@ -2681,11 +2691,20 @@ These functions are helpers and should be self explanitory
                        :type "string"
                        :description "Path to the file to read.  Supports relative paths and ~."))
    :category "filesystem"))
+
+(use-package mcp
+  :ensure t
+  :after gptel
+  :custom (mcp-hub-servers
+           `(("categorize" . (:command "mcp_categorize"))))
+  :config (require 'mcp-hub)
+  :hook (after-init . mcp-hub-start-all-server))
+
+(use-package gptel-mcp
+  :ensure t
+  :after mpc
+  :straight (:host github :repo "lizqwerscott/gptel-mcp.el" :files ("gptel-mcp.el")))
 #+end_src
-
-#+RESULTS:
-: #s(gptel-tool #[(filepath) ((with-temp-buffer (insert-file-contents (expand-file-name filepath)) (buffer-string))) nil] "read_file" "Read and display the contents of a file" ((:name "filepath" :type "string" :description "Path to the file to read.  Supports relative paths and ~.")) nil "filesystem" nil nil)
-
 
 ** Copilot
 #+begin_src emacs-lisp :tangle ~/.emacs
@@ -2766,8 +2785,7 @@ These functions are helpers and should be self explanitory
   (setq hunting-modeline-toggle 0)
   )
 
-(defvar noonker/radare-hist '())
-(add-to-list 'savehist-additional-variables noonker/radare-hist)
+(defvar noonker/radare-hist '("null"))
 
 (defun noonker/open-with-radare2 ()
   (interactive)
@@ -3133,13 +3151,6 @@ Load my RSS feeds
   )
 #+end_src
 
-* Work Config
-#+begin_src emacs-lisp :tangle ~/.emacs
-(if im-at-work
-    (progn
-      (org-babel-lob-ingest "~/org/config.org")
-      (org-sbe work-config)))
-#+end_src
 * Shortcuts
 
 #+begin_src emacs-lisp :tangle ~/.emacs
@@ -3283,4 +3294,11 @@ Load my RSS feeds
 (evil-define-key '(normal visual) 'global (kbd "<leader>g") 'keyboard-quit) 
 (evil-define-key '(normal visual) 'global (kbd "<leader>x") 'eval-last-sexp) 
 (evil-define-key '(normal visual) 'global (kbd "<leader>u") 'undo)
+#+end_src
+* Work Config
+#+begin_src emacs-lisp :tangle ~/.emacs
+(if im-at-work
+    (progn
+      (org-babel-lob-ingest "~/org/config.org")
+      (org-sbe work-config)))
 #+end_src
