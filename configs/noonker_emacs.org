@@ -9,7 +9,6 @@ It is broken up into several sections:
  - Programming - Packages & tweaks to programming modes
  - Text - Any packages which are used primarily for writing of text (mostly org-mode)
  - Custom Functions - Any simple functions I've added to enrich my emacs life
-
 * Mobile
 #+begin_src emacs-lisp :tangle ~/.emacs
 (when (string-equal system-type "android")
@@ -358,6 +357,8 @@ Random global behavior configs
     (electric-pair-default-inhibit c)))
 
 (setq electric-pair-inhibit-predicate #'my-electric-pair-inhibit-p)
+
+(use-package expand-region)
 #+end_src
 
 ** Projectile
@@ -1074,7 +1075,8 @@ Lispy mode makes lisp-mode editing significantly more efficent
   (setq evil-want-integration t) ;; This is optional since it's already set to t by default.
   (setq evil-want-keybinding nil)
   :config
-  (setq evil-want-minibuffer t)
+  ;;  Unsure tbh
+  ;;  (setq evil-want-minibuffer t)
   (evil-mode 1)
   (define-key evil-normal-state-map (kbd "C-e") 'move-end-of-line)
   )
@@ -1524,7 +1526,7 @@ Clojure + LSP
 #+begin_src emacs-lisp :tangle ~/.emacs
 (setq org-fontify-whole-heading-line t)
 (setq org-startup-folded t)
-
+(setq org-ellipsis "👇")
 (add-hook 'org-mode-hook (lambda () (display-line-numbers-mode -1)))
 
 (setq org-directory "~/org")
@@ -1558,7 +1560,6 @@ Clojure + LSP
 (global-set-key (kbd "C-c n r f") 'org-roam-node-find)
 (global-set-key (kbd "C-c n r i") 'org-roam-node-insert)
 
-(evil-global-set-key 'normal "gl" 'org-store-link)
 
 (setq personal/node-types '('ctf
 			    'investigation
@@ -3223,11 +3224,11 @@ Load my RSS feeds
 (define-key noonker-buffer-map (kbd "R") 'revert-buffer)
 
 ;; Window commands
-(define-key noonker-window-map (kbd "h") 'split-window-right)
-(define-key noonker-window-map (kbd "j") 'split-window-below)
-(define-key noonker-window-map (kbd "d") 'delete-window)
-(define-key noonker-window-map (kbd "m") 'delete-other-windows)
-(define-key noonker-window-map (kbd "w") 'other-window)
+(define-key noonker-window-map (kbd "3") 'split-window-right)
+(define-key noonker-window-map (kbd "2") 'split-window-below)
+(define-key noonker-window-map (kbd "0") 'delete-window)
+(define-key noonker-window-map (kbd "1") 'delete-other-windows)
+(define-key noonker-window-map (kbd "o") 'other-window)
 
 ;; Search commands
 (define-key noonker-search-map (kbd "s") 'isearch-forward)  ;; Or swiper if you have it
@@ -3262,6 +3263,8 @@ Load my RSS feeds
 (define-key noonker-org-map (kbd "a") 'org-agenda)
 (define-key noonker-org-map (kbd "c") 'org-capture)
 (define-key noonker-org-map (kbd "r") 'org-roam-capture)
+(define-key noonker-org-map (kbd "l") 'org-store-link)
+(define-key noonker-org-map (kbd "L") 'org-insert-link)
 
 ;; Edit Commands
 (define-key noonker-edit-map (kbd "r") 'query-replace)
@@ -3294,7 +3297,10 @@ Load my RSS feeds
 (evil-define-key '(normal visual) 'global (kbd "<leader>g") 'keyboard-quit) 
 (evil-define-key '(normal visual) 'global (kbd "<leader>x") 'eval-last-sexp) 
 (evil-define-key '(normal visual) 'global (kbd "<leader>u") 'undo)
+(evil-define-key '(normal visual) 'global (kbd "<leader>j") 'er/expand-region)
+(evil-define-key '(normal visual) 'global (kbd "<leader>k") 'er/contract-region)
 #+end_src
+
 * Work Config
 #+begin_src emacs-lisp :tangle ~/.emacs
 (if im-at-work
