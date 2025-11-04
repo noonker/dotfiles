@@ -310,7 +310,7 @@ Leuven Theme and Comic Mono
 (set-fontset-font t 'emoji '("Noto Emoji" . "iso10646-1") nil 'prepend)
 
 (if (string= "blep" (system-name))
-    (set-face-attribute 'default nil :font "Comic Code" :height 130))
+    (set-face-attribute 'default nil :font "Comic Code" :height 180))
 
 (if im-at-work
     (set-face-attribute 'default nil :font "JetBrains Mono" :height 160))
@@ -1637,6 +1637,7 @@ Clojure + LSP
    (d2 . t)
    (sclang . t)
    (screen . t)
+   (lua . t)
    ))
 
 (setq org-babel-clojure-backend 'cider)
@@ -2817,6 +2818,26 @@ These functions are helpers and should be self explanitory
 		   "ida64"
 		   (file-name-concat hunting-project-basedir hunting-project-current-project "samples" choice)
 		   "-a-")))
+#+end_src
+
+* Norns
+#+begin_src emacs-lisp :tangle ~/.emacs
+(use-package norns
+  :config
+  (add-hook 'lua-mode-hook #'norns-mode-maybe-activate)
+  (add-hook 'sclang-mode-mode-hook #'norns-mode-maybe-activate)
+  :bind (
+         :map norns-mode-map
+         ;; NB: those keybindings are inspired by John Wiegley's
+         ("C-c e b" . norns-load-current-script)
+         ("C-c e r" . norns-send-selection)
+
+         :map norns-matron-repl-mode-map
+         ("C-c e b" . norns-rerun)
+
+         :map norns-sc-repl-mode-map
+         ("C-." . norns-sc-stop))
+  )
 #+end_src
 
 * Finally

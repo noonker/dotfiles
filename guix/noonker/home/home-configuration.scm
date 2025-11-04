@@ -82,6 +82,7 @@
 					   "bind:utils"
 					   "alsa-utils"
 					   "qpwgraph"
+					   "lua"
 					   ;; Guile Hacking
 					   "guile"
 					   "emacs-geiser"
