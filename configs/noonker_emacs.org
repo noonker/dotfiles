@@ -82,6 +82,13 @@ This section sets up [[https://github.com/radian-software/straight.el][straight.
 #+end_src
 
 * Behavior
+** Exec from Shell
+#+begin_src emacs-lisp :tangle ~/.emacs
+(use-package exec-path-from-shell)
+(when (memq window-system '(mac ns x))
+  (exec-path-from-shell-initialize))
+#+end_src
+
 ** Minibuffer Fix
 #+begin_src emacs-lisp :tangle ~/.emacs
 (defun stop-using-minibuffer (&optional foo)
@@ -1290,6 +1297,36 @@ Python + LSP
       (insert dirlocals-content))
 
     (message "Created .envrc and .dir-locals.el for %s virtualenv" venv)))
+
+(defvar noonker/python-binary-for-venvs "/Library/Frameworks/Python.framework/Versions/3.10/bin/python3")
+
+(defun noonker/create-python-project-environment ()
+  "Create a Python virtual environment and set up project configuration files."
+  (interactive)
+  ;; Query for venv name
+  (let* ((venv-name (read-string "Virtual environment name: "))
+         (project-root (projectile-project-root))
+         (dir-locals-path (expand-file-name ".dir-locals.el" project-root))
+         (envrc-path (expand-file-name ".envrc" project-root)))
+    
+    ;; Create the virtualenv
+    (pyvenv-create venv-name noonker/python-binary-for-venvs)
+    
+    ;; Create .dir-locals.el file
+    (with-temp-file dir-locals-path
+      (insert (format "(
+ (nil . ((pyvenv-workon . \"%s\")))
+)" venv-name)))
+    
+    ;; Create .envrc file
+    (with-temp-file envrc-path
+      (insert (format "echo \"Activating %s venv\"
+source ~/.virtualenvs/%s/bin/activate
+export BASEPATH=%s
+export PYTHONPATH=%s
+" venv-name venv-name project-root project-root)))
+    
+(message "Python environment '%s' created with supporting files" venv-name)))
 
 (evil-define-key 'normal python-mode-map "gjd" 'dap-debug)
 (evil-define-key 'normal python-mode-map "gjl" 'dap-continue)
@@ -2997,63 +3034,63 @@ Load my RSS feeds
 #+begin_src emacs-lisp :tangle ~/.emacs
 (setq security-feeds
       '(
-       ("https://www.amnesty.org/en/latest/feed/" amnesty security second)
-	("https://media.ccc.de/updates.rdf" ccc security second)
-	("https://www.us-cert.gov/ncas/alerts.xml" us-cert-alerts security second)
-	("https://www.cisa.gov/cybersecurity-advisories/all.xml" us-certs-all security second)
-	("https://securelist.com/feed/" securelist security second)
-	("http://blog.dynamoo.com/feeds/posts/default" dynamoo security second)
-	("http://feeds.feedburner.com/feedburner/Talos?format=xml" cisco-talos security second)
-	("https://newsroom.trendmicro.com/news-releases?pagetemplate=rss&category=787" trend-micro security second)
-	("https://feeds.feedburner.com/PaloAltoNetworks" unit42 security second)
-	("https://www.proofpoint.com/rss.xml" proofpoint security second)
-	("http://asert.arbornetworks.com/feed/" arbor-networks security second)
-	("http://addxorrol.blogspot.com/feeds/posts/default" addxorrol security second)
-	("http://herrcore.blogspot.com/feeds/posts/default" herrcore security second)
-	("https://threatlabz.zscaler.com/blogs" zscalar security second)
-	("http://googleonlinesecurity.blogspot.com/atom.xml" google-security security second)
-	("http://bartblaze.blogspot.com/feeds/posts/default" bartblaze security second)
-	("https://www.exploit-db.com/rss.xml" exploit-db security second) 
-	("https://bittherapy.net/post/index.xml" bittherapy security second)
-	("http://malwaredomains.com/?feed=rss2" malware-domains security second)
-	("http://windowsir.blogspot.com/feeds/posts/default" windows-incident-response security second)
-	("http://www.schneier.com/blog/index.rdf" schneier-on-security security second)
-	("http://contagiodump.blogspot.com/feeds/posts/default" contagio security second)
-	("http://feeds.feedburner.com/darknethackers" darknet-hackers security second)
-	("http://securityaffairs.co/wordpress/feed" security-affairs security second)
-	("http://blog.invisiblethings.org/feed.xml" invisible-things security second)
-	("https://threatpost.com/feed" threatpost security second)
-	("http://hackingexposedcomputerforensicsblog.blogspot.com/feeds/posts/default" hacking-exposed security second)
-	("http://detect-respond.blogspot.com/feeds/posts/default" detect-respond security second)
-	("https://feeds.feedburner.com/threatintelligence/pvexyqv7v0v" fireeye security second)
-	("http://www.elsevierscitech.com/feeds/feeds/b2b/14.xml" elsevierscitech security second)
-	("https://malware.dontneedcoffee.com/feed.xml" dont-need-coffee security second)
-	("https://www.darktrace.com/blog/index.xml" darktrace security second)
-	("http://krebsonsecurity.com/feed/" krebs-on-security security second)
-	("http://www.swiftforensics.com/feeds/posts/default" swift-forensics security second)
-	("http://www.darkreading.com/rss.xml" dark-reading security second)
-	("http://taosecurity.blogspot.com/atom.xml" tao-security security second)
-	("https://isc.sans.edu/rssfeed_full.xml" sans security second)
-	("http://blog.malwarebytes.org/feed/" malware-bytes security second)
-	("https://www.wired.com/feed/category/security/latest/rss" wired security second)
-	("http://ryanstillions.blogspot.com/feeds/posts/default" ryan-stillions security second)
-	("http://www.theregister.co.uk/security/headlines.atom" register security second)
-	("https://www.recordedfuture.com/feed/" recorded-future security second)
-	("http://www.malware-traffic-analysis.net/blog-entries.rss" malware-traffic-analysis security second)
-	("https://www.bellingcat.com/feed/" bellingcat security second)
-	("https://www.clearskysec.com/feed/" clearsky-sec security second)
-	("https://thecomputerperson.wordpress.com/rss" the-computer-person security second)
+       ("https://www.amnesty.org/en/latest/feed/" amnesty security second skim)
+	("https://media.ccc.de/updates.rdf" ccc security second skim)
+	("https://www.us-cert.gov/ncas/alerts.xml" us-cert-alerts security second skim)
+	("https://www.cisa.gov/cybersecurity-advisories/all.xml" us-certs-all security second skim)
+	("https://securelist.com/feed/" securelist security second skim)
+	("http://blog.dynamoo.com/feeds/posts/default" dynamoo security second skim)
+	("http://feeds.feedburner.com/feedburner/Talos?format=xml" cisco-talos security second skim)
+	("https://newsroom.trendmicro.com/news-releases?pagetemplate=rss&category=787" trend-micro security second skim)
+	("https://feeds.feedburner.com/PaloAltoNetworks" unit42 security second skim)
+	("https://www.proofpoint.com/rss.xml" proofpoint security second skim)
+	("http://asert.arbornetworks.com/feed/" arbor-networks security second skim)
+	("http://addxorrol.blogspot.com/feeds/posts/default" addxorrol security second skim)
+	("http://herrcore.blogspot.com/feeds/posts/default" herrcore security second skim)
+	("https://threatlabz.zscaler.com/blogs" zscalar security second skim)
+	("http://googleonlinesecurity.blogspot.com/atom.xml" google-security security second skim)
+	("http://bartblaze.blogspot.com/feeds/posts/default" bartblaze security second skim)
+	("https://www.exploit-db.com/rss.xml" exploit-db security second skim) 
+	("https://bittherapy.net/post/index.xml" bittherapy security second skim)
+	("http://malwaredomains.com/?feed=rss2" malware-domains security second skim)
+	("http://windowsir.blogspot.com/feeds/posts/default" windows-incident-response security second skim)
+	("http://www.schneier.com/blog/index.rdf" schneier-on-security security second skim)
+	("http://contagiodump.blogspot.com/feeds/posts/default" contagio security second skim)
+	("http://feeds.feedburner.com/darknethackers" darknet-hackers security second skim)
+	("http://securityaffairs.co/wordpress/feed" security-affairs security second skim)
+	("http://blog.invisiblethings.org/feed.xml" invisible-things security second skim)
+	("https://threatpost.com/feed" threatpost security second skim)
+	("http://hackingexposedcomputerforensicsblog.blogspot.com/feeds/posts/default" hacking-exposed security second skim)
+	("http://detect-respond.blogspot.com/feeds/posts/default" detect-respond security second skim)
+	("https://feeds.feedburner.com/threatintelligence/pvexyqv7v0v" fireeye security second skim)
+	("http://www.elsevierscitech.com/feeds/feeds/b2b/14.xml" elsevierscitech security second skim)
+	("https://malware.dontneedcoffee.com/feed.xml" dont-need-coffee security second skim)
+	("https://www.darktrace.com/blog/index.xml" darktrace security second skim)
+	("http://krebsonsecurity.com/feed/" krebs-on-security security second skim)
+	("http://www.swiftforensics.com/feeds/posts/default" swift-forensics security second skim)
+	("http://www.darkreading.com/rss.xml" dark-reading security second skim)
+	("http://taosecurity.blogspot.com/atom.xml" tao-security security second skim)
+	("https://isc.sans.edu/rssfeed_full.xml" sans security second skim)
+	("http://blog.malwarebytes.org/feed/" malware-bytes security second skim)
+	("https://www.wired.com/feed/category/security/latest/rss" wired security second skim)
+	("http://ryanstillions.blogspot.com/feeds/posts/default" ryan-stillions security second skim)
+	("http://www.theregister.co.uk/security/headlines.atom" register security second skim)
+	("https://www.recordedfuture.com/feed/" recorded-future security second skim)
+	("http://www.malware-traffic-analysis.net/blog-entries.rss" malware-traffic-analysis security second skim)
+	("https://www.bellingcat.com/feed/" bellingcat security second skim)
+	("https://www.clearskysec.com/feed/" clearsky-sec security second skim)
+	("https://thecomputerperson.wordpress.com/rss" the-computer-person security second skim)
 	("https://dfir.it/atom.xml" dfir-it re)
-	("https://www.msreverseengineering.com/blog?format=rss" ms-reverse-engineering security second re)
+	("https://www.msreverseengineering.com/blog?format=rss" ms-reverse-engineering security second skim re)
 	("https://www.wired.com/feed/category/security/latest/rss" wired-security tech)
 	("https://www.sentinelone.com/blog/rss" sentinel-one tech security)
 	("https://labs.f-secure.com/blog/rss" f-secure tech security)
 	("https://euvsdisinfo.eu/articles/feed" eu-disinfo security)
 	("https://www.megabeets.net/rss" megabeets tech)
 	("https://pluralistic.net/feed/" pluralistic tech)
-	("https://seclists.org/rss/fulldisclosure.rss" second seclists tech security)
+	("https://seclists.org/rss/fulldisclosure.rss" second skim seclists tech security)
 	("https://www.404media.co/rss" 404media tech security)
-	("https://feeds.feedburner.com/TheHackersNews" second thehackernews tech security)
+	("https://feeds.feedburner.com/TheHackersNews" second skim thehackernews tech security)
 	))
 #+end_src
 
@@ -3074,7 +3111,7 @@ Load my RSS feeds
 ** Comics
 #+begin_src emacs-lisp :tangle ~/.emacs
 (setq comic-feeds '(
-		    ("http://pbfcomics.com/feed/feed.xml" pbfcomics second)
+		    ("http://pbfcomics.com/feed/feed.xml" pbfcomics comics)
 		    ("http://existentialcomics.com/rss.xml" existential-comics comics)
 		    ("http://xkcd.com/rss.xml" xkcd comics)
 		    ))
@@ -3105,8 +3142,8 @@ Load my RSS feeds
 #+begin_src emacs-lisp :tangle ~/.emacs
 (setq news-live-feeds
       '(
-	("http://rss.nytimes.com/services/xml/rss/nyt/HomePage.xml" news first)
-	("http://feeds.propublica.org/propublica/main" first)
+	("http://rss.nytimes.com/services/xml/rss/nyt/HomePage.xml" news first skim)
+	("http://feeds.propublica.org/propublica/main" first skim)
 	))
 #+end_src
 
