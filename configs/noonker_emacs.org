@@ -1570,7 +1570,6 @@ Clojure + LSP
 (setq org-agenda-basedir "~/org/tasks")
 
 (setq org-startup-align-all-tables t) ;; Aligns tables when a file is opened
-(setq org-startup-shrink-all-tables t) ;; Shrinks tables according to <x> tags in the column headers
 (setq org-clock-out-switch-to-state "TODO")
 (setq org-clock-out-remove-zero-time-clocks nil)
 (setq org-startup-indented t) ;; Indent content of blocks to visual indent
@@ -3248,7 +3247,7 @@ Load my RSS feeds
 (evil-define-key '(normal visual) 'global (kbd "<leader>s") noonker-search-map)
 (evil-define-key '(normal visual) 'global (kbd "<leader>h") noonker-help-map)
 (evil-define-key '(normal visual) 'global (kbd "<leader>p") noonker-project-map)
-(evil-define-key '(normal visual) 'global (kbd "<leader>c") noonker-code-map)
+(evil-define-key '(normal visual) 'global (kbd "<leader>i") noonker-code-map)
 (evil-define-key '(normal visual) 'global (kbd "<leader>t") noonker-toggle-map)
 (evil-define-key '(normal visual) 'global (kbd "<leader>o") noonker-org-map)
 (evil-define-key '(normal visual) 'global (kbd "<leader>a") noonker-ai-map)
