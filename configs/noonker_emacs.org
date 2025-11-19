@@ -131,10 +131,12 @@ Random global behavior configs
 	    display-line-numbers-current-absolute t
 	    display-line-numbers-width 4 
 	    display-line-numbers-widen t)
-(add-hook 'artist-mode-hook (lambda () (setq indent-tabs-mode nil)))
+(add-hook 'artist-mode-hook (lambda () (setq indent-tabs-mode nil))) ;; Nothing special in artist mode
+;; Line Numbers
 (global-display-line-numbers-mode) ;; Enable line numbers
 (custom-set-variables '(linum-format 'dynamic)) ;; Automatically align line numbers
 (setq display-line-numbers-type 'relative)
+
 (global-hl-line-mode) ;; Highlight the current line
 (tool-bar-mode -1) ;; Don't show the ugly emacs toolbar
 (scroll-bar-mode -1) ;; No scroll bars
@@ -155,7 +157,10 @@ Random global behavior configs
 (setq create-lockfiles nil) ;; I don't work on systems where multiple people are editing the same files with emacs.
 (global-so-long-mode 1) ;; Stop trying to syntax highlight absurdly long strings
 (global-set-key (kbd "C-s") 'swiper)
+(setq visible-bell t)
 ;; (setq mouse-1-click-follows-link nil) ;; don't accidentally click links
+(setq ediff-split-window-function 'split-window-horizontally)
+(setq ediff-window-setup-function 'ediff-setup-windows-plain)
 
 (defun my-electric-pair-inhibit-p (c)
   "Inhibit electric pairing for the carat character."
@@ -203,9 +208,396 @@ Emacs can nearly transparently use .gpg encrypted files in emacs. These settings
 #+end_src
 
 * Tools
-** One Liners
+* Evil?
 
-Anything in this section can be described in one sentence.
+Lispy mode makes lisp-mode editing significantly more efficent
+
+#+begin_src emacs-lisp :tangle ~/.emacs
+(use-package evil
+  :ensure t
+  :init
+  (setq evil-want-integration t) ;; This is optional since it's already set to t by default.
+  (setq evil-want-keybinding nil)
+  :config
+  ;;  Unsure tbh
+  ;;  (setq evil-want-minibuffer t)
+  (evil-mode 1)
+  (define-key evil-normal-state-map (kbd "C-e") 'move-end-of-line)
+  )
+
+(use-package evil-collection
+  :after evil
+  :ensure t
+  :config
+  (evil-collection-init))
+
+(use-package evil-surround
+  :ensure t
+  :config
+  (global-evil-surround-mode 1))
+
+(use-package paredit)
+
+(use-package evil-paredit)
+
+(defun hook-the-parenthesis-things ()
+  (paredit-mode 1)
+  (evil-paredit-mode 1))
+
+(add-hook 'emacs-lisp-mode-hook 'hook-the-parenthesis-things)
+
+(evil-ex-define-cmd "wq" 'save-and-kill-this-buffer)
+
+(defun save-and-kill-this-buffer()
+  (interactive)
+  (save-buffer)
+  (kill-current-buffer))
+#+end_src
+
+* Programming
+** Eglot
+#+begin_src emacs-lisp :tangle ~/.emacs
+(use-package eglot
+  :ensure t
+  :defer t
+  :hook ((python-mode . eglot-ensure)
+         (go-mode . eglot-ensure))
+  :config
+  (add-to-list 'eglot-server-programs
+               `(python-mode . ("pyright-langserver" "--stdio")
+			     )))
+#+end_src
+
+** Treesitter
+#+begin_src emacs-lisp :tangle ~/.emacs
+(setq treesit-language-source-alist
+      '((bash "https://github.com/tree-sitter/tree-sitter-bash")
+	(cmake "https://github.com/uyha/tree-sitter-cmake")
+	(css "https://github.com/tree-sitter/tree-sitter-css")
+	(elisp "https://github.com/Wilfred/tree-sitter-elisp")
+	(go "https://github.com/tree-sitter/tree-sitter-go")
+	(html "https://github.com/tree-sitter/tree-sitter-html")
+	(javascript "https://github.com/tree-sitter/tree-sitter-javascript" "master" "src")
+	(json "https://github.com/tree-sitter/tree-sitter-json")
+	(make "https://github.com/alemuller/tree-sitter-make")
+	(markdown "https://github.com/ikatyang/tree-sitter-markdown")
+	(python "https://github.com/tree-sitter/tree-sitter-python")
+	(toml "https://github.com/tree-sitter/tree-sitter-toml")
+	(rust "https://github.com/tree-sitter/tree-sitter-rust")
+	(tsx "https://github.com/tree-sitter/tree-sitter-typescript" "master" "tsx/src")
+	(typescript "https://github.com/tree-sitter/tree-sitter-typescript" "master" "typescript/src")
+	(yaml "https://github.com/ikatyang/tree-sitter-yaml")))
+#+end_src
+
+** Guile
+#+begin_src emacs-lisp :tangle ~/.emacs
+;; Assuming the Guix checkout is in ~/git/guix.
+(if is-guix
+    (progn
+      (with-eval-after-load 'geiser-guile
+	(add-to-list 'geiser-guile-load-path "~/git/guix"))
+      
+      ;; Assuming the Guix checkout is in ~/git/guix.
+      ;; Yasnippet configuration
+      (with-eval-after-load 'yasnippet
+	(add-to-list 'yas-snippet-dirs "~/git/guix/etc/snippets/yas"))
+      ;; Tempel configuration
+      (with-eval-after-load 'tempel
+	;; Ensure tempel-path is a list -- it may also be a string.
+	(unless (listp 'tempel-path)
+	  (setq tempel-path (list tempel-path)))
+	(add-to-list 'tempel-path "~/git/guix/etc/snippets/tempel/*"))
+      
+      (load-file "~/git/guix/etc/copyright.el")
+      ))
+#+end_src
+
+** Flycheck
+
+[[https://www.flycheck.org/en/latest/][Flycheck]] is a syntax checker for emacs
+
+#+begin_src emacs-lisp :tangle ~/.emacs
+(use-package flycheck
+  :config
+  (global-flycheck-mode)
+  (setq-default flycheck-disabled-checker '(emacs-lisp-checkdoc)))
+#+end_src
+
+*** C/C++ / Platformio-DCMAKE_PREFIX_PATH=/usr/local/opt/llvm
+
+On MacOS you need to add =-DCMAKE_PREFIX_PATH=/usr/local/opt/llvm= after =cmake= to run =install-irony-server= per [[https://github.com/Sarcasm/irony-mode/issues/167][this]] git issue.
+
+#+begin_src emacs-lisp :tangle ~/.emacs
+(add-hook 'c-mode-hook 'eglot-ensure)
+(add-hook 'c++-mode-hook 'eglot-ensure)
+
+(setq gc-cons-threshold (* 100 1024 1024)
+      read-process-output-max (* 1024 1024)
+      treemacs-space-between-root-nodes nil
+      company-minimum-prefix-length 1)
+
+(use-package irony)
+(add-hook 'c++-mode-hook 'irony-mode)
+(add-hook 'c-mode-hook 'irony-mode)
+(add-hook 'objc-mode-hook 'irony-mode)
+(add-hook 'irony-mode-hook 'irony-cdb-autosetup-compile-options)
+(add-to-list 'company-backends 'company-irony) ;; Add the required company backend.
+
+;; Enable irony for all c++ files, and platformio-mode only
+;; when needed (platformio.ini present in project root).
+(add-hook 'c++-mode-hook (lambda ()
+			   (irony-mode)
+			   (irony-eldoc)
+			   (platformio-conditionally-enable)))
+
+;; Use irony's completion functions.
+(add-hook 'irony-mode-hook
+	  (lambda ()
+	    (define-key irony-mode-map [remap completion-at-point]
+			'irony-completion-at-point-async)
+
+	    (define-key irony-mode-map [remap complete-symbol]
+			'irony-completion-at-point-async)
+
+	    (irony-cdb-autosetup-compile-options)))
+
+;; Setup irony for flycheck.
+;;  (add-hook 'flycheck-mode-hook 'flycheck-irony-setup)
+
+(use-package ggtags)
+(add-hook 'c-mode-common-hook
+	  (lambda ()
+	    (when (derived-mode-p 'c-mode 'c++-mode 'java-mode 'asm-mode)
+	      (ggtags-mode 1))))
+
+(define-key ggtags-mode-map (kbd "C-c g s") 'ggtags-find-other-symbol)
+(define-key ggtags-mode-map (kbd "C-c g h") 'ggtags-view-tag-history)
+(define-key ggtags-mode-map (kbd "C-c g r") 'ggtags-find-reference)
+(define-key ggtags-mode-map (kbd "C-c g f") 'ggtags-find-file)
+(define-key ggtags-mode-map (kbd "C-c g c") 'ggtags-create-tags)
+(define-key ggtags-mode-map (kbd "C-c g u") 'ggtags-update-tags)
+
+(define-key ggtags-mode-map (kbd "M-,") 'pop-tag-mark)
+
+(setq-local imenu-create-index-function #'ggtags-build-imenu-index)
+
+(add-to-list 'company-backends 'company-c-headers)
+(setq wdired-allow-to-change-permissions t)
+#+end_src
+
+** Rust
+#+begin_src emacs-lisp :tangle ~/.emacs
+(use-package rustic
+  :ensure
+  :bind (:map rustic-mode-map
+              ("C-c C-c l" . flycheck-list-errors))
+  :config
+  ;; uncomment for less flashiness
+  ;; (setq lsp-eldoc-hook nil)
+  ;; (setq lsp-enable-symbol-highlighting nil)
+  ;; (setq lsp-signature-auto-activate nil)
+
+  ;; comment to disable rustfmt on save
+  (setq rustic-format-on-save t)
+  (add-hook 'rustic-mode-hook 'rk/rustic-mode-hook))
+
+(defun rk/rustic-mode-hook ()
+  ;; so that run C-c C-c C-r works without having to confirm, but don't try to
+  ;; save rust buffers that are not file visiting. Once
+  ;; https://github.com/brotzeit/rustic/issues/253 has been resolved this should
+  ;; no longer be necessary.
+  (when buffer-file-name
+    (setq-local buffer-save-without-query t)))
+#+end_src
+
+** Go
+#+begin_src emacs-lisp :tangle ~/.emacs
+(use-package go-mode)
+
+(add-hook 'go-mode-hook 'eglot-ensure)
+(add-hook 'go-mode-hook 'subword-mode)
+(add-hook 'before-save-hook 'gofmt-before-save)
+
+(add-hook 'go-mode-hook (lambda ()
+                          (setq tab-width 4)
+                          (flycheck-add-next-checker 'go 'go-vet)
+                          (flycheck-add-next-checker 'go 'go-staticcheck)))
+#+end_src
+
+** Python
+
+#+begin_src emacs-lisp :tangle ~/.emacs
+(use-package envrc
+  :hook (after-init . envrc-global-mode))
+
+(use-package python
+  :bind (("C-c C-c" . python-shell-send-region)))
+
+(add-hook 'python-mode-hook 'electric-pair-mode)
+
+(use-package elpy
+  :ensure t
+  :init
+  (elpy-enable)
+  (pyvenv-tracking-mode)
+  (setq elpy-rpc-virtualenv-path 'current)
+  ;; (setq elpy-shell-starting-directory 'current-directory) ;; default is 'project-root 
+  (setenv "WORKON_HOME" (file-name-concat (file-truename "~") ".virtualenvs"))
+  (setq elpy-shell-echo-output nil)
+  (setq python-shell-interpreter "python"))
+(add-hook 'elpy-mode-hook (lambda ()
+                            (add-hook 'before-save-hook
+                                      'elpy-black-fix-code nil t)))
+
+(use-package dap-mode
+  :after eglot-mode
+  :commands dap-debug
+  :hook ((python-mode . dap-ui-mode)
+	 (python-mode . dap-mode))
+  :config
+  (eval-when-compile
+    (require 'cl))
+  (require 'dap-python)
+  (require 'dap-lldb)
+  (dap-auto-configure-mode)
+  (setq dap-python-debugger 'debugpy)
+  )
+
+(defvar noonker/python-binary-for-venvs "/Library/Frameworks/Python.framework/Versions/3.10/bin/python3")
+
+(defun noonker/create-python-project-environment ()
+  "Create a Python virtual environment and set up project configuration files."
+  (interactive)
+  ;; Query for venv name
+  (let* ((venv-name (read-string "Virtual environment name: "))
+         (project-root (projectile-project-root))
+         (dir-locals-path (expand-file-name ".dir-locals.el" project-root))
+         (envrc-path (expand-file-name ".envrc" project-root)))
+    
+    ;; Create the virtualenv
+    (pyvenv-create venv-name noonker/python-binary-for-venvs)
+    
+    ;; Create .dir-locals.el file
+    (with-temp-file dir-locals-path
+      (insert (format "(
+ (nil . ((pyvenv-workon . \"%s\")))
+)" venv-name)))
+    
+    ;; Create .envrc file
+    (with-temp-file envrc-path
+      (insert (format "echo \"Activating %s venv\"
+source ~/.virtualenvs/%s/bin/activate
+export BASEPATH=%s
+export PYTHONPATH=%s
+" venv-name venv-name project-root project-root)))
+    
+(message "Python environment '%s' created with supporting files" venv-name)))
+
+(evil-define-key 'normal python-mode-map "gjd" 'dap-debug)
+(evil-define-key 'normal python-mode-map "gjl" 'dap-continue)
+(evil-define-key 'normal python-mode-map "gjj" 'dap-step-in)
+(evil-define-key 'normal python-mode-map "gjk" 'dap-step-out)
+(evil-define-key 'normal python-mode-map "gjn" 'dap-next)
+(evil-define-key 'normal python-mode-map "gjD" 'dap-disconnect)
+(evil-define-key 'normal python-mode-map "gjb" 'dap-breakpoint-toggle)
+(evil-define-key 'normal python-mode-map "gjr" 'dap-ui-repl)
+(evil-define-key 'visual python-mode-map "gje" 'dap-eval-region)
+(evil-define-key 'visual python-mode-map "gjr" 'dap-eval-variable-in-buffer)
+#+end_src
+
+** Platformio
+
+Platformio is for programming embedded devices
+
+#+begin_src emacs-lisp :tangle ~/.emacs
+(use-package platformio-mode)
+#+end_src
+
+** Typescript
+
+Typescript
+
+#+begin_src emacs-lisp :tangle ~/.emacs
+(use-package rjsx-mode)
+
+(use-package typescript-mode)
+
+(use-package tide
+  :ensure t
+  :after (typescript-mode flycheck)
+  :hook ((typescript-mode . tide-setup)
+	 (typescript-mode . tide-hl-identifier-mode)
+	 ;; (before-save . tide-format-before-save)
+	 ))
+#+end_src
+
+** Clojure
+
+Clojure
+
+#+begin_src emacs-lisp :tangle ~/.emacs
+(use-package clj-refactor)
+
+(if (not is-mobile)
+  (add-hook 'clojure-mode-hook 'eglot-ensure)
+  (add-hook 'clojurescript-mode-hook 'eglot-ensure)
+  (add-hook 'clojurec-mode-hook 'eglot-ensure))
+
+(setq gc-cons-threshold (* 100 1024 1024)
+      read-process-output-max (* 1024 1024)
+      treemacs-space-between-root-nodes nil
+      company-minimum-prefix-length 1
+      )
+
+(use-package clojure-mode
+  :ensure t
+  :mode (("\\.clj\\'" . clojure-mode)
+	 ("\\.edn\\'" . clojure-mode)
+	 ))
+
+(use-package cider
+  :ensure t
+  :defer t
+  :init (add-hook 'cider-mode-hook #'clj-refactor-mode)
+  :diminish subword-mode
+  :config
+  (setq nrepl-log-messages t
+	cider-repl-display-in-current-window t
+	cider-repl-use-clojure-font-lock t
+	cider-prompt-save-file-on-load 'always-save
+	cider-font-lock-dynamically '(macro core function var)
+	nrepl-hide-special-buffers t
+	cider-overlays-use-font-lock t)
+  (cider-repl-toggle-pretty-printing))
+
+
+
+(add-hook 'clojure-mode-hook #'paredit-mode)
+(add-hook 'clojure-mode-hook #'subword-mode)
+(add-hook 'clojure-mode-hook #'eldoc-mode)
+(add-hook 'clojure-mode-hook (lambda ()
+                            (add-hook 'before-save-hook
+                                      'cider-format-buffer nil t)))
+
+#+end_src
+
+** Json
+#+begin_src emacs-lisp :tangle ~/.emacs
+(use-package json)
+(use-package json-mode)
+(use-package counsel-jq) ;; Query json file with jq + counsel
+#+end_src
+
+** Yaml
+#+begin_src emacs-lisp :tangle ~/.emacs
+(use-package yaml)
+#+end_src
+
+** RMSBolt
+#+begin_src emacs-lisp :tangle ~/.emacs
+(use-package rmsbolt)
+#+end_src
+** Passwords 
 
 #+begin_src emacs-lisp :tangle ~/.emacs
 (use-package pass
@@ -213,17 +605,6 @@ Anything in this section can be described in one sentence.
 
 (defalias 'original-password-store-get (symbol-function 'password-store-get))
 
-(setq visible-bell t)
-
-(setq ediff-split-window-function 'split-window-horizontally)
-(setq ediff-window-setup-function 'ediff-setup-windows-plain)
-#+end_src
-
-** Shell
-
-Emacs shell settings
-
-#+begin_src emacs-lisp :tangle ~/.emacs
 (defun noonker/simple-password (&optional prefix-len)
   (interactive "P")
   (let ((len (if prefix-len prefix-len 10)))
@@ -231,7 +612,13 @@ Emacs shell settings
    (shell-command-to-string
     (concat "tr -dc \'A-Za-z0-9!?%=\' < /dev/urandom | head -c "
 	    (number-to-string len))))))
+#+end_src
 
+** Shell
+
+Emacs shell settings
+
+#+begin_src emacs-lisp :tangle ~/.emacs
 ;; https://timmydouglas.com/2020/12/17/eshell-counsel.html
 (defun timmy/counsel-eshell-history-action (cmd)
   "Insert cmd into the buffer"
@@ -388,11 +775,11 @@ Tramp allows for nearly transparent editing of files on remote machines. Run =C-
 (setq projectile-mode-line "Projectile")
 
 ;; By default lets be safe in tramp
-(add-hook
- 'find-file-hook
- (lambda ()
-   (when (file-remote-p default-directory)
-     (read-only-mode t))))
+;; (add-hook
+;;  'find-file-hook
+;;  (lambda ()
+;;    (when (file-remote-p default-directory)
+;;      (read-only-mode t))))
 
 ;; Some more optimizations?
 (setq projectile-auto-update-cache nil)
@@ -718,68 +1105,7 @@ Magit is git porcelain for Emacs
 (use-package kubel)
 #+end_src
 
-* Programming
-** General
-#+begin_src emacs-lisp :tangle ~/.emacs
-(add-hook 'python-mode-hook 'electric-pair-mode)
-#+end_src
-
-** Treesitter
-#+begin_src emacs-lisp :tangle ~/.emacs
-(setq treesit-language-source-alist
-      '((bash "https://github.com/tree-sitter/tree-sitter-bash")
-	(cmake "https://github.com/uyha/tree-sitter-cmake")
-	(css "https://github.com/tree-sitter/tree-sitter-css")
-	(elisp "https://github.com/Wilfred/tree-sitter-elisp")
-	(go "https://github.com/tree-sitter/tree-sitter-go")
-	(html "https://github.com/tree-sitter/tree-sitter-html")
-	(javascript "https://github.com/tree-sitter/tree-sitter-javascript" "master" "src")
-	(json "https://github.com/tree-sitter/tree-sitter-json")
-	(make "https://github.com/alemuller/tree-sitter-make")
-	(markdown "https://github.com/ikatyang/tree-sitter-markdown")
-	(python "https://github.com/tree-sitter/tree-sitter-python")
-	(toml "https://github.com/tree-sitter/tree-sitter-toml")
-	(rust "https://github.com/tree-sitter/tree-sitter-rust")
-	(tsx "https://github.com/tree-sitter/tree-sitter-typescript" "master" "tsx/src")
-	(typescript "https://github.com/tree-sitter/tree-sitter-typescript" "master" "typescript/src")
-	(yaml "https://github.com/ikatyang/tree-sitter-yaml")))
-#+end_src
-
-** Guile
-#+begin_src emacs-lisp :tangle ~/.emacs
-;; Assuming the Guix checkout is in ~/git/guix.
-(if is-guix
-    (progn
-      (with-eval-after-load 'geiser-guile
-	(add-to-list 'geiser-guile-load-path "~/git/guix"))
-      
-      ;; Assuming the Guix checkout is in ~/git/guix.
-      ;; Yasnippet configuration
-      (with-eval-after-load 'yasnippet
-	(add-to-list 'yas-snippet-dirs "~/git/guix/etc/snippets/yas"))
-      ;; Tempel configuration
-      (with-eval-after-load 'tempel
-	;; Ensure tempel-path is a list -- it may also be a string.
-	(unless (listp 'tempel-path)
-	  (setq tempel-path (list tempel-path)))
-	(add-to-list 'tempel-path "~/git/guix/etc/snippets/tempel/*"))
-      
-      (load-file "~/git/guix/etc/copyright.el")
-      ))
-#+end_src
-
-** Flycheck
-
-[[https://www.flycheck.org/en/latest/][Flycheck]] is a syntax checker for emacs
-
-#+begin_src emacs-lisp :tangle ~/.emacs
-(use-package flycheck
-  :config
-  (global-flycheck-mode)
-  (setq-default flycheck-disabled-checker '(emacs-lisp-checkdoc)))
-#+end_src
-
-** Company
+* Company
 
 Company is an autocomplete option framework for emacs
 
@@ -804,329 +1130,7 @@ Company is an autocomplete option framework for emacs
       (indent-according-to-mode))))
 #+end_src
 
-** Evil?
-
-Lispy mode makes lisp-mode editing significantly more efficent
-
-#+begin_src emacs-lisp :tangle ~/.emacs
-(use-package evil
-  :ensure t
-  :init
-  (setq evil-want-integration t) ;; This is optional since it's already set to t by default.
-  (setq evil-want-keybinding nil)
-  :config
-  ;;  Unsure tbh
-  ;;  (setq evil-want-minibuffer t)
-  (evil-mode 1)
-  (define-key evil-normal-state-map (kbd "C-e") 'move-end-of-line)
-  )
-
-(use-package evil-collection
-  :after evil
-  :ensure t
-  :config
-  (evil-collection-init))
-
-(use-package evil-surround
-  :ensure t
-  :config
-  (global-evil-surround-mode 1))
-
-(use-package paredit)
-
-(use-package evil-paredit)
-
-(defun hook-the-parenthesis-things ()
-  (paredit-mode 1)
-  (evil-paredit-mode 1))
-
-(add-hook 'emacs-lisp-mode-hook 'hook-the-parenthesis-things)
-
-(evil-ex-define-cmd "wq" 'save-and-kill-this-buffer)
-
-(defun save-and-kill-this-buffer()
-  (interactive)
-  (save-buffer)
-  (kill-current-buffer))
-#+end_src
-
-** C/C++ / Platformio-DCMAKE_PREFIX_PATH=/usr/local/opt/llvm
-
-On MacOS you need to add =-DCMAKE_PREFIX_PATH=/usr/local/opt/llvm= after =cmake= to run =install-irony-server= per [[https://github.com/Sarcasm/irony-mode/issues/167][this]] git issue.
-
-#+begin_src emacs-lisp :tangle ~/.emacs
-(add-hook 'c-mode-hook 'eglot-ensure)
-(add-hook 'c++-mode-hook 'eglot-ensure)
-
-(setq gc-cons-threshold (* 100 1024 1024)
-      read-process-output-max (* 1024 1024)
-      treemacs-space-between-root-nodes nil
-      company-minimum-prefix-length 1)
-
-(use-package irony)
-(add-hook 'c++-mode-hook 'irony-mode)
-(add-hook 'c-mode-hook 'irony-mode)
-(add-hook 'objc-mode-hook 'irony-mode)
-(add-hook 'irony-mode-hook 'irony-cdb-autosetup-compile-options)
-(add-to-list 'company-backends 'company-irony) ;; Add the required company backend.
-
-;; Enable irony for all c++ files, and platformio-mode only
-;; when needed (platformio.ini present in project root).
-(add-hook 'c++-mode-hook (lambda ()
-			   (irony-mode)
-			   (irony-eldoc)
-			   (platformio-conditionally-enable)))
-
-;; Use irony's completion functions.
-(add-hook 'irony-mode-hook
-	  (lambda ()
-	    (define-key irony-mode-map [remap completion-at-point]
-			'irony-completion-at-point-async)
-
-	    (define-key irony-mode-map [remap complete-symbol]
-			'irony-completion-at-point-async)
-
-	    (irony-cdb-autosetup-compile-options)))
-
-;; Setup irony for flycheck.
-;;  (add-hook 'flycheck-mode-hook 'flycheck-irony-setup)
-
-(use-package ggtags)
-(add-hook 'c-mode-common-hook
-	  (lambda ()
-	    (when (derived-mode-p 'c-mode 'c++-mode 'java-mode 'asm-mode)
-	      (ggtags-mode 1))))
-
-(define-key ggtags-mode-map (kbd "C-c g s") 'ggtags-find-other-symbol)
-(define-key ggtags-mode-map (kbd "C-c g h") 'ggtags-view-tag-history)
-(define-key ggtags-mode-map (kbd "C-c g r") 'ggtags-find-reference)
-(define-key ggtags-mode-map (kbd "C-c g f") 'ggtags-find-file)
-(define-key ggtags-mode-map (kbd "C-c g c") 'ggtags-create-tags)
-(define-key ggtags-mode-map (kbd "C-c g u") 'ggtags-update-tags)
-
-(define-key ggtags-mode-map (kbd "M-,") 'pop-tag-mark)
-
-(setq-local imenu-create-index-function #'ggtags-build-imenu-index)
-
-(add-to-list 'company-backends 'company-c-headers)
-(setq wdired-allow-to-change-permissions t)
-#+end_src
-
-** Rust
-#+begin_src emacs-lisp :tangle ~/.emacs
-(use-package rustic
-  :ensure
-  :bind (:map rustic-mode-map
-              ("C-c C-c l" . flycheck-list-errors))
-  :config
-  ;; uncomment for less flashiness
-  ;; (setq lsp-eldoc-hook nil)
-  ;; (setq lsp-enable-symbol-highlighting nil)
-  ;; (setq lsp-signature-auto-activate nil)
-
-  ;; comment to disable rustfmt on save
-  (setq rustic-format-on-save t)
-  (add-hook 'rustic-mode-hook 'rk/rustic-mode-hook))
-
-(defun rk/rustic-mode-hook ()
-  ;; so that run C-c C-c C-r works without having to confirm, but don't try to
-  ;; save rust buffers that are not file visiting. Once
-  ;; https://github.com/brotzeit/rustic/issues/253 has been resolved this should
-  ;; no longer be necessary.
-  (when buffer-file-name
-    (setq-local buffer-save-without-query t)))
-#+end_src
-
-** Go
-#+begin_src emacs-lisp :tangle ~/.emacs
-(use-package go-mode)
-
-(add-hook 'go-mode-hook 'eglot-ensure)
-(add-hook 'go-mode-hook 'subword-mode)
-(add-hook 'before-save-hook 'gofmt-before-save)
-
-(add-hook 'go-mode-hook (lambda ()
-                          (setq tab-width 4)
-                          (flycheck-add-next-checker 'go 'go-vet)
-                          (flycheck-add-next-checker 'go 'go-staticcheck)))
-#+end_src
-
-** Python
-
-Python
-
-#+begin_src emacs-lisp :tangle ~/.emacs
-(use-package envrc
-  :hook (after-init . envrc-global-mode))
-
-(use-package python
-  :bind (("C-c C-c" . python-shell-send-region)))
-
-(use-package elpy
-  :ensure t
-  :init
-  (elpy-enable)
-  (pyvenv-tracking-mode)
-  (setq elpy-rpc-virtualenv-path 'current)
-  ;; (setq elpy-shell-starting-directory 'current-directory) ;; default is 'project-root 
-  (setenv "WORKON_HOME" (file-name-concat (file-truename "~") ".virtualenvs"))
-  (setq elpy-shell-echo-output nil)
-  (setq python-shell-interpreter "python"))
-(add-hook 'elpy-mode-hook (lambda ()
-                            (add-hook 'before-save-hook
-                                      'elpy-black-fix-code nil t)))
-
-(use-package dap-mode
-  :after eglot-mode
-  :commands dap-debug
-  :hook ((python-mode . dap-ui-mode)
-	 (python-mode . dap-mode))
-  :config
-  (eval-when-compile
-    (require 'cl))
-  (require 'dap-python)
-  (require 'dap-lldb)
-  (dap-auto-configure-mode)
-  (setq dap-python-debugger 'debugpy)
-  )
-
-(defvar noonker/python-binary-for-venvs "/Library/Frameworks/Python.framework/Versions/3.10/bin/python3")
-
-(defun noonker/create-python-project-environment ()
-  "Create a Python virtual environment and set up project configuration files."
-  (interactive)
-  ;; Query for venv name
-  (let* ((venv-name (read-string "Virtual environment name: "))
-         (project-root (projectile-project-root))
-         (dir-locals-path (expand-file-name ".dir-locals.el" project-root))
-         (envrc-path (expand-file-name ".envrc" project-root)))
-    
-    ;; Create the virtualenv
-    (pyvenv-create venv-name noonker/python-binary-for-venvs)
-    
-    ;; Create .dir-locals.el file
-    (with-temp-file dir-locals-path
-      (insert (format "(
- (nil . ((pyvenv-workon . \"%s\")))
-)" venv-name)))
-    
-    ;; Create .envrc file
-    (with-temp-file envrc-path
-      (insert (format "echo \"Activating %s venv\"
-source ~/.virtualenvs/%s/bin/activate
-export BASEPATH=%s
-export PYTHONPATH=%s
-" venv-name venv-name project-root project-root)))
-    
-(message "Python environment '%s' created with supporting files" venv-name)))
-
-(evil-define-key 'normal python-mode-map "gjd" 'dap-debug)
-(evil-define-key 'normal python-mode-map "gjl" 'dap-continue)
-(evil-define-key 'normal python-mode-map "gjj" 'dap-step-in)
-(evil-define-key 'normal python-mode-map "gjk" 'dap-step-out)
-(evil-define-key 'normal python-mode-map "gjn" 'dap-next)
-(evil-define-key 'normal python-mode-map "gjD" 'dap-disconnect)
-(evil-define-key 'normal python-mode-map "gjb" 'dap-breakpoint-toggle)
-(evil-define-key 'normal python-mode-map "gjr" 'dap-ui-repl)
-(evil-define-key 'visual python-mode-map "gje" 'dap-eval-region)
-(evil-define-key 'visual python-mode-map "gjr" 'dap-eval-variable-in-buffer)
-#+end_src
-
-** Platformio
-
-Platformio is for programming embedded devices
-
-#+begin_src emacs-lisp :tangle ~/.emacs
-(use-package platformio-mode)
-#+end_src
-
-** Typescript
-
-Typescript
-
-#+begin_src emacs-lisp :tangle ~/.emacs
-(use-package rjsx-mode)
-
-(use-package typescript-mode)
-
-(use-package tide
-  :ensure t
-  :after (typescript-mode flycheck)
-  :hook ((typescript-mode . tide-setup)
-	 (typescript-mode . tide-hl-identifier-mode)
-	 ;; (before-save . tide-format-before-save)
-	 ))
-#+end_src
-
-** Clojure
-
-Clojure
-
-#+begin_src emacs-lisp :tangle ~/.emacs
-(use-package clj-refactor)
-
-(if (not is-mobile)
-  (add-hook 'clojure-mode-hook 'eglot-ensure)
-  (add-hook 'clojurescript-mode-hook 'eglot-ensure)
-  (add-hook 'clojurec-mode-hook 'eglot-ensure))
-
-(setq gc-cons-threshold (* 100 1024 1024)
-      read-process-output-max (* 1024 1024)
-      treemacs-space-between-root-nodes nil
-      company-minimum-prefix-length 1
-      )
-
-(use-package clojure-mode
-  :ensure t
-  :mode (("\\.clj\\'" . clojure-mode)
-	 ("\\.edn\\'" . clojure-mode)
-	 ))
-
-(use-package cider
-  :ensure t
-  :defer t
-  :init (add-hook 'cider-mode-hook #'clj-refactor-mode)
-  :diminish subword-mode
-  :config
-  (setq nrepl-log-messages t
-	cider-repl-display-in-current-window t
-	cider-repl-use-clojure-font-lock t
-	cider-prompt-save-file-on-load 'always-save
-	cider-font-lock-dynamically '(macro core function var)
-	nrepl-hide-special-buffers t
-	cider-overlays-use-font-lock t)
-  (cider-repl-toggle-pretty-printing))
-
-
-
-(add-hook 'clojure-mode-hook #'paredit-mode)
-(add-hook 'clojure-mode-hook #'subword-mode)
-(add-hook 'clojure-mode-hook #'eldoc-mode)
-(add-hook 'clojure-mode-hook (lambda ()
-                            (add-hook 'before-save-hook
-                                      'cider-format-buffer nil t)))
-
-#+end_src
-
-** Json
-#+begin_src emacs-lisp :tangle ~/.emacs
-(use-package json)
-(use-package json-mode)
-(use-package counsel-jq) ;; Query json file with jq + counsel
-#+end_src
-
-** Yaml
-#+begin_src emacs-lisp :tangle ~/.emacs
-(use-package yaml)
-#+end_src
-
-** RMSBolt
-#+begin_src emacs-lisp :tangle ~/.emacs
-(use-package rmsbolt)
-#+end_src
-
 * PDF
-
 ** PDF Tools
 #+begin_src emacs-lisp :tangle ~/.emacs
 (if (not is-mobile)
@@ -1251,7 +1255,9 @@ Clojure
 (setq org-fontify-whole-heading-line t)
 (setq org-startup-folded t)
 (setq org-ellipsis "👇")
-(add-hook 'org-mode-hook (lambda () (display-line-numbers-mode -1)))
+
+;; If org-mode gets jumpy from non-monospace fonts
+;; (add-hook 'org-mode-hook (lambda () (display-line-numbers-mode -1)))
 
 (setq org-directory "~/org")
 (setq org-agenda-basedir "~/org/tasks")
@@ -2282,19 +2288,6 @@ These functions are helpers and should be self explanitory
       
       )))
 #+end_src
-* Eglot
-#+begin_src emacs-lisp :tangle ~/.emacs
-(use-package eglot
-  :ensure t
-  :defer t
-  :hook ((python-mode . eglot-ensure)
-         (go-mode . eglot-ensure))
-  :config
-  (add-to-list 'eglot-server-programs
-               `(python-mode . ("pyright-langserver" "--stdio")
-			     )))
-#+end_src
-
 * Finally
 Load my RSS feeds
 #+begin_src emacs-lisp :tangle ~/.emacs
