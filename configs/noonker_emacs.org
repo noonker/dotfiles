@@ -41,6 +41,31 @@ This section sets up [[https://github.com/radian-software/straight.el][straight.
   (straight-use-package-by-default t))
 #+end_src
 
+* Company
+
+Company is an autocomplete option framework for emacs
+
+#+begin_src emacs-lisp :tangle ~/.emacs
+(use-package company
+  :config
+  (global-company-mode)
+  (setq company-dabbrev-downcase 0)
+  (setq company-idle-delay 0.38)
+  (setq company-minimum-prefix-length 2)
+
+  (defun complete-or-indent ()
+    (interactive)
+    (if (company-manual-begin)
+	(company-complete-common)
+      (indent-according-to-mode)))
+
+  (defun indent-or-complete ()
+    (interactive)
+    (if (looking-at "\\_>")
+	(company-complete-common)
+      (indent-according-to-mode))))
+#+end_src
+
 * Behavior
 ** Minibuffer Fix
 #+begin_src emacs-lisp :tangle ~/.emacs
@@ -1103,31 +1128,6 @@ Magit is git porcelain for Emacs
 
 #+begin_src emacs-lisp :tangle ~/.emacs
 (use-package kubel)
-#+end_src
-
-* Company
-
-Company is an autocomplete option framework for emacs
-
-#+begin_src emacs-lisp :tangle ~/.emacs
-(use-package company
-  :config
-  (global-company-mode)
-  (setq company-dabbrev-downcase 0)
-  (setq company-idle-delay 0.38)
-  (setq company-minimum-prefix-length 2)
-
-  (defun complete-or-indent ()
-    (interactive)
-    (if (company-manual-begin)
-	(company-complete-common)
-      (indent-according-to-mode)))
-
-  (defun indent-or-complete ()
-    (interactive)
-    (if (looking-at "\\_>")
-	(company-complete-common)
-      (indent-according-to-mode))))
 #+end_src
 
 * PDF
