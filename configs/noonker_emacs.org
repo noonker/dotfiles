@@ -273,7 +273,7 @@ Leuven Theme and Comic Mono
 (set-fontset-font t 'emoji '("Noto Emoji" . "iso10646-1") nil 'prepend)
 
 (if (string= "blep" (system-name))
-    (set-face-attribute 'default nil :font "Comic Code" :height 180))
+    (set-face-attribute 'default nil :font "Comic Code" :height 120))
 
 (if im-at-work
     (set-face-attribute 'default nil :font "JetBrains Mono" :height 160))
@@ -606,20 +606,6 @@ On MacOS you need to add =-DCMAKE_PREFIX_PATH=/usr/local/opt/llvm= after =cmake=
                             (add-hook 'before-save-hook
                                       'elpy-black-fix-code nil t)))
 
-(use-package dap-mode
-  :after eglot-mode
-  :commands dap-debug
-  :hook ((python-mode . dap-ui-mode)
-	 (python-mode . dap-mode))
-  :config
-  (eval-when-compile
-    (require 'cl))
-  (require 'dap-python)
-  (require 'dap-lldb)
-  (dap-auto-configure-mode)
-  (setq dap-python-debugger 'debugpy)
-  )
-
 (defvar noonker/python-binary-for-venvs "/Library/Frameworks/Python.framework/Versions/3.10/bin/python3")
 
 (defun noonker/create-python-project-environment ()
@@ -649,17 +635,6 @@ export PYTHONPATH=%s
 " venv-name venv-name project-root project-root)))
     
 (message "Python environment '%s' created with supporting files" venv-name)))
-
-(evil-define-key 'normal python-mode-map "gjd" 'dap-debug)
-(evil-define-key 'normal python-mode-map "gjl" 'dap-continue)
-(evil-define-key 'normal python-mode-map "gjj" 'dap-step-in)
-(evil-define-key 'normal python-mode-map "gjk" 'dap-step-out)
-(evil-define-key 'normal python-mode-map "gjn" 'dap-next)
-(evil-define-key 'normal python-mode-map "gjD" 'dap-disconnect)
-(evil-define-key 'normal python-mode-map "gjb" 'dap-breakpoint-toggle)
-(evil-define-key 'normal python-mode-map "gjr" 'dap-ui-repl)
-(evil-define-key 'visual python-mode-map "gje" 'dap-eval-region)
-(evil-define-key 'visual python-mode-map "gjr" 'dap-eval-variable-in-buffer)
 #+end_src
 
 ** Platformio
@@ -2636,6 +2611,7 @@ Load my RSS feeds
 	("https://seclists.org/rss/fulldisclosure.rss" second skim seclists tech security)
 	("https://www.404media.co/rss" 404media tech security)
 	("https://feeds.feedburner.com/TheHackersNews" second skim thehackernews tech security)
+	("https://monome.org/rss.xml" monome tech)
 	))
 #+end_src
 

@@ -39,7 +39,6 @@
                                            "gcc-toolchain"
                                            "cairo"
                                            "poppler"
-                                           "libpng"
                                            "node"
                                            "clang"
                                            "perl"
@@ -82,7 +81,7 @@
 					   "bind:utils"
 					   "alsa-utils"
 					   "qpwgraph"
-					   "lua"
+;;					   "lua"
 					   ;; Guile Hacking
 					   "guile"
 					   "emacs-geiser"
