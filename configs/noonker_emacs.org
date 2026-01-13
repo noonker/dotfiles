@@ -273,7 +273,7 @@ Leuven Theme and Comic Mono
 (set-fontset-font t 'emoji '("Noto Emoji" . "iso10646-1") nil 'prepend)
 
 (if (string= "blep" (system-name))
-    (set-face-attribute 'default nil :font "Comic Code" :height 120))
+    (set-face-attribute 'default nil :font "Comic Code" :height 200))
 
 (if im-at-work
     (set-face-attribute 'default nil :font "JetBrains Mono" :height 160))
@@ -1235,6 +1235,8 @@ Magit is git porcelain for Emacs
 
 #+begin_src emacs-lisp :tangle ~/.emacs
 (use-package kubel)
+(use-package docker)
+(setq docker-command "podman")
 #+end_src
 
 * PDF
@@ -1939,7 +1941,7 @@ These functions are helpers and should be self explanitory
 ** Gptel
 #+begin_src emacs-lisp :tangle ~/.emacs
 (use-package gptel
-  :straight (:host github :repo "karthink/gptel" :files ("dist" "*.el")))
+  :straight (:host github :repo "karthink/gptel"))
 (use-package gptel-quick
   :straight (:host github :repo "karthink/gptel-quick" :files ("gptel-quick.el")))
 
@@ -1983,6 +1985,27 @@ These functions are helpers and should be self explanitory
                          `((display-buffer-in-side-window)
                            (side . bottom)
                            (window-height . ,#'fit-window-to-buffer))))))))
+
+
+(defun gptel-bad-code ()
+  (interactive)
+  (gptel-request
+   (buffer-substring-no-properties (mark) (point))
+   :system "The following code is yielding an error. Do you know why?"
+   :callback
+   (lambda (response info)
+     (if (not response)
+         (message "gptel-lookup failed with message: %s" (plist-get info :status))
+       (with-current-buffer (get-buffer-create "*gptel-lookup*")
+         (let ((inhibit-read-only t))
+           (erase-buffer)
+           (insert response))
+         (special-mode)
+         (display-buffer (current-buffer)
+                         `((display-buffer-in-side-window)
+                           (side . bottom)
+                           (window-height . ,#'fit-window-to-buffer))))))))
+
 
 
 (defun gptel-editor-rewrite-and-replace (bounds &optional directive)
@@ -2056,6 +2079,9 @@ These functions are helpers and should be self explanitory
   (let ((anthropic (gptel-make-anthropic "Anthropic" 
 		     :stream t
 		     :key (password-store-get "Internet/anthropic")))
+	(gemini (gptel-make-gemini "Gemini"
+		   :key (password-store-get "Internet/gemini")
+		   :stream t)) 
 	(chatgpt
 
 	 (gptel-make-openai "ChatGPT"
@@ -2079,6 +2105,8 @@ These functions are helpers and should be self explanitory
 	  (setq org-ai-openai-api-token (password-store-get "Internet/openai"))
 	  )
       nil)))
+
+(noonker/init-ai)
 
 (evil-global-set-key 'normal "gsm" 'gptel-menu)
 (evil-global-set-key 'normal "gss" 'gptel-send)
@@ -2305,6 +2333,16 @@ These functions are helpers and should be self explanitory
   :ensure t
   :after mpc
   :straight (:host github :repo "lizqwerscott/gptel-mcp.el" :files ("gptel-mcp.el")))
+
+(use-package llm-tool-collection
+  :ensure t
+  :config (require 'llm-tool-collection)
+  :straight (:host github :repo "skissue/llm-tool-collection"))
+
+(use-package gptel-agent
+  :config 
+  (add-to-list 'gptel-agent-dirs (file-name-concat (file-truename "~") "git/agents"))
+  (gptel-agent-update)) 
 #+end_src
 
 ** Aidermacs
@@ -2346,6 +2384,9 @@ These functions are helpers and should be self explanitory
          :map norns-sc-repl-mode-map
          ("C-." . norns-sc-stop))
   )
+
+
+(setq norns-host "norns.local")
 #+end_src
 
 * Hunting
@@ -2493,6 +2534,12 @@ Load my RSS feeds
 	("https://www.youtube.com/feeds/videos.xml?channel_id=UCDIJ45Bba6nzrGL5v8b7fMw" conneromalley youtube)
 	("https://www.youtube.com/feeds/videos.xml?channel_id=UCNAxrHudMfdzNi6NxruKPLw" samharris youtube)
 	("https://www.youtube.com/feeds/videos.xml?channel_id=UCASM0cgfkJxQ1ICmRilfHLw" patrick-boyle youtube)
+	("https://www.youtube.com/feeds/videos.xml?channel_id=UCshObcm-nLhbu8MY50EZ5Ng" benn-jordan youtube)
+	("https://www.youtube.com/feeds/videos.xml?channel_id=UC7royq87tX5w3q5XRxk4tVw" encanti youtube)
+	("https://www.youtube.com/feeds/videos.xml?channel_id=UC554eY5jNUfDq3yDOJYirOQ" destiny youtube)
+	("https://www.youtube.com/feeds/videos.xml?channel_id=UCAf4fP8QzKkJ_t-c1F2v27Q" eli-fieldsteel youtube)
+	("https://www.youtube.com/feeds/videos.xml?channel_id=UCXWshk1jyhNJDs4m-9zSQiA" divya youtube)
+	("https://www.youtube.com/feeds/videos.xml?channel_id=UCc-cLumEjZiivL93UJO21ng" destiny-vault youtube)
 	))
 #+end_src
 
@@ -2858,6 +2905,7 @@ Load my RSS feeds
 (define-key noonker-ai-map (kbd "d") 'gptel-debug)
 (define-key noonker-ai-map (kbd "r") 'gptel-code-rewrite-and-replace)
 (define-key noonker-ai-map (kbd "e") 'gptel-editor-rewrite-and-replace)
+(define-key noonker-ai-map (kbd "y") 'gptel-bad-code)
 
 ;; Hunting Commands
 (define-key noonker-hunting-map "r" 'noonker/open-with-iaito)

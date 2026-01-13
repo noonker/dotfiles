@@ -56,7 +56,12 @@
                   (comment "Person")
                   (group "users")
                   (home-directory "/home/person")
-                  (supplementary-groups '("realtime" "wheel" "netdev" "audio" "input" "video")))
+                  (supplementary-groups '("realtime" "wheel" "netdev" "audio" "input" "video" "dialout")))
+		;; Norns-Desktop Account
+		(user-account
+		 (name "we")
+		 (group "users")
+		 (supplementary-groups '("realtime" "wheel" "audio" "video" "dialout")))
                 %base-user-accounts))
 
   ;; Add the 'realtime' group

@@ -9,6 +9,8 @@
 (use-modules (gnu home)
              (gnu packages)
              (gnu services)
+	     (gnu home services)
+	     (gnu home services xdg)
              (gnu home services desktop)
 	     (gnu home services sound)
              (guix gexp)
@@ -28,6 +30,7 @@
 					   "inkscape"
                                            "radare2"
                                            "python"
+					   "python-wrapper"
                                            "curl"
                                            "rsync"
                                            "the-silver-searcher"
@@ -64,7 +67,6 @@
                                            "flatpak"
                                            "emacs-next"
                                            "signal-desktop"
-                                           "firefox"
 					   "clojure"
 					   "babashka"
 					   "coreutils"
@@ -75,13 +77,12 @@
 					   "supercollider"
 					   "carla"
 					   "wine64"
-					   "tmux"
 					   "direnv"
 					   "screen"
 					   "bind:utils"
 					   "alsa-utils"
 					   "qpwgraph"
-;;					   "lua"
+					   "lua"
 					   ;; Guile Hacking
 					   "guile"
 					   "emacs-geiser"
@@ -98,24 +99,39 @@
 					   "gr-osmosdr"
 					   "mako"
 					   "glib:bin"
+					   "yabridgectl"
 					   )))
- 
 
-  ;; Below is the list of Home services.  To search for available
-  ;; services, run 'guix home search KEYWORD' in a terminal.
-  (services
-   (list
-    (service home-pipewire-service-type pipewire-config)
-    (service home-dbus-service-type)
-    (service home-bash-service-type
-                  (home-bash-configuration
-                   (aliases '(("grep" . "grep --color=auto") ("ll" . "ls -l")
-                              ("ls" . "ls -p --color=auto")))
-		   (environment-variables '(("PATH" . "$PATH:$HOME/.local/bin")))
-                   (bashrc (list (local-file
-                                  "/home/person/git/dotfiles/guix/noonker/home/.bashrc"
-                                  "bashrc")))
-                   (bash-profile (list (local-file
-                                        "/home/person/git/dotfiles/guix/noonker/home/.bash_profile"
-                                        "bash_profile")))))
-    )))
+
+ ;; Below is the list of Home services.  To search for available
+ ;; services, run 'guix home search KEYWORD' in a terminal.
+ (services
+  (list
+   (service home-pipewire-service-type pipewire-config)
+   (service home-dbus-service-type)
+   (simple-service 'containers-config
+		   home-xdg-configuration-files-service-type
+		   `(("containers/registries.conf"
+		      ,(plain-file "registries.conf"
+				   "unqualified-search-registries = [\"docker.io\", \"quay.io\", \"myregistry.example.com\"]
+[[registry]]
+location = \"myregistry.example.com\"
+insecure = true
+blocked = false
+"))
+		     ("containers/policy.json"
+		      ,(plain-file "policy.json"
+				   "{\n  \"default\": [ { \"type\": \"insecureAcceptAnything\" } ]\n}\n"))))
+   
+   (service home-bash-service-type
+            (home-bash-configuration
+             (aliases '(("grep" . "grep --color=auto") ("ll" . "ls -l")
+                        ("ls" . "ls -p --color=auto")))
+	     (environment-variables '(("PATH" . "$PATH:$HOME/.local/bin")))
+             (bashrc (list (local-file
+                            "/home/person/git/dotfiles/guix/noonker/home/.bashrc"
+                            "bashrc")))
+             (bash-profile (list (local-file
+                                  "/home/person/git/dotfiles/guix/noonker/home/.bash_profile"
+                                  "bash_profile")))))
+   )))
