@@ -2106,8 +2106,6 @@ These functions are helpers and should be self explanitory
 	  )
       nil)))
 
-(noonker/init-ai)
-
 (evil-global-set-key 'normal "gsm" 'gptel-menu)
 (evil-global-set-key 'normal "gss" 'gptel-send)
 (evil-global-set-key 'normal "gso" 'gptel)
@@ -2343,17 +2341,6 @@ These functions are helpers and should be self explanitory
   :config 
   (add-to-list 'gptel-agent-dirs (file-name-concat (file-truename "~") "git/agents"))
   (gptel-agent-update)) 
-#+end_src
-
-** Aidermacs
-
-#+begin_src emacs-lisp :tangle ~/.emacs
-(use-package aidermacs
-  :bind (("C-c m" . aidermacs-transient-menu))
-  :custom
-  ; See the Configuration section below
-  (aidermacs-default-chat-mode 'architect)
-  (aidermacs-default-model "sonnet"))
 #+end_src
 
 * Music
