@@ -2322,25 +2322,34 @@ These functions are helpers and should be self explanitory
 (use-package mcp
   :ensure t
   :after gptel
-  :custom (mcp-hub-servers
-           `(("categorize" . (:command "mcp_categorize"))))
   :config (require 'mcp-hub)
   :hook (after-init . mcp-hub-start-all-server))
 
 (use-package gptel-mcp
   :ensure t
-  :after mpc
+  :after mcp
   :straight (:host github :repo "lizqwerscott/gptel-mcp.el" :files ("gptel-mcp.el")))
 
 (use-package llm-tool-collection
   :ensure t
   :config (require 'llm-tool-collection)
-  :straight (:host github :repo "skissue/llm-tool-collection"))
+  :straight (:host github :repo "skissue/llm-tool-collection")
+  :config (mapcar (apply-partially #'apply #'gptel-make-tool)
+		  (llm-tool-collection-get-all)))
 
 (use-package gptel-agent
   :config 
   (add-to-list 'gptel-agent-dirs (file-name-concat (file-truename "~") "git/agents"))
-  (gptel-agent-update)) 
+  (gptel-agent-update))
+
+(defun noonker/dev-agent-mcp-restart ()
+  (interactive)
+  (progn
+    (gptel-agent-update)
+    (mcp-hub-restart-all-server)
+    (gptel-mcp-dispatch)
+    )
+  )
 #+end_src
 
 * Music
