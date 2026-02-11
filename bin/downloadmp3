@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+
+# Check if a URL was provided
+if [ -z "$1" ]; then
+    echo "Usage: $0 <youtube_url>"
+    exit 1
+fi
+
+yt-dlp -x --audio-format mp3 -o "%(title)s.%(ext)s" "$1"

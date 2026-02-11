@@ -1,0 +1,3 @@
+#!/usr/bin/env bash
+echo "Patching $1"
+patchelf --set-interpreter "$(patchelf --print-interpreter "$(realpath "$(which sh)")")" $1

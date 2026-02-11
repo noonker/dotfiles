@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+
+# Check if any arguments are passed
+if [ "$#" -eq 0 ]; then
+    echo "Usage: $0 <docker-command>"
+    exit 1
+fi
+
+# Prepend 'podman' to the given Docker command arguments
+podman "$@"

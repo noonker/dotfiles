@@ -1,0 +1,33 @@
+import os
+import signal
+import argparse
+import sys
+
+from time import sleep
+
+WORD="yoinked"
+
+def sig_handler(_signo, _stack_frame):
+    print("BYE!")
+    sys.exit(0)
+
+signal.signal(signal.SIGTERM, sig_handler)
+signal.signal(signal.SIGINT, sig_handler)
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description='A tool to yoink the NI Instruments as they download')
+    parser.add_argument('-d', '--dir', help=('Directory to watch'))
+
+    args = parser.parse_args()
+
+    while True:
+        rename = [f for f in os.listdir(args.dir) if WORD not in f and (f.endswith(".zip") or f.endswith(".iso")) ]
+        for name in rename:
+            p_from = os.path.join(args.dir, name)
+            p_to = args.dir + f"{WORD}-" + name
+            print(f" - Yoinking {p_from}")
+            os.rename(p_from, p_to)
+            print(f" - Renamed it to {p_to}")
+        sleep(0.5) 
+    
+

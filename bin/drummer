@@ -1,0 +1,9 @@
+#!/bin/bash
+
+aseqdump -p "SPD-SX" | \
+    while IFS=" ," read src ev1 ev2 ch label1 data1 label2 data2 rest; do
+    case "$ev2 $data1" in
+        "on 69" ) xdotool click 1 ;;
+        "on 71" ) xdotool click 1 ;;
+    esac
+done

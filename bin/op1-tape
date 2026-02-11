@@ -1,0 +1,237 @@
+#!/usr/bin/env python3
+
+import subprocess
+import argparse
+import json
+import os
+
+from enum import Enum
+from pathlib import Path
+
+# ffmpeg -i turf.wav -y -f s32le -acodec pcm_s32le -ar 44100 -f wav -af apad=whole_len=15876000 out.wav
+
+readme = """
+this folder accepts 44100 Hz .wav files.
+allowed names: track_1.wav track_2.wav track_3.wav track_4.wav
+""".strip()
+
+FREQ = 44100
+TRACK_LEN = 15876000
+GLOBAL_CLIP_COUNTER = 0
+
+tape_json = {
+    "clips": [],
+    "loop": False,
+    "loop_in": 0,
+    "loop_out": 10000,
+    "mixer_params": [1.0, 1.0, 1.0, 1.0, 0.0, 0.0, 0.0, 0.0],
+    "pos": 0,
+    "tape_type": 0,
+    "tempobpmdecimal": 1240,
+    "tempometronomelevel": 0.0,
+    "tempometronometype": 0,
+    "temposyncout": 0,
+    "temposynctype": 0,
+    "track": 0,
+}
+
+
+# TODO
+class TapeType(Enum):
+    FourTrack = 0
+    VintageFourTrack = 1
+    Porta = 2
+    MiniDisc = 3
+
+
+# TODO
+class TempoSyncType(Enum):
+    Free = 0
+    BPM = 1
+
+
+# TODO
+class MetroType(Enum):
+    Free = 0
+
+
+def make_clip(channel=0, start=0, stop=0):
+    global GLOBAL_CLIP_COUNTER
+    GLOBAL_CLIP_COUNTER += 1
+
+    return {"ch": channel, "id": GLOBAL_CLIP_COUNTER, "start": start, "stop": stop}
+
+
+def ffmpeg_create_track(infile, directory, track=1):
+    subprocess.run(
+        [
+            "ffmpeg",
+            "-i",
+            infile,
+            "-y",
+            "-filter:a",
+            "volume=0.1",
+            "-fflags",
+            "+bitexact",
+            "-flags:v",
+            "+bitexact",
+            "-flags:a",
+            "+bitexact",
+            "-f",
+            "s32le",
+            "-acodec",
+            "pcm_s32le",
+            "-ar",
+            "44100",
+            "-f",
+            "wav",
+            "temptemptemp.wav",
+        ]
+    )
+    subprocess.run(
+        [
+            "ffmpeg",
+            "-i",
+            "temptemptemp.wav",
+            "-f",
+            "s32le",
+            "-acodec",
+            "pcm_s32le",
+            "-ar",
+            "44100",
+            "-f",
+            "wav",
+            "-map_metadata",
+            "-1",
+            "-fflags",
+            "+bitexact",
+            "-flags:v",
+            "+bitexact",
+            "-flags:a",
+            "+bitexact",
+            "-af",
+            "apad=whole_len=15876000",
+            str(Path(directory, f"track_{track}.wav")),
+        ]
+    )
+    os.remove("temptemptemp.wav")
+
+
+def ffmpeg_create_empty_track(directory, track=1):
+    subprocess.run(
+        [
+            "ffmpeg",
+            "-f",
+            "lavfi",
+            "-i",
+            "anullsrc=r=44100:cl=stereo",
+            "-t",
+            "360",
+            "-acodec",
+            "pcm_s32le",
+            "-f",
+            "wav",
+            "-map_metadata",
+            "-1",
+            "-fflags",
+            "+bitexact",
+            "-flags:v",
+            "+bitexact",
+            "-flags:a",
+            "+bitexact",
+            str(Path(directory, f"track_{track}.wav")),
+        ]
+    )
+
+
+def patch_headers(directory):
+    """
+    This is so nasty :(
+    """
+    patch = b"RIFF$\xfd\x91\x07WAVEfmt \x10\x00\x00\x00\x01\x00\x02\x00D\xac\x00\x00 b\x05\x00\x08\x00 \x00data"
+    for i in range(1, 5):
+        with open(Path(directory, f"track_{i}.wav"), "rb") as f:
+            out = f.read()
+        with open(Path(directory, f"track_{i}.wav"), "wb") as f:
+            f.write(patch + out[0x40:])
+        print(f"Patched track_{i}.wav")
+
+
+def main(
+    infiles,
+    track_only=False,
+    output_dir="./op1-tape",
+    tape_type=TapeType.FourTrack,
+    sync_type=TempoSyncType.Free,
+    bpm=130,
+    start_at=0,
+    clips=[],
+):
+    os.mkdir(output_dir)
+
+    with open(Path(output_dir, "readme.txt"), "w+") as f:
+        f.write(readme)
+
+    audio_len = len(infiles)
+    silence_len = 4 - audio_len
+
+    print(infiles)
+    for i, infile in enumerate(infiles):
+        print(infile)
+        ffmpeg_create_track(infile[0], output_dir, i + 1)
+
+    for i in range(0, silence_len):
+        ffmpeg_create_empty_track(output_dir, i + 1 + audio_len)
+
+    patch_headers(output_dir)
+
+    with open(Path(output_dir, "tape.json"), "w+") as f:
+        tape_json["tape_type"] = tape_type
+        tape_json["sync_type"] = sync_type
+        tape_json["clips"].append(make_clip(channel=0, start=0, stop=TRACK_LEN))
+        if isinstance(bpm, float):
+            tape_json["tempobpmdecimal"] = int(bpm * 10)
+        elif bpm > 1000:
+            tape_json["tempobpmdecimal"] = bpm
+        else:
+            tape_json["tempobpmdecimal"] = bpm * 10
+
+        f.write(json.dumps(tape_json).replace(" ", ""))
+
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description="")
+
+    parser.add_argument("-T", "--track-only")
+    parser.add_argument("-o", "--output")
+    parser.add_argument("-t", "--tape-type")  # TODO add options here
+    parser.add_argument("-s", "--sync-type")  # TODO add options here
+    parser.add_argument("-b", "--bpm", default=130)  # Default to dubstep ;)
+    parser.add_argument("-a", "--start-at", default=130, type=int)
+    parser.add_argument(
+        "-i",
+        "--infiles",
+        nargs="+",
+        action="append",
+        help="List of input tracks",
+        required=True,
+    )
+    parser.add_argument(
+        "-c",
+        "--clips",
+        nargs="+",
+        action="append",
+        help="List of clips",
+    )
+    args = parser.parse_args()
+
+    main(
+        infiles=args.infiles,
+        track_only=False,
+        output_dir=args.output,
+        tape_type=0,
+        sync_type=0,
+        bpm=130,
+        start_at=0,
+        clips=[],
+    )
