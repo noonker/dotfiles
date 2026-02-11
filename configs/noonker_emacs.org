@@ -272,7 +272,7 @@ Leuven Theme and Comic Mono
 
 (set-fontset-font t 'emoji '("Noto Emoji" . "iso10646-1") nil 'prepend)
 
-(if (string= "blep" (system-name))
+(if (string= "steamdeck" (system-name))
     (set-face-attribute 'default nil :font "Comic Code" :height 200))
 
 (if im-at-work
