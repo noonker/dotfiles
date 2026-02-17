@@ -2888,6 +2888,7 @@ Load my RSS feeds
 (gptel-make-preset 'automagic
   :description "A preset for general usefulness" ;for your reference
   :tools '("WebFetch" "WebSearch"
+	   "Agent"
 	   "browser_close"
 	   "browser_resize"
 	   "browser_console_messages"
