@@ -879,6 +879,17 @@ INITIAL-INPUT can be given as the initial minibuffer input."
 (use-package vterm
     :ensure t)
 
+
+
+(straight-use-package
+ '(eat :type git
+       :host codeberg
+       :repo "akib/emacs-eat"
+       :files ("*.el" ("term" "term/*.el") "*.texi"
+               "*.ti" ("terminfo/e" "terminfo/e/*")
+               ("terminfo/65" "terminfo/65/*")
+               ("integration" "integration/*")
+               (:exclude ".dir-locals.el" "*-tests.el"))))
 #+end_src
 
 ** Tramp
@@ -2356,18 +2367,6 @@ These functions are helpers and should be self explanitory
   )
 #+end_src
 
-** Aidermacs
-
-#+begin_src emacs-lisp :tangle ~/.emacs
-(use-package aidermacs
-  :bind (("C-c m" . aidermacs-transient-menu))
-  :custom
-  ; See the Configuration section below
-  (aidermacs-default-chat-mode 'architect)
-  (aidermacs-default-model "sonnet"))
-#+end_src
-
-
 ** Claude Code
 #+begin_src emacs-lisp :tangle ~/.emacs
 ;; install required inheritenv dependency:
@@ -2376,7 +2375,7 @@ These functions are helpers and should be self explanitory
 
 ;; install claude-code.el, using :depth 1 to reduce download size:
 (use-package claude-code
-  :straight (:type git :host github :repo "stevemolitor/claude-code.el" :branch "main" :depth 1
+  :straight (:type git :host github :repo "noonker/claude-code.el" :branch "main" :depth 1
                    :files ("*.el" (:exclude "images/*"))))
 
 (setq claude-code-terminal-backend 'vterm)
@@ -2386,10 +2385,8 @@ These functions are helpers and should be self explanitory
 
 ** Whisper
 #+begin_src emacs-lisp :tangle ~/.emacs
-
 (use-package whisper
-  :vc (:url "https://github.com/natrys/whisper.el" :branch "master" :no-byte-compile)
-  )
+  :straight (:host github :repo "natrys/whisper.el"))
 
 (defun rk/get-ffmpeg-device ()
   "Gets the list of devices available to ffmpeg.
@@ -3125,3 +3122,8 @@ Load my RSS feeds
       (org-babel-lob-ingest "~/org/config.org")
       (org-sbe work-config)))
 #+end_src
+* Start Server
+#+begin_src emacs-lisp :tangle ~/.emacs
+(server-start)
+#+end_src
+
