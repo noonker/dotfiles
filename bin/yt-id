@@ -1,0 +1,27 @@
+#!/usr/bin/env bash
+#
+# youtube-id-finder.sh - Resolve a YouTube channel handle URL to its channel ID URL.
+#
+# Usage: ./youtube-id-finder.sh https://www.youtube.com/@SomeChannel
+
+set -euo pipefail
+
+if [[ $# -lt 1 ]]; then
+    echo "Usage: $0 <youtube-channel-url>" >&2
+    echo "Example: $0 https://www.youtube.com/@TheOktavismChannel" >&2
+    exit 1
+fi
+
+url="$1"
+
+# Fetch the page and extract the channel ID from the meta tag
+html=$(curl -sL -A "Mozilla/5.0" "$url")
+
+channel_id=$(echo "$html" | grep -oP '"channelId":"[^"]*"' | head -1 | grep -oP 'UC[^"]+')
+
+if [[ -z "$channel_id" ]]; then
+    echo "Error: Could not find a channel ID for: $url" >&2
+    exit 1
+fi
+
+echo "https://www.youtube.com/channel/$channel_id"
