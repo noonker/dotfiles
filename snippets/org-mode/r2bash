@@ -1,0 +1,8 @@
+# -*- mode: snippet -*-
+# name: r2call 
+# key: rrr
+# --
+#+begin_src bash :session *re* :results code pp
+$1
+#+end_src
+$0

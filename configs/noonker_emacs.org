@@ -1498,6 +1498,12 @@ Magit is git porcelain for Emacs
 (setq org-babel-clojure-backend 'cider)
 
 (setq org-confirm-babel-evaluate nil)
+
+(defun display-ansi-colors ()
+
+(ansi-color-apply-on-region (point-min) (point-max)))
+
+(add-hook 'org-babel-after-execute-hook #'display-ansi-colors)
 #+end_src
 
 *** Org Agenda
@@ -2889,29 +2895,7 @@ Load my RSS feeds
   :description "A preset for general usefulness" ;for your reference
   :tools '("WebFetch" "WebSearch"
 	   "Agent"
-	   "browser_close"
-	   "browser_resize"
-	   "browser_console_messages"
-	   "browser_handle_dialog"
-	   "browser_evaluate"
-	   "browser_file_upload"
-	   "browser_fill_form"
-	   "browser_install"
-	   "browser_press_key"
-	   "browser_type"
-	   "browser_navigate"
-	   "browser_navigate_back"
-	   "browser_network_requests"
-	   "browser_run_code"
-	   "browser_take_screenshot"
-	   "browser_snapshot"
-	   "browser_click"
-	   "browser_drag"
-	   "browser_hover"
-	   "browser_select_option"
-	   "browser_tabs"
-	   "browser_wait_for"
-	   )) ;gptel tools or tool names
+	   	   )) ;gptel tools or tool names
 
 (gptel noonker/voice-ai-buffer)
 
@@ -3076,6 +3060,7 @@ Load my RSS feeds
 (define-key noonker-org-map (kbd "r") 'org-roam-capture)
 (define-key noonker-org-map (kbd "l") 'org-store-link)
 (define-key noonker-org-map (kbd "L") 'org-insert-link)
+(define-key noonker-org-map (kbd "t") 'org-table-transpose-table-at-point)
 
 ;; Edit Commands
 (define-key noonker-edit-map (kbd "r") 'query-replace)
