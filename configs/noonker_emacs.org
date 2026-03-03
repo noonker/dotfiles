@@ -876,11 +876,6 @@ INITIAL-INPUT can be given as the initial minibuffer input."
   ;; :hook (eshell-mode-hook . esh-autosuggest-mode)
   :ensure t)
 
-(use-package vterm
-    :ensure t)
-
-
-
 (straight-use-package
  '(eat :type git
        :host codeberg
@@ -2383,8 +2378,6 @@ These functions are helpers and should be self explanitory
 (use-package claude-code
   :straight (:type git :host github :repo "noonker/claude-code.el" :branch "main" :depth 1
                    :files ("*.el" (:exclude "images/*"))))
-
-(setq claude-code-terminal-backend 'vterm)
 #+end_src
 
 #+RESULTS:
