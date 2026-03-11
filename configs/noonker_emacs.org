@@ -2355,7 +2355,7 @@ These functions are helpers and should be self explanitory
 
 (use-package gptel-agent
   :config 
-  (add-to-list 'gptel-agent-dirs (file-name-concat (file-truename "~") "git/agents"))
+  (setq gptel-agent-dirs (list (file-name-concat (file-truename "~") "git/agents")))
   (gptel-agent-update))
 
 (defun noonker/dev-agent-mcp-restart ()
@@ -3050,6 +3050,7 @@ Load my RSS feeds
 ;; Org commands 
 (define-key noonker-org-map (kbd "a") 'org-agenda)
 (define-key noonker-org-map (kbd "c") 'org-capture)
+(define-key noonker-org-map (kbd "o") 'org-roam-node-find)
 (define-key noonker-org-map (kbd "r") 'org-roam-capture)
 (define-key noonker-org-map (kbd "l") 'org-store-link)
 (define-key noonker-org-map (kbd "L") 'org-insert-link)
