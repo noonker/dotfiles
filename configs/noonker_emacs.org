@@ -584,57 +584,93 @@ On MacOS you need to add =-DCMAKE_PREFIX_PATH=/usr/local/opt/llvm= after =cmake=
 ** Python
 
 #+begin_src emacs-lisp :tangle ~/.emacs
-(use-package envrc
-  :hook (after-init . envrc-global-mode))
+  (use-package envrc
+    :hook (after-init . envrc-global-mode))
 
-(use-package python
-  :bind (("C-c C-c" . python-shell-send-region)))
+  (use-package python
+    :bind (("C-c C-c" . python-shell-send-region)))
 
-(add-hook 'python-mode-hook 'electric-pair-mode)
+  (add-hook 'python-mode-hook 'electric-pair-mode)
 
-(use-package elpy
-  :ensure t
-  :init
-  (elpy-enable)
-  (pyvenv-tracking-mode)
-  (setq elpy-rpc-virtualenv-path 'current)
-  ;; (setq elpy-shell-starting-directory 'current-directory) ;; default is 'project-root 
-  (setenv "WORKON_HOME" (file-name-concat (file-truename "~") ".virtualenvs"))
-  (setq elpy-shell-echo-output nil)
-  (setq python-shell-interpreter "python"))
-(add-hook 'elpy-mode-hook (lambda ()
-                            (add-hook 'before-save-hook
-                                      'elpy-black-fix-code nil t)))
+  (use-package elpy
+    :ensure t
+    :init
+    (elpy-enable)
+    (uv-activate)
+    (add-hook 'elpy-mode-hook (lambda ()
+                              (add-hook 'before-save-hook
+                                        'elpy-black-fix-code nil t))))
 
-(defvar noonker/python-binary-for-venvs "/Library/Frameworks/Python.framework/Versions/3.10/bin/python3")
+  (defun uv-activate ()
+    "Activate Python environment managed by uv based on current project directory.
+  Looks for .venv directory in project root and activates the Python interpreter."
+    (interactive)
+    (let* ((project-root (project-root (project-current t)))
+           (venv-path (expand-file-name ".venv" project-root))
+           (python-path (expand-file-name
+                         (if (eq system-type 'windows-nt)
+                             "Scripts/python.exe"
+                           "bin/python")
+                         venv-path)))
+      (if (file-exists-p python-path)
+          (progn
+            ;; Set Python interpreter path
+            (setq python-shell-interpreter python-path)
 
-(defun noonker/create-python-project-environment ()
-  "Create a Python virtual environment and set up project configuration files."
-  (interactive)
-  ;; Query for venv name
-  (let* ((venv-name (read-string "Virtual environment name: "))
-         (project-root (projectile-project-root))
-         (dir-locals-path (expand-file-name ".dir-locals.el" project-root))
-         (envrc-path (expand-file-name ".envrc" project-root)))
-    
-    ;; Create the virtualenv
-    (pyvenv-create venv-name noonker/python-binary-for-venvs)
-    
-    ;; Create .dir-locals.el file
-    (with-temp-file dir-locals-path
-      (insert (format "(
- (nil . ((pyvenv-workon . \"%s\")))
-)" venv-name)))
-    
-    ;; Create .envrc file
-    (with-temp-file envrc-path
-      (insert (format "echo \"Activating %s venv\"
-source ~/.virtualenvs/%s/bin/activate
-export BASEPATH=%s
-export PYTHONPATH=%s
-" venv-name venv-name project-root project-root)))
-    
-(message "Python environment '%s' created with supporting files" venv-name)))
+            ;; Update exec-path to include the venv's bin directory
+            (let ((venv-bin-dir (file-name-directory python-path)))
+              (setq exec-path (cons venv-bin-dir
+                                    (remove venv-bin-dir exec-path))))
+
+            ;; Update PATH environment variable
+            (setenv "PATH" (concat (file-name-directory python-path)
+                                   path-separator
+                                   (getenv "PATH")))
+
+            ;; Update VIRTUAL_ENV environment variable
+            (setenv "VIRTUAL_ENV" venv-path)
+
+            ;; Remove PYTHONHOME if it exists
+            (setenv "PYTHONHOME" nil)
+
+            (message "Activated UV Python environment at %s" venv-path))
+
+        (error "No UV Python environment found in %s" project-root))))
+
+  (defun noonker/create-python-project-environment ()
+    "Create a Python virtual environment and set up project configuration files."
+    (interactive)
+    ;; Query for venv name
+    (let* ((project-root (projectile-project-root))
+           (dir-locals-path (expand-file-name ".dir-locals.el" project-root))
+           (envrc-path (expand-file-name ".envrc" project-root))
+  	 (default-directory project-root))
+      
+      ;; Create the virtualenv
+      (start-process "uv-initialize-venv" "*uv-initialize-venv*" "uv" "venv")
+      
+      ;; Create .dir-locals.el file
+      (with-temp-file dir-locals-path
+        (insert
+         "((nil . ((eval . (uv-activate)))))"
+         ))
+      
+      ;; Create .envrc file
+      (with-temp-file envrc-path
+        (insert (format "echo \"Activating %s venv\"
+  source %s.venv/bin/activate
+  export BASEPATH=%s
+  export PYTHONPATH=%s
+  " project-root project-root project-root project-root)))
+
+      ;; Trust the envrc file
+      (start-process "direnv-trust" "*direnv-trust*" "direnv" "allow" ".")
+
+      ;; Trust the .dir-locals.el file
+      (put 'eval 'safe-local-variable
+       (lambda (val) (equal val '(uv-activate))))
+      
+      (message "Python environment '%s' created with supporting files" project-root)))
 #+end_src
 
 ** Platformio
