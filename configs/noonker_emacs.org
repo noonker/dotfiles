@@ -592,15 +592,6 @@ On MacOS you need to add =-DCMAKE_PREFIX_PATH=/usr/local/opt/llvm= after =cmake=
 
   (add-hook 'python-mode-hook 'electric-pair-mode)
 
-  (use-package elpy
-    :ensure t
-    :init
-    (elpy-enable)
-    (uv-activate)
-    (add-hook 'elpy-mode-hook (lambda ()
-                              (add-hook 'before-save-hook
-                                        'elpy-black-fix-code nil t))))
-
   (defun uv-activate ()
     "Activate Python environment managed by uv based on current project directory.
   Looks for .venv directory in project root and activates the Python interpreter."
@@ -3074,7 +3065,6 @@ Load my RSS feeds
 (define-key noonker-code-map (kbd "r") 'lsp-find-references)
 (define-key noonker-code-map (kbd "f") 'lsp-format-buffer)
 (define-key noonker-code-map (kbd "c") 'compile)
-(define-key noonker-code-map (kbd "t") 'elpy-test)
 (define-key noonker-code-map (kbd "g") 'magit)
 (define-key noonker-code-map (kbd "e") 'emoji-insert)
 
