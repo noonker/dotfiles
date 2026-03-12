@@ -850,7 +850,8 @@ INITIAL-INPUT can be given as the initial minibuffer input."
       	  (setq git-dirty
       		(when (eshell-git-prompt--collect-status)
       		  (with-face "🫠" 'eshell-git-prompt-robyrussell-git-dirty-face)))
-      	  (concat git-branch git-dirty)) "🤚" )))
+      	  (concat git-branch git-dirty))
+      "🤚" )))
 
 (setq eshell-prompt-function
       (lambda ()
@@ -868,8 +869,12 @@ INITIAL-INPUT can be given as the initial minibuffer input."
       	 (propertize "]──[" 'face 'org-level-4)
       	 (if (is-tramp-window) "🌎"
       	   (concat (propertize (git-prompt-eshell) 'face 'org-level-6)
-      		   (if pyvenv-virtual-env-name (concat (propertize "]──[" 'face 'org-level-4)
-      						       (propertize (format "venv:%s" pyvenv-virtual-env-name) 'face 'org-level-2)))))
+		   (if (getenv "VIRTUAL_ENV") (concat (propertize "]──[" 'face 'org-level-4)
+						       (propertize (format "venv:%s"
+									   (let ((path-parts (split-string (getenv "VIRTUAL_ENV") "/")))
+									     (nth (- (length path-parts) 2) path-parts)
+									     ))
+								   'face 'org-level-2)))))
       	 (propertize "]\n" 'face 'org-level-4)
       	 (propertize "└─>" 'face 'org-level-4)
       	 (propertize (if (= (user-uid) 0) " # " " $ ") 'face 'default)
