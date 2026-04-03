@@ -450,6 +450,7 @@ Lispy mode makes lisp-mode editing significantly more efficent
 #+begin_src emacs-lisp :tangle ~/.emacs
 ;; Assuming the Guix checkout is in ~/git/guix.
 (if is-guix
+    (use-package guix)
     (progn
       (with-eval-after-load 'geiser-guile
 	(add-to-list 'geiser-guile-load-path "~/git/guix"))
@@ -1506,6 +1507,7 @@ Magit is git porcelain for Emacs
    (python . t)
    (verb . t)
    (mermaid . t)
+   (plantuml . t)
    (shell . t)
    (sql . t)
    (js . t)
