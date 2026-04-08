@@ -2884,6 +2884,7 @@ Load my RSS feeds
 	("https://www.stallman.org/rss/rss.xml" stallman emacs tech gnu)
 	("https://joshblais.com/index.xml" joshua-blais emacs tech)
 	("https://aartaka.me/rss.xml" aartaka emacs tech)
+	("https://マリウス.com/index.xml" tech)
 	))
 #+end_src
 
