@@ -251,6 +251,9 @@ Company is an autocomplete option framework for emacs
 
 (use-package exec-path-from-shell
   :init (exec-path-from-shell-initialize))
+
+(use-package inheritenv
+  :straight (:type git :host github :repo "purcell/inheritenv"))
 #+end_src
 
 ** Theme
@@ -2251,14 +2254,6 @@ These functions are helpers and should be self explanitory
                        :description "The text to append to the buffer."))
    :category "emacs")
 
-  ;; List buffers
-  ;; (gptel-make-tool
-  ;;  :function (lambda () (buffer-list))
-  ;;  :name "list_buffers"
-  ;;  :description "List the currently open emacs buffers"
-  ;;  :args (list '())
-  ;;  :category "emacs")
-
   ;; ;; Todo, prompt user
   (gptel-make-tool
    :function (lambda (prompt)
@@ -2389,10 +2384,7 @@ These functions are helpers and should be self explanitory
   :config (require 'mcp-hub)
   :hook (after-init . mcp-hub-start-all-server))
 
-(use-package gptel-mcp
-  :ensure t
-  :after mcp
-  :straight (:host github :repo "lizqwerscott/gptel-mcp.el" :files ("gptel-mcp.el")))
+(require 'gptel-integrations)
 
 (use-package llm-tool-collection
   :ensure t
@@ -2415,20 +2407,6 @@ These functions are helpers and should be self explanitory
     )
   )
 #+end_src
-
-** Claude Code
-#+begin_src emacs-lisp :tangle ~/.emacs
-;; install required inheritenv dependency:
-(use-package inheritenv
-  :straight (:type git :host github :repo "purcell/inheritenv"))
-
-;; install claude-code.el, using :depth 1 to reduce download size:
-(use-package claude-code
-  :straight (:type git :host github :repo "noonker/claude-code.el" :branch "main" :depth 1
-                   :files ("*.el" (:exclude "images/*"))))
-#+end_src
-
-#+RESULTS:
 
 ** Whisper
 #+begin_src emacs-lisp :tangle ~/.emacs
@@ -2503,6 +2481,18 @@ If `DEVICE-NAME' is provided, it will be used instead of prompting the user."
 
 (setq whisper-model "small")
 
+#+end_src
+
+** Agent-Shell
+#+begin_src emacs-lisp :tangle ~/.emacs
+(use-package agent-shell
+    :ensure t
+    :ensure-system-package
+    ;; Add agent installation configs here
+    ((claude . "brew install claude-code")
+     (claude-agent-acp . "npm install -g @agentclientprotocol/claude-agent-acp")))
+
+(setq agent-shell-preferred-agent-config (agent-shell-anthropic-make-claude-code-config))
 #+end_src
 
 * Music
@@ -2899,6 +2889,8 @@ Load my RSS feeds
 	("https://joshblais.com/index.xml" joshua-blais emacs tech)
 	("https://aartaka.me/rss.xml" aartaka emacs tech)
 	("https://マリウス.com/index.xml" tech)
+	("https://the.unknown-universe.co.uk/feed/" unknown-universe tech)
+	("https://xenodium.com/rss" xenodium emacs tech)
 	))
 #+end_src
 
