@@ -1283,6 +1283,8 @@ Magit is git porcelain for Emacs
   (global-set-key (kbd "C-x g") 'magit-status)
   (setq magit-save-repository-buffers nil))
 
+(require 'git-commit)
+
 (defvar code-review-prompt "Take a look at the following diff. Create org-mode output that highlights ONLY issues with the changes.
 
 Look for things like, but not limited to, syntax errors, logic errors, severe inefficiencies, introduced edge cases, and misleading code / comment conflicts
@@ -1290,9 +1292,7 @@ Look for things like, but not limited to, syntax errors, logic errors, severe in
 %s
 ")
 
-(require 'git-commit)
-
-(defun noonker/llm-review-staged-changes ()
+(defun noonker/llm-review-changes ()
   "Review staged git changes with LLM."
   (interactive)
   (message "Begin code review....")
@@ -1307,7 +1307,7 @@ Look for things like, but not limited to, syntax errors, logic errors, severe in
 		     (org-mode)
                      (display-buffer (current-buffer))))))))
 
-(add-hook 'git-commit-post-finish-hook #'noonker/llm-review-staged-changes)
+(add-hook 'git-commit-post-finish-hook #'noonker/llm-review-changes)
 #+end_src
 
 ** Counsel
