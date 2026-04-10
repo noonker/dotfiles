@@ -453,22 +453,22 @@ Lispy mode makes lisp-mode editing significantly more efficent
 #+begin_src emacs-lisp :tangle ~/.emacs
 ;; Assuming the Guix checkout is in ~/git/guix.
 (if is-guix
-    (use-package guix)
     (progn
+      (use-package guix)
       (with-eval-after-load 'geiser-guile
-	(add-to-list 'geiser-guile-load-path "~/git/guix"))
-      
+      (add-to-list 'geiser-guile-load-path "~/git/guix"))
+
       ;; Assuming the Guix checkout is in ~/git/guix.
       ;; Yasnippet configuration
       (with-eval-after-load 'yasnippet
-	(add-to-list 'yas-snippet-dirs "~/git/guix/etc/snippets/yas"))
+      (add-to-list 'yas-snippet-dirs "~/git/guix/etc/snippets/yas"))
       ;; Tempel configuration
       (with-eval-after-load 'tempel
-	;; Ensure tempel-path is a list -- it may also be a string.
-	(unless (listp 'tempel-path)
-	  (setq tempel-path (list tempel-path)))
-	(add-to-list 'tempel-path "~/git/guix/etc/snippets/tempel/*"))
-      
+      ;; Ensure tempel-path is a list -- it may also be a string.
+      (unless (listp 'tempel-path)
+	(setq tempel-path (list tempel-path)))
+      (add-to-list 'tempel-path "~/git/guix/etc/snippets/tempel/*"))
+
       (load-file "~/git/guix/etc/copyright.el")
       ))
 #+end_src
@@ -1282,6 +1282,32 @@ Magit is git porcelain for Emacs
   :config
   (global-set-key (kbd "C-x g") 'magit-status)
   (setq magit-save-repository-buffers nil))
+
+(defvar code-review-prompt "Take a look at the following diff. Create org-mode output that highlights ONLY issues with the changes.
+
+Look for things like, but not limited to, syntax errors, logic errors, severe inefficiencies, introduced edge cases, and misleading code / comment conflicts
+
+%s
+")
+
+(require 'git-commit)
+
+(defun noonker/llm-review-staged-changes ()
+  "Review staged git changes with LLM."
+  (interactive)
+  (message "Begin code review....")
+  (let ((diff (shell-command-to-string "git diff HEAD^ HEAD")))
+    (when (> (length diff) 0)
+      (gptel-request
+       (format code-review-prompt diff)
+       :callback (lambda (response info)
+                   (with-current-buffer (get-buffer-create "*Code Review*")
+                     (erase-buffer)
+                     (insert response)
+		     (org-mode)
+                     (display-buffer (current-buffer))))))))
+
+(add-hook 'git-commit-post-finish-hook #'noonker/llm-review-staged-changes)
 #+end_src
 
 ** Counsel
