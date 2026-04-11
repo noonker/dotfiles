@@ -16,6 +16,8 @@
   #:use-module (gnu packages ssh)
   #:use-module (gnu packages wm)
   #:use-module (gnu services desktop)
+  #:use-module (gnu system accounts)
+  #:use-module (gnu system setuid)
   #:use-module (guix records)
   #:use-module (noonker services boltd)
   #:use-module (noonker services podman)
@@ -46,7 +48,7 @@
    )
   )
 
-(operating-system
+(operating-system 
   (locale "en_US.utf8")
   (timezone "America/Chicago")
   (keyboard-layout (keyboard-layout "us" 
@@ -94,6 +96,11 @@
 		    (web-interface? #t)
 		    (extensions
 		     (list cups-filters))))
+	  (service subids-service-type
+                   (subids-configuration
+                    (add-root? #f)
+                    (subuids (list (subid-range (name "person"))))
+                    (subgids (list (subid-range (name "person"))))))
           (service boltd-service-type)
 	  (service bluetooth-service-type)
 	  (service nftables-service-type)
@@ -120,11 +127,8 @@
                    (using-setuid? #f)))
 	  (udev-rules-service 'bladerf %bladerf-udev-rule)
 	  (udev-rules-service 'monome %monome-udev-rule)
-	  (udev-hardware-service 'capslock %capslock-hwdb-udev-rule)
-          (set-xorg-configuration
-           (xorg-configuration (keyboard-layout keyboard-layout)))
+	  (udev-hardware-service 'capslock %capslock-hwdb-udev-rule) 
 	  audio-realtime-service
-	  podman-user-person-subuid
           podman-iptables
            ;; This is the default list of services we
            ;; are appending to.
