@@ -120,10 +120,11 @@
 
 					   ;; Sway
 					   "sway"
-					   "swaybg"
+					   "shaderbg"
 					   "swayidle"
 					   "swaylock"
 					   "fuzzel"
+					   "grim"
 					   "mako"
 					   "rofi"
 					   "kitty"

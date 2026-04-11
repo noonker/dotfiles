@@ -2510,7 +2510,7 @@ If `DEVICE-NAME' is provided, it will be used instead of prompting the user."
 #+end_src
 
 ** Agent-Shell
-#+begin_src emacs-lisp :tangle ~/.emacs
+#+begin_src emacs-lisp 
 (use-package agent-shell
     :ensure t
     :ensure-system-package

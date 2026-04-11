@@ -11,8 +11,11 @@
   #:use-module (gnu packages linux)
   #:use-module (gnu packages radio)
   #:use-module (gnu packages cups)
-  #:use-module (gnu packages ssh)
+  #:use-module (gnu packages admin)
   #:use-module (gnu packages gnome)
+  #:use-module (gnu packages ssh)
+  #:use-module (gnu packages wm)
+  #:use-module (gnu services desktop)
   #:use-module (guix records)
   #:use-module (noonker services boltd)
   #:use-module (noonker services podman)
@@ -50,10 +53,10 @@
                                     #:options '("ctrl:nocaps")))
   (host-name "blep")
   (kernel linux)
-;;  (kernel-arguments
-;;   (append
-;;    (list "nomodeset")
-;;    %default-kernel-arguments))
+  (kernel-arguments
+   (append
+    (list "quiet")
+    %default-kernel-arguments))
   (initrd microcode-initrd)
   (firmware (list linux-firmware))
   
@@ -86,8 +89,7 @@
   ;; Below is the list of system services.  To search for available
   ;; services, run 'guix system search KEYWORD' in a terminal.
   (services
-   (cons* (service gnome-desktop-service-type)
-	  (service cups-service-type
+   (cons* (service cups-service-type
 		   (cups-configuration
 		    (web-interface? #t)
 		    (extensions
@@ -95,6 +97,27 @@
           (service boltd-service-type)
 	  (service bluetooth-service-type)
 	  (service nftables-service-type)
+	  (service greetd-service-type
+		   (greetd-configuration
+		    (greeter-supplementary-groups '("video" "input"))
+		    (terminals
+		     (list
+		      (greetd-terminal-configuration
+                       (terminal-vt "7")
+                       (terminal-switch #t)
+                       (default-session-command
+			 (greetd-agreety-session
+			  (command
+			   (greetd-user-session
+			    (command (file-append sway "/bin/sway"))
+			    (command-args '())
+			    (xdg-session-type "wayland"))))))))))
+	  (service screen-locker-service-type
+                   (screen-locker-configuration
+                   (name "swaylock")
+                   (program (file-append swaylock "/bin/swaylock"))
+                   (using-pam? #t)
+                   (using-setuid? #f)))
 	  (udev-rules-service 'bladerf %bladerf-udev-rule)
 	  (udev-rules-service 'monome %monome-udev-rule)
 	  (udev-hardware-service 'capslock %capslock-hwdb-udev-rule)
@@ -105,7 +128,8 @@
           podman-iptables
            ;; This is the default list of services we
            ;; are appending to.
-          %desktop-services))
+	  (modify-services %desktop-services
+		 (delete gdm-service-type))))
   (bootloader (bootloader-configuration
                 (bootloader grub-efi-bootloader)
                 (targets (list "/boot/efi"))
