@@ -36,6 +36,13 @@
                "evdev:atkbd:dmi:*\n"
                " KEYBOARD_KEY_3a=leftctrl\n")))
 
+(define %monome-udev-rule
+  (udev-rule
+   "50-monome.rules"
+   (string-append "SUBSYSTEM==\"tty\", ATTRS{idVendor}==\"cafe\", MODE=\"0666\"")
+   )
+  )
+
 (operating-system
   (locale "en_US.utf8")
   (timezone "America/Chicago")
@@ -89,6 +96,7 @@
 	  (service bluetooth-service-type)
 	  (service nftables-service-type)
 	  (udev-rules-service 'bladerf %bladerf-udev-rule)
+	  (udev-rules-service 'monome %monome-udev-rule)
 	  (udev-hardware-service 'capslock %capslock-hwdb-udev-rule)
           (set-xorg-configuration
            (xorg-configuration (keyboard-layout keyboard-layout)))

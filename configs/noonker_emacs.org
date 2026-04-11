@@ -275,8 +275,8 @@ Leuven Theme and Comic Mono
 
 (set-fontset-font t 'emoji '("Noto Emoji" . "iso10646-1") nil 'prepend)
 
-(if (string= "steamdeck" (system-name))
-    (set-face-attribute 'default nil :font "Comic Code" :height 200))
+(if (string= "blep" (system-name))
+    (set-face-attribute 'default nil :font "Comic Code" :height 100))
 
 (if im-at-work
     (set-face-attribute 'default nil :font "JetBrains Mono" :height 160))
@@ -2705,6 +2705,9 @@ Load my RSS feeds
 	("https://www.youtube.com/feeds/videos.xml?channel_id=UCAf4fP8QzKkJ_t-c1F2v27Q" eli-fieldsteel youtube)
 	("https://www.youtube.com/feeds/videos.xml?channel_id=UCXWshk1jyhNJDs4m-9zSQiA" divya youtube)
 	("https://www.youtube.com/feeds/videos.xml?channel_id=UCc-cLumEjZiivL93UJO21ng" destiny-vault youtube)
+	("https://www.youtube.com/feeds/videos.xml?channel_id=UCjY8KAGllKyZZd2FYF1vbPw" paul-krugman youtube)
+	("https://www.youtube.com/feeds/videos.xml?channel_id=UC718uEQF7bdg4QnnXo8uQJA" emacs-propaganda youtube)
+	("https://www.youtube.com/feeds/videos.xml?channel_id=UCOLGEEl-F3vQ6M1chJ5DsEw" synthdef youtube)
 	))
 #+end_src
 

@@ -20,13 +20,26 @@
   (home-pipewire-configuration
    (enable-pulseaudio? #t)))
 
+
+(define sway-config
+  (map (lambda (str)
+         (string-append str "\n"))
+       (list
+        "set $mod Mod4"
+        "include \"~/.config/sway/before-config\""
+        "bindsym $mod+space exec fuzzel -w 50 -x 8 -y 8 -r 3 -b 232635ff -t A6Accdff -s A6Accdff -S 232635ff -C c792eacc -m c792eacc -f \"Comic Code:weight=light:size=10\""
+        "exec mako --border-radius=2 --font=\"JetBrains Mono 8\" --max-visible=5 --outer-margin=5 --margin=3 --background=\"#1c1f26\" --border-color=\"#89AAEB\" --border-size=1 --default-timeout=7000"
+        "exec nm-applet --indicator"
+        "exec emacs"
+        "include \"~/.config/sway/after-config\"")))
+
 (home-environment
  ;; Below is the list of packages that will show up in your
  ;; Home profile, under ~/.guix-home/profile.
- (packages (specifications->packages (list "p7zip"
+ (packages (specifications->packages (list "7zip"
 					   "unzip"
 					   "kicad"
-					   "texlive"
+					   ;; "texlive-scheme-full"
 					   "inkscape"
                                            "radare2"
                                            "python"
@@ -40,7 +53,7 @@
                                            "slirp4netns"
                                            "distrobox"
                                            "gcc-toolchain"
-                                           "cairo"
+                                           ;; "cairo"
                                            "poppler"
                                            "node"
                                            "clang"
@@ -65,7 +78,7 @@
                                            "gnome-tweaks"
                                            "password-store"
                                            "flatpak"
-                                           "emacs-next"
+					   "emacs-pgtk"
                                            "signal-desktop"
 					   "clojure"
 					   "babashka"
@@ -82,11 +95,15 @@
 					   "bind:utils"
 					   "alsa-utils"
 					   "qpwgraph"
-					   "lua"
+					   ;; "lua"
 					   ;; Guile Hacking
 					   "guile"
 					   "emacs-geiser"
 					   "emacs-geiser-guile"
+
+					   ;; Cli
+					   "tmux"
+
 					   ;; Radio
 					   "gnuradio"
 
@@ -100,6 +117,41 @@
 					   "mako"
 					   "glib:bin"
 					   "yabridgectl"
+
+					   ;; Sway
+					   "sway"
+					   "swaybg"
+					   "swayidle"
+					   "swaylock"
+					   "fuzzel"
+					   "mako"
+					   "rofi"
+					   "kitty"
+					   "htop"
+					   "s-tui"
+					   "grimshot"
+					   "waybar"
+					   "network-manager-applet"
+
+					   ;; Browser
+					   "icecat"
+					   
+					   ;; Compatibility for older Xorg applications
+					   "xorg-server-xwayland"
+
+					   ;; Flatpak and XDG utilities
+					   "xdg-utils" ;; For xdg-open, etc
+					   "xdg-dbus-proxy"
+					   "shared-mime-info"
+
+					   ;; Appearance
+					   "gnome-themes-extra"
+					   "adwaita-icon-theme"
+
+					   ;; Fonts
+					   "font-jetbrains-mono"
+					   "font-liberation"
+					   "font-awesome"
 					   )))
 
 
@@ -109,6 +161,8 @@
   (list
    (service home-pipewire-service-type pipewire-config)
    (service home-dbus-service-type)
+   (service home-xdg-configuration-files-service-type
+            `(("sway/config" ,(apply mixed-text-file (cons "sway-config" sway-config)))))
    (simple-service 'containers-config
 		   home-xdg-configuration-files-service-type
 		   `(("containers/registries.conf"
@@ -135,3 +189,4 @@ blocked = false
                                   "/home/person/git/dotfiles/guix/noonker/home/.bash_profile"
                                   "bash_profile")))))
    )))
+
