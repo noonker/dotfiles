@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+cd /home/person/git/norns-desktop/ && make run
+xdg-open "http://localhost:5000/maiden/"
+xdg-open "http://localhost:8889/"

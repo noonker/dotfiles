@@ -11,26 +11,35 @@
              (gnu services)
 	     (gnu home services)
 	     (gnu home services xdg)
-             (gnu home services desktop)
+	     (gnu home services desktop)
 	     (gnu home services sound)
              (guix gexp)
-             (gnu home services shells))
+             (gnu home services shells)
+	     ;; For ~/bin helper
+	     (ice-9 ftw)
+	     (ice-9 regex)
+	     )
 
 (define pipewire-config
   (home-pipewire-configuration
    (enable-pulseaudio? #t)))
 
 
-(define sway-config
-  (map (lambda (str)
-         (string-append str "\n"))
-       (list
-        "set $mod Mod4"
-        "include \"~/.config/sway/before-config\""
-        "bindsym $mod+space exec fuzzel -w 50 -x 8 -y 8 -r 3 -b 232635ff -t A6Accdff -s A6Accdff -S 232635ff -C c792eacc -m c792eacc -f \"Comic Code:weight=light:size=10\""
-        "exec mako --border-radius=2 --font=\"JetBrains Mono 8\" --max-visible=5 --outer-margin=5 --margin=3 --background=\"#1c1f26\" --border-color=\"#89AAEB\" --border-size=1 --default-timeout=7000"
-        "exec emacs"
-        "include \"~/.config/sway/after-config\"")))
+(define %dotfiles-dir "/home/person/git/dotfiles/")
+
+;; Helper to build paths relative to dotfiles
+(define (dotfile path)
+  (string-append %dotfiles-dir "/" path))
+
+(define (dotfiles-bin-directory source-dir dest-prefix)
+  (let ((files (scandir source-dir
+                        (lambda (f) (not (member f '("." "..")))))))
+    (map (lambda (f)
+           (list (string-append dest-prefix "/" f)
+                 (local-file (string-append source-dir "/" f)
+                             f
+                             #:recursive? #t)))
+         (or files '()))))
 
 (home-environment
  ;; Below is the list of packages that will show up in your
@@ -44,8 +53,10 @@
                                            "python"
 					   "python-wrapper"
                                            "curl"
+					   "bluez"
                                            "rsync"
                                            "the-silver-searcher"
+					   "brightnessctl"
                                            "passt"
                                            "podman-compose"
                                            "podman"
@@ -122,7 +133,6 @@
 					   "shaderbg"
 					   "swayidle"
 					   "swaylock"
-					   "fuzzel"
 					   "grim"
 					   "mako"
 					   "rofi"
@@ -131,7 +141,16 @@
 					   "s-tui"
 					   "grimshot"
 					   "waybar"
+					   "cliphist"
+					   "grim"
+					   "rofi-pass"
+					   "slurp"
+					   "wtype"
+					   "pwgen"
+					   "pass-otp"
+					   "wl-clipboard"
 					   "network-manager-applet"
+					   "jq"
 
 					   ;; Browser
 					   "icecat"
@@ -161,27 +180,35 @@
   (list
    (service home-pipewire-service-type pipewire-config)
    (service home-dbus-service-type)
+   (simple-service 'my-bins
+                   home-files-service-type
+                   (dotfiles-bin-directory
+                    "/home/person/git/dotfiles/bin"
+                    "bin"))
+   (simple-service 'my-dotfiles
+                   home-files-service-type
+                   (list
+                    `(".tmux.conf"  ,(local-file (dotfile "guix/configs/tmux.conf")))
+                    ))
    (service home-xdg-configuration-files-service-type
-            `(("sway/config" ,(apply mixed-text-file (cons "sway-config" sway-config)))))
-   (simple-service 'containers-config
-		   home-xdg-configuration-files-service-type
-		   `(("containers/registries.conf"
-		      ,(plain-file "registries.conf"
-				   "unqualified-search-registries = [\"docker.io\", \"quay.io\", \"myregistry.example.com\"]
-[[registry]]
-location = \"myregistry.example.com\"
-insecure = true
-blocked = false
-"))
-		     ("containers/policy.json"
-		      ,(plain-file "policy.json"
-				   "{\n  \"default\": [ { \"type\": \"insecureAcceptAnything\" } ]\n}\n"))))
-   
+            `(
+	      ("sway/config" ,(local-file (dotfile "guix/configs/sway.conf")))
+	      ("rofi/config.rasi" ,(local-file (dotfile "guix/configs/config.rasi")))
+	      ("rofi-pass/config" ,(local-file (dotfile "guix/configs/rofi-pass.conf")))
+	      ("waybar/config" ,(local-file (dotfile "guix/configs/waybar.conf")))
+	      ("waybar/style.css" ,(local-file (dotfile "guix/configs/waybar_style.css")))
+	      ("containers/registries.conf" ,(local-file (dotfile "guix/configs/podman_registries.conf")))
+	      ("containers/policy.json" ,(local-file (dotfile "guix/configs/podman_policy.json")))
+	      ("shaders/background.frag" ,(local-file (dotfile "guix/configs/background.frag")))
+	      ))
    (service home-bash-service-type
             (home-bash-configuration
              (aliases '(("grep" . "grep --color=auto") ("ll" . "ls -l")
                         ("ls" . "ls -p --color=auto")))
-	     (environment-variables '(("PATH" . "$PATH:$HOME/.local/bin")))
+	     (environment-variables '(
+				      ("PATH" . "$PATH:$HOME/.local/bin")
+				      ("XCURSOR_SIZE" . "24")
+				      ))
              (bashrc (list (local-file
                             "/home/person/git/dotfiles/guix/noonker/home/.bashrc"
                             "bashrc")))
