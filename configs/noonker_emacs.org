@@ -2023,6 +2023,10 @@ These functions are helpers and should be self explanitory
 
 (global-set-key (kbd "C-c C-t") 'todo)
 
+(setq noonker/bookmarks '(("General"
+			   (("DuckDuckGo" "https://html.duckduckgo.com/" "Search"))
+			   )))
+
 (defun noonker/flatten-category (category)
   (mapcar (lambda (item) (cons (car category) item)) (cadr category)))
 
@@ -2036,6 +2040,10 @@ These functions are helpers and should be self explanitory
 			 (noonker/flatten-bookmarks bookmarks))))
 	 (url (nth 2 (split-string choice "	"))))
     (browse-url url)))
+
+(defun noonker/json-bookmarks ()
+  (interactive)
+  (json-encode noonker/bookmarks))
 #+end_src
 
 * AI
