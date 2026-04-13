@@ -197,6 +197,8 @@
 
 					   ;; Ollama
 					   "ollama-linux-amd64"
+
+					   "hydroxide"
 					   )))
 
 
