@@ -9,6 +9,7 @@
 (use-modules (gnu home)
 	     (noonker home emacs)
 	     (noonker home ollama)
+	     (noonker home hydroxide)
              (gnu packages)
              (gnu services)
 	     (gnu home services)
@@ -210,6 +211,7 @@
    (service home-dbus-service-type)
    emacs-daemon-service
    ollama-daemon-service
+   hydroxide-daemon-service
    (simple-service 'my-font-packages
                    home-profile-service-type
                    (list my-comic-code-font))
