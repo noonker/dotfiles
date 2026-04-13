@@ -2024,7 +2024,10 @@ These functions are helpers and should be self explanitory
 (global-set-key (kbd "C-c C-t") 'todo)
 
 (setq noonker/bookmarks '(("General"
-			   (("DuckDuckGo" "https://html.duckduckgo.com/" "Search"))
+			   (("DuckDuckGo" "https://duckduckgo.com/" "Search")
+			    ("GitHub" "https://github.com" "GitHub Git Repo")))
+			  ("Social Media"
+			   (("InfoSecExchange" "https://infosec.exchange" "Mastodon"))
 			   )))
 
 (defun noonker/flatten-category (category)
@@ -2035,9 +2038,9 @@ These functions are helpers and should be self explanitory
 
 (defun noonker/bookmarks-complete (bookmarks)
   (let* ((choice (completing-read
-		 "Bookmarks:"
-		 (mapcar (lambda (item) (string-join item "	"))
-			 (noonker/flatten-bookmarks bookmarks))))
+		  "Bookmarks:"
+		  (mapcar (lambda (item) (string-join item "	"))
+			  (noonker/flatten-bookmarks bookmarks))))
 	 (url (nth 2 (split-string choice "	"))))
     (browse-url url)))
 
@@ -2045,6 +2048,9 @@ These functions are helpers and should be self explanitory
   (interactive)
   (json-encode noonker/bookmarks))
 #+end_src
+
+#+RESULTS:
+: noonker/json-bookmarks
 
 * AI
 ** Gptel

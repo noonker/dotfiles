@@ -1,0 +1,15 @@
+#!/usr/bin/env bash
+# ~/.local/bin/bookmark-search
+
+bookmarks=$(emacsclient -e '(noonker/json-bookmarks)' | jq -r . | jq -r '
+  to_entries[] | .key as $cat |
+  .value[] | to_entries[] |
+  "\($cat) / \(.key) - \(.value[1]) | \(.value[0])"
+')
+
+selected=$(echo "$bookmarks" | rofi -dmenu -i -p "🔖 Bookmarks" -matching fuzzy)
+
+if [ -n "$selected" ]; then
+  url=$(echo "$selected" | sed 's/.*| //')
+  xdg-open "$url"
+fi
