@@ -194,6 +194,7 @@
 
 					   ;; Screen Share
 					   "xdg-desktop-portal-wlr"
+					   "xdg-desktop-portal-gtk"
 					   "xdg-desktop-portal"
 
 					   ;; Ollama
@@ -246,6 +247,7 @@
 				      ("PATH" . "$PATH:$HOME/.local/bin")
 				      ("XCURSOR_SIZE" . "24")
 				      ("XDG_CURRENT_DESKTOP" . "sway")
+				      ("XDG_SESSION_TYPE" . "wayland")
 				      ;; ("XDG_DESKTOP_PORTAL_DIR" . "$HOME/.guix-home/profile/share/xdg-desktop-portal/portals")
 				      ))
              (bashrc (list (local-file

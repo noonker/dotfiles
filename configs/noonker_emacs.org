@@ -1173,7 +1173,7 @@ IRC for Emacs
 					(nnimap-address "127.0.0.1")
 					(nnimap-server-port 1143)
  					(nnimap-inbox "INBOX")
-					(nnimap-subscribed-newsgroups ("nnimap+protonmail:INBOX"))
+					(nnimap-subscribed-newsgroups ("INBOX"))
 					(nnimap-stream network)
 					(nnimap-authinfo-file "~/.authinfo.gpg")))))
 ;; (setq gnus-check-new-newsgroups nil)
