@@ -10,6 +10,7 @@
 	     (noonker home emacs)
 	     (noonker home ollama)
 	     (noonker home hydroxide)
+	     (noonker home git-repos)
              (gnu packages)
              (gnu services)
 	     (gnu home services)
@@ -226,6 +227,12 @@
                    (list
                     `(".tmux.conf"  ,(local-file (dotfile "guix/configs/tmux.conf")))
                     ))
+   (service home-git-repos-service-type
+         (home-git-repos-configuration
+          (directory "~/git")
+          (repos '(("dotfiles"  . "git@github.com:noonker/dotfiles.git")
+                   ("hunting-mode"   . "git@github.com:noonker/hunting-mode.git")
+                   ))))
    (service home-xdg-configuration-files-service-type
             `(
 	      ("sway/config" ,(local-file (dotfile "guix/configs/sway.conf")))
