@@ -7,14 +7,18 @@
 (define-module (noonker home home-configuration))
 
 (use-modules (gnu home)
+	     (noonker home emacs)
+	     (noonker home ollama)
              (gnu packages)
              (gnu services)
 	     (gnu home services)
 	     (gnu home services xdg)
 	     (gnu home services desktop)
 	     (gnu home services sound)
-             (guix gexp)
              (gnu home services shells)
+	     (guix packages)
+	     (guix build-system font)
+             (guix gexp)
 	     ;; For ~/bin helper
 	     (ice-9 ftw)
 	     (ice-9 regex)
@@ -24,6 +28,18 @@
   (home-pipewire-configuration
    (enable-pulseaudio? #t)))
 
+;; Font
+(define my-comic-code-font
+  (package
+    (name "font-comic-code")
+    (version "1.0")
+    (source (local-file "/home/person/.password-store/Comic Code/OTF"
+                        #:recursive? #t))
+    (build-system font-build-system)
+    (synopsis "Comic Code font")
+    (description "Comic Code monospace font.")
+    (home-page "")
+    (license #f)))
 
 (define %dotfiles-dir "/home/person/git/dotfiles/")
 
@@ -47,7 +63,7 @@
  (packages (specifications->packages (list "7zip"
 					   "unzip"
 					   "kicad"
-					   ;; "texlive-scheme-full"
+					   "texlive-scheme-full"
 					   "inkscape"
                                            "radare2"
                                            "python"
@@ -128,6 +144,9 @@
 					   "glib:bin"
 					   "yabridgectl"
 
+					   ;; VPN
+					   "proton-vpn-cli"
+
 					   ;; Sway
 					   "sway"
 					   "shaderbg"
@@ -171,6 +190,13 @@
 					   "font-jetbrains-mono"
 					   "font-liberation"
 					   "font-awesome"
+
+					   ;; Screen Share
+					   "xdg-desktop-portal-wlr"
+					   "xdg-desktop-portal"
+
+					   ;; Ollama
+					   "ollama-linux-amd64"
 					   )))
 
 
@@ -180,6 +206,11 @@
   (list
    (service home-pipewire-service-type pipewire-config)
    (service home-dbus-service-type)
+   emacs-daemon-service
+   ollama-daemon-service
+   (simple-service 'my-font-packages
+                   home-profile-service-type
+                   (list my-comic-code-font))
    (simple-service 'my-bins
                    home-files-service-type
                    (dotfiles-bin-directory
@@ -200,6 +231,8 @@
 	      ("containers/registries.conf" ,(local-file (dotfile "guix/configs/podman_registries.conf")))
 	      ("containers/policy.json" ,(local-file (dotfile "guix/configs/podman_policy.json")))
 	      ("shaders/background.frag" ,(local-file (dotfile "guix/configs/background.frag")))
+	      ("guix/channels.scm" ,(local-file (dotfile "guix/configs/guix_channels")))
+	      ("xdg-desktop-portal/portals.conf" ,(local-file (dotfile "guix/configs/portals.conf")))
 	      ))
    (service home-bash-service-type
             (home-bash-configuration
@@ -208,6 +241,8 @@
 	     (environment-variables '(
 				      ("PATH" . "$PATH:$HOME/.local/bin")
 				      ("XCURSOR_SIZE" . "24")
+				      ("XDG_CURRENT_DESKTOP" . "sway")
+				      ;; ("XDG_DESKTOP_PORTAL_DIR" . "$HOME/.guix-home/profile/share/xdg-desktop-portal/portals")
 				      ))
              (bashrc (list (local-file
                             "/home/person/git/dotfiles/guix/noonker/home/.bashrc"

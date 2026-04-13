@@ -267,19 +267,28 @@ Leuven Theme and Comic Mono
 
 (cond
  ((eq how-ya-feeling 'dark-tbh)
-    (use-package cyberpunk-theme)
-     (load-theme 'cyberpunk t))
-  ((eq how-ya-feeling 'burn-my-eyes)
-   (load-theme 'leuven)
-    ))
+  (use-package cyberpunk-theme)
+  (load-theme 'cyberpunk t))
+ ((eq how-ya-feeling 'burn-my-eyes)
+  (load-theme 'leuven)
+  ))
 
-(set-fontset-font t 'emoji '("Noto Emoji" . "iso10646-1") nil 'prepend)
 
+(defun noonker/set-fonts (frame)
+  (interactive)
+
+  (with-selected-frame frame
+    (progn
 (if (string= "blep" (system-name))
-    (set-face-attribute 'default nil :font "Comic Code" :height 100))
+      (set-face-attribute 'default nil :font "Comic Code" :height 100))
 
-(if im-at-work
-    (set-face-attribute 'default nil :font "JetBrains Mono" :height 160))
+  (if im-at-work
+      (set-face-attribute 'default nil :font "JetBrains Mono" :height 160))
+      )
+    )
+ )
+
+(add-hook 'after-make-frame-functions 'noonker/set-fonts)
 #+end_src
 
 ** Global Config
@@ -2037,7 +2046,6 @@ These functions are helpers and should be self explanitory
   :straight (:host github :repo "karthink/gptel"))
 (use-package gptel-quick
   :straight (:host github :repo "karthink/gptel-quick" :files ("gptel-quick.el")))
-
 ;; Popup question
 (defvar gptel-lookup--history nil)
 
