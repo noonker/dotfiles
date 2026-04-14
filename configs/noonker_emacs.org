@@ -1029,13 +1029,13 @@ IRC for Emacs
 (defun libera ()
   "Connect to IRC"
   (interactive)
-  (erc-ssl :server "192.168.50.228" :port "6669" :nick "noonker" :password
+  (erc-ssl :server "192.168.50.242" :port "6697" :nick "noonker" :password
 	   (format "noonker/libera:%s" (password-store-get "Internet/ZNC")) )
   )
 
 (defun nerds ()
   (interactive)
-  (erc-ssl :server "192.168.50.228" :port "6669" :nick "noonker" :password
+  (erc-ssl :server "192.168.50.242" :port "6697" :nick "noonker" :password
 	   (format "noonker/nerds:%s" (password-store-get "Internet/ZNC"))))
 
 (setq erc-rename-buffers t)
