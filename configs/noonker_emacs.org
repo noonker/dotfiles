@@ -1751,6 +1751,49 @@ Look for things like, but not limited to, syntax errors, logic errors, severe in
 
 #+end_src
 
+*** Org Table
+#+begin_src emacs-lisp :tangle ~/.emacs
+(defun noonker/org-table-copy-cell-above (&optional n)
+  "Copy the content of the cell N rows above into the current cell.
+N defaults to 1. Skips horizontal lines."
+  (interactive "p")
+  (unless (org-at-table-p)
+    (user-error "Not in an org table"))
+  (let ((col (org-table-current-column))
+        (remaining (or n 1))
+        value)
+    (save-excursion
+      (while (> remaining 0)
+        (forward-line -1)
+        (unless (org-at-table-p)
+          (user-error "Not enough table rows above"))
+        (unless (org-at-table-hline-p)
+          (cl-decf remaining)))
+      (setq value (org-table-get nil col)))
+    (org-table-put nil col (org-trim value))
+    (org-table-align)))
+
+(defun noonker/org-table-copy-cell-below (&optional n)
+  "Copy the content of the cell N rows below into the current cell.
+N defaults to 1. Skips horizontal lines."
+  (interactive "p")
+  (unless (org-at-table-p)
+    (user-error "Not in an org table"))
+  (let ((col (org-table-current-column))
+        (remaining (or n 1))
+        value)
+    (save-excursion
+      (while (> remaining 0)
+        (forward-line 1)
+        (unless (org-at-table-p)
+          (user-error "Not enough table rows below"))
+        (unless (org-at-table-hline-p)
+          (cl-decf remaining)))
+      (setq value (org-table-get nil col)))
+    (org-table-put nil col (org-trim value))
+    (org-table-align)))
+#+end_src
+
 *** Org + Hugo
 
 Blogging with hugo
@@ -2876,19 +2919,11 @@ Load my RSS feeds
       '(
 	("https://www.youtube.com/feeds/videos.xml?channel_id=UC5fdssPqmmGhkhsJi4VcckA" innuendo-studios youtube)
 	("https://www.youtube.com/feeds/videos.xml?channel_id=UCDsElQQt_gCZ9LgnW-7v-cQ" kirsten-dirksen youtube)
-	("https://www.youtube.com/feeds/videos.xml?channel_id=UCsXVk37bltHxD1rDPwtNM8Q" kurzgesagt youtube)
-	("https://www.youtube.com/feeds/videos.xml?channel_id=UCJXa3_WNNmIpewOtCHf3B0g" laurie-wired youtube)
-	("https://www.youtube.com/feeds/videos.xml?channel_id=UCUyeluBRhGPCW4rPe_UvBZQ" prime-time youtube)
 	("https://www.youtube.com/feeds/videos.xml?channel_id=UCwHwDuNd9lCdA7chyyquDXw" bread-on-penguins youtube)
-	("https://www.youtube.com/feeds/videos.xml?channel_id=UC8gFadPgK2r1ndqLI04Xvvw" maangchi youtube)
-	("https://www.youtube.com/feeds/videos.xml?channel_id=UCV5vCi3jPJdURZwAOO_FNfQ" thought-emporium youtube)
-	("https://www.youtube.com/feeds/videos.xml?channel_id=UCe2JAC5FUfbxLCfAvBWmNJA" food-lab youtube)
 	("https://www.youtube.com/feeds/videos.xml?channel_id=UCWZ3HFiJkxG1K8C4HVnyBvQ" vic-berger youtube)
-	("https://www.youtube.com/feeds/videos.xml?channel_id=UCWjmAUHmajb1-eo5WKk_22A" audioTree music youtube)
+	("https://www.youtube.com/feeds/videos.xml?channel_id=UCWjmAUHmajb1-eo5WKk_22A" audiotree music youtube)
 	("https://www.youtube.com/feeds/videos.xml?channel_id=UC9-y-6csu5WGm29I7JiwpnA" computerphile youtube)
 	("https://www.youtube.com/feeds/videos.xml?channel_id=UCSkzHxIcfoEr69MWBdo0ppg" cuck-philosophy youtube)
-	("https://www.youtube.com/feeds/videos.xml?channel_id=UCo-3ThNQmPmQSQL_L6Lx1_w" deepsky-videos youtube)
-	("https://www.youtube.com/feeds/videos.xml?channel_id=UC-yuWVUplUJZvieEligKBkA" javidx9 youtube)
 	("https://www.youtube.com/feeds/videos.xml?channel_id=UCa_8y96THr7LzMg8BsU-sUw" just-wondering youtube)
 	("https://www.youtube.com/feeds/videos.xml?channel_id=UC3I2GFN_F8WudD_2jUZbojA" KEXP youtube music)
 	("https://www.youtube.com/feeds/videos.xml?channel_id=UCJgBqh3tYway5A5VgV4dZRw" mr-bill youtube music)
@@ -2898,7 +2933,6 @@ Load my RSS feeds
 	("https://www.youtube.com/feeds/videos.xml?channel_id=UCGaVdbSav8xWuFWTadK6loA" vlogbrothers youtube)
 	("https://www.youtube.com/feeds/videos.xml?channel_id=UCy-AwzC0US6T_DALeiqnLHQ" yan-z youtube music)
 	("https://www.youtube.com/feeds/videos.xml?channel_id=UC4eYXhJI4-7wSWc8UNRwD4A" tiny-desk youtube  music)
-	("https://www.youtube.com/feeds/videos.xml?channel_id=UCvB3solmhqtgDeLpD-yTtfg" hickok45 youtube )
 	("https://www.youtube.com/feeds/videos.xml?channel_id=UCdBnxYbzwu5CypEdMfu4_jA" leeya-katrina youtube music )
 	("https://www.youtube.com/feeds/videos.xml?channel_id=UCzIlUODCqKo7Og_OIp66x9g" lucy-riddett youtube music)
 	("https://www.youtube.com/feeds/videos.xml?channel_id=UCaB0Vx7zrGJRrOQb42bI99g" milan youtube  music)
@@ -2927,13 +2961,11 @@ Load my RSS feeds
 	("https://www.youtube.com/feeds/videos.xml?channel_id=UC4eYXhJI4-7wSWc8UNRwD4A" npr-music youtube)
 	("https://www.youtube.com/feeds/videos.xml?channel_id=UCk0tHQym-zIaxjrVuTzojdg" embahn youtube music)
 	("https://www.youtube.com/feeds/videos.xml?channel_id=UCigygyPkHm07o-wQvkET7Og" george-collier youtubemusic )
-	("https://www.youtube.com/feeds/videos.xml?channel_id=UCm9K6rby98W8JigLoZOh6FQ" lock-picking-lawyer youtube)
 	("https://www.youtube.com/feeds/videos.xml?channel_id=UCposMD82i8gEmpnSG-rrO1g" mojca youtube music)
 	("https://www.youtube.com/feeds/videos.xml?channel_id=UCrCTC5_t-HaVJ025DbYITiw" alice-capelle youtube music)
 	("https://www.youtube.com/feeds/videos.xml?channel_id=UCqM0zDcFNdAHj7uQkprLszg" positron youtube)
 	("https://www.youtube.com/feeds/videos.xml?channel_id=UCuVLTxl-I0glJYPfcPKJg7w" heymun youtube music)
 	("https://www.youtube.com/feeds/videos.xml?channel_id=UCAzPN3ilUBKEU0hcQ0vuxpw" george-secor youtube music)
-	("https://www.youtube.com/feeds/videos.xml?channel_id=UCHP9CdeguNUI-_nBv_UXBhw" daniel-naroditsky youtube)
 	("https://www.youtube.com/feeds/videos.xml?channel_id=UCJjFX23mI0oZaZirtIgyE-Q" david-lange youtube)
 	("https://www.youtube.com/feeds/videos.xml?channel_id=UCzJVGqsvZ3ti197NMIjE5ig" elina-spitsa youtube music)
 	("https://www.youtube.com/feeds/videos.xml?channel_id=UC6EnFbK-P5q0zeaqI5yobKg" benjamin-finegold youtube)
@@ -3380,6 +3412,9 @@ Load my RSS feeds
 (define-key noonker-org-map (kbd "l") 'org-store-link)
 (define-key noonker-org-map (kbd "L") 'org-insert-link)
 (define-key noonker-org-map (kbd "t") 'org-table-transpose-table-at-point)
+(define-key noonker-org-map (kbd "k") 'noonker/org-table-copy-cell-above)
+(define-key noonker-org-map (kbd "j") 'noonker/org-table-copy-cell-below)
+
 
 ;; Edit Commands
 (define-key noonker-edit-map (kbd "r") 'query-replace)
