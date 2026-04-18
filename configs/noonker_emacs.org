@@ -3000,6 +3000,7 @@ Load my RSS feeds
 	("https://www.youtube.com/feeds/videos.xml?channel_id=UCjY8KAGllKyZZd2FYF1vbPw" paul-krugman youtube)
 	("https://www.youtube.com/feeds/videos.xml?channel_id=UC718uEQF7bdg4QnnXo8uQJA" emacs-propaganda youtube)
 	("https://www.youtube.com/feeds/videos.xml?channel_id=UCOLGEEl-F3vQ6M1chJ5DsEw" synthdef youtube)
+	("https://www.youtube.com/feeds/videos.xml?channel_id=UCaLlzGqiPE2QRj6sSOawJRg" clojuretv youtube)
 	))
 #+end_src
 
