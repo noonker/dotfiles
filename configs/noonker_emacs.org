@@ -1707,6 +1707,60 @@ Look for things like, but not limited to, syntax errors, logic errors, severe in
 				   ))
 #+end_src
 
+*** Rofi Capture
+Non-interactive capture called by =org-today-capture= shell script via emacsclient.
+Inserts directly into the target file without opening an interactive capture buffer.
+#+begin_src emacs-lisp :tangle ~/.emacs
+(defun noonker/rofi-capture (text template)
+  "Non-interactively capture TEXT using org TEMPLATE key.
+Intended to be called from emacsclient by the org-today-capture script.
+Supports: t (Today→Tasks), n (Now + clock-in), b (Backlog→Backlog)."
+  (let* ((ts (format-time-string "<%Y-%m-%d %a>"))
+         (entry (concat "\n** TODO " text "\n   SCHEDULED: " ts "\n")))
+    (pcase template
+      ("t"
+       (let ((file (expand-file-name (format "%s/today.org" org-agenda-basedir))))
+         (with-current-buffer (find-file-noselect file)
+           (org-with-wide-buffer
+            (goto-char (point-min))
+            (if (re-search-forward "^\\* Tasks" nil t)
+                (progn (org-end-of-subtree t)
+                       (unless (bolp) (insert "\n"))
+                       (insert entry))
+              (goto-char (point-max))
+              (insert entry)))
+           (save-buffer))))
+      ("n"
+       (let ((file (expand-file-name (format "%s/today.org" org-agenda-basedir))))
+         (with-current-buffer (find-file-noselect file)
+           (org-with-wide-buffer
+            (goto-char (point-min))
+            (if (re-search-forward "^\\* Tasks" nil t)
+                (progn (org-end-of-subtree t)
+                       (unless (bolp) (insert "\n"))
+                       (insert entry))
+              (goto-char (point-max))
+              (insert entry)))
+           (save-buffer)
+           (org-with-wide-buffer
+            (goto-char (point-max))
+            (when (re-search-backward (regexp-quote (concat "** TODO " text)) nil t)
+              (org-clock-in))))))
+      ("b"
+       (let ((file (expand-file-name (format "%s/backlog.org" org-agenda-basedir))))
+         (with-current-buffer (find-file-noselect file)
+           (org-with-wide-buffer
+            (goto-char (point-min))
+            (if (re-search-forward "^\\* Backlog" nil t)
+                (progn (org-end-of-subtree t)
+                       (unless (bolp) (insert "\n"))
+                       (insert entry))
+              (goto-char (point-max))
+              (insert entry)))
+           (save-buffer))))
+      (_ (error "noonker/rofi-capture: unknown template key: %s" template)))))
+#+end_src
+
 *** Org Roam
 #+begin_src emacs-lisp :tangle ~/.emacs
 (setq org-roam-directory "~/org/")

@@ -1,0 +1,44 @@
+#!/usr/bin/env bash
+# org-today-capture: Quick org-capture to org files from anywhere in Sway
+# Uses rofi for input, emacsclient to insert via noonker/rofi-capture.
+# Depends: rofi, emacsclient, notify-send (mako)
+set -euo pipefail
+
+# ── Template selection ─────────────────────────────────────────────────────
+template=$(printf 't  Today\nn  Now (clock-in)\nb  Backlog' | \
+    rofi -dmenu \
+         -p " Capture" \
+         -lines 3 | \
+    awk '{print $1}')
+
+[ -z "$template" ] && exit 0
+
+# ── Prompt label ────────────────────────────────────────────────────────────
+case "$template" in
+    t) prompt=" Today" ;;
+    n) prompt=" Now" ;;
+    b) prompt=" Backlog" ;;
+    *) exit 1 ;;
+esac
+
+# ── Capture text ─────────────────────────────────────────────────────────
+text=$(printf '' | rofi -dmenu \
+    -p "$prompt" \
+    -lines 0)
+
+[ -z "$text" ] && exit 0
+
+# ── Pass text via tmpfile to avoid elisp quoting issues ─────────────────
+tmpfile=$(mktemp /tmp/org-capture-XXXXXX)
+printf '%s' "$text" > "$tmpfile"
+trap 'rm -f "$tmpfile"' EXIT
+
+# ── Send to running Emacs via emacsclient ────────────────────────────────
+if emacsclient --eval \
+    "(let ((text (with-temp-buffer (insert-file-contents \"$tmpfile\") (string-trim (buffer-string))))) (noonker/rofi-capture text \"$template\"))" \
+    > /dev/null 2>&1; then
+    notify-send -t 2000 " Captured" "$text"
+else
+    notify-send -t 4000 -u critical " Org capture failed" \
+        "Is the Emacs daemon running?"
+fi
