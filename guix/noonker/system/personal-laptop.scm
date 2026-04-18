@@ -28,7 +28,7 @@
    #:use-module (nongnu system linux-initrd)
 )
 
-(use-service-modules cups desktop networking ssh xorg)
+(use-service-modules cups desktop networking ssh xorg avahi)
 
 (define %bladerf-udev-rule
   (udev-rule
@@ -61,7 +61,7 @@
     %default-kernel-arguments))
   (initrd microcode-initrd)
   (firmware (list linux-firmware))
-  
+  (name-service-switch %mdns-host-lookup-nss)
   ;; The list of user accounts ('root' is implicit).
   (users (cons* (user-account
                   (name "person")
@@ -103,6 +103,7 @@
                     (subgids (list (subid-range (name "person"))))))
           (service boltd-service-type)
 	  (service bluetooth-service-type)
+	  (service block-facebook-hosts-service-type) 
 	  (service nftables-service-type)
 	  (service greetd-service-type
 		   (greetd-configuration

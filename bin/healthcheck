@@ -1,0 +1,11 @@
+#!/usr/bin/env bb
+;; Parallel HTTP health checks with structured concurrency
+(require '[babashka.http-client :as http])
+
+(let [urls ["https://ctf.legitimate.company"
+            "https://noonker.github.io"]
+      results (pmap (fn [url]
+                      (try {:url url :status (:status (http/get url {:timeout 5000}))}
+                           (catch Exception e {:url url :error (.getMessage e)})))
+                    urls)]
+  (doseq [r results] (println r)))

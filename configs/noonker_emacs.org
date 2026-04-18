@@ -1160,23 +1160,27 @@ IRC for Emacs
 (if (not im-at-work) 
     (progn
       (setq user-mail-address "noonker@pm.me"
-	    user-full-name  "Joshua Person")
+            user-full-name  "Joshua Person")
 
       (setq send-mail-function 'smtpmail-send-it
-	    smtpmail-smtp-server "127.0.0.1"
-	    smtpmail-smtp-service 1025
-	    smtpmail-auth-credentials "~/.authinfo.gpg"
-	    smtpmail-stream-type 'plain
-	    smtpmail-smtp-user "noonker")
-
-      (setq gnus-select-method '(nnimap "protonmail"
-					(nnimap-address "127.0.0.1")
-					(nnimap-server-port 1143)
- 					(nnimap-inbox "INBOX")
-					(nnimap-subscribed-newsgroups ("INBOX"))
-					(nnimap-stream network)
-					(nnimap-authinfo-file "~/.authinfo.gpg")))))
-;; (setq gnus-check-new-newsgroups nil)
+            smtpmail-smtp-server "127.0.0.1"
+            smtpmail-smtp-service 1025
+            smtpmail-auth-credentials "~/.authinfo.gpg"
+            smtpmail-stream-type 'plain
+            smtpmail-smtp-user "noonker")
+      
+      (setq gnus-auto-subscribed-groups nil)
+      (setq gnus-check-new-newsgroups nil)
+      
+      (setq gnus-select-method 
+            '(nnimap "protonmail"
+                     (nnimap-address "127.0.0.1")
+                     (nnimap-server-port 1143)
+                     (nnimap-inbox "INBOX")
+                     (nnimap-list-pattern ("INBOX")) 
+                     (nnimap-fetch-partial-articles nil)
+                     (nnimap-stream network)
+                     (nnimap-authinfo-file "~/.authinfo.gpg")))))
 #+end_src
 
 Email client for emacs

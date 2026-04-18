@@ -172,6 +172,8 @@
 					   "wl-clipboard"
 					   "network-manager-applet"
 					   "jq"
+					   "wlsunset"
+					   "vim"
 
 					   ;; Browser
 					   "icecat"
@@ -245,12 +247,16 @@
 	      ("shaders/background.frag" ,(local-file (dotfile "guix/configs/background.frag")))
 	      ("guix/channels.scm" ,(local-file (dotfile "guix/configs/guix_channels")))
 	      ("xdg-desktop-portal/portals.conf" ,(local-file (dotfile "guix/configs/portals.conf")))
+	      ("kitty/kitty.conf" ,(local-file (dotfile "guix/configs/kitty.conf")))
 	      ))
    (service home-bash-service-type
             (home-bash-configuration
              (aliases '(("grep" . "grep --color=auto") ("ll" . "ls -l")
                         ("ls" . "ls -p --color=auto")))
 	     (environment-variables '(
+				      ("EDITOR" . "emacsclient -c")
+				      ("VISUAL" . "emacsclient -c")
+				      ("ALTERNATE_EDITOR" . "vim")
 				      ("PATH" . "$PATH:$HOME/.local/bin")
 				      ("XCURSOR_SIZE" . "24")
 				      ("XDG_CURRENT_DESKTOP" . "sway")
