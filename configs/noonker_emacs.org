@@ -1154,6 +1154,249 @@ IRC for Emacs
               ("C-c C-w" . elfeed-tube-mpv-where)))
 #+end_src
 
+*Elfeed Playlist*
+
+#+begin_src emacs-lisp :tangle ~/.emacs
+(require 'elfeed)
+
+(defgroup elfeed-playlist nil
+  "Download and dispatch elfeed audio."
+  :group 'elfeed
+  :prefix "elfeed-playlist-")
+
+(defcustom elfeed-playlist-download-dir
+  (expand-file-name "elfeed-playlist" temporary-file-directory)
+  "Directory where yt-dlp downloads audio before dispatch."
+  :type 'directory)
+
+(defcustom elfeed-playlist-vlc-host "192.168.50.140"
+  "Host running VLC Wi-Fi sharing."
+  :type 'string)
+
+(defcustom elfeed-playlist-vlc-port 80
+  "Port for VLC Wi-Fi sharing."
+  :type 'integer)
+
+(defcustom elfeed-playlist-ytdlp-args
+  '("-x" "--audio-format" "mp3" "-o" "%(title)s.%(ext)s")
+  "Extra arguments passed to yt-dlp."
+  :type '(repeat string))
+
+(defcustom elfeed-playlist-norns-host "norns.local"
+  "Hostname or IP of the norns device."
+  :type 'string)
+
+(defcustom elfeed-playlist-norns-user "we"
+  "SSH user for the norns device."
+  :type 'string)
+
+(defcustom elfeed-playlist-max-concurrent 2
+  "Maximum number of yt-dlp downloads to run at once."
+  :type 'integer)
+
+(defcustom elfeed-playlist-destinations
+  '(("VLC Wi-Fi Share" . elfeed-playlist--send-vlc)
+    ("Norns"           . elfeed-playlist--send-norns)
+    ("Open Folder"     . elfeed-playlist--send-open-folder))
+  "Alist of (LABEL . FUNCTION).  Each function is called with a
+list of downloaded file paths."
+  :type '(alist :key-type string :value-type function))
+
+;;; Mode line
+
+(defvar elfeed-playlist--mode-line nil
+  "Current mode-line string, or nil when idle.")
+
+(put 'elfeed-playlist--mode-line 'risky-local-variable t)
+
+(defun elfeed-playlist--mode-line-update (state)
+  "Update the mode-line indicator from STATE."
+  (let* ((total  (plist-get state :total))
+         (active (plist-get state :active))
+         (queued (length (plist-get state :queue)))
+         (done   (- total active queued)))
+    (setq elfeed-playlist--mode-line
+          (propertize (format " [♫ %d/%d]" done total)
+                      'help-echo (format "%d downloading, %d queued"
+                                         active queued)))
+    (force-mode-line-update t)))
+
+(defun elfeed-playlist--mode-line-clear ()
+  "Remove the mode-line indicator."
+  (setq elfeed-playlist--mode-line nil)
+  (force-mode-line-update t))
+
+;;;###autoload
+(define-minor-mode elfeed-playlist-mode-line-mode
+  "Show elfeed-playlist download progress in the mode line."
+  :global t
+  :lighter nil
+  (if elfeed-playlist-mode-line-mode
+      (unless (memq 'elfeed-playlist--mode-line global-mode-string)
+        (push 'elfeed-playlist--mode-line global-mode-string))
+    (setq global-mode-string
+          (delq 'elfeed-playlist--mode-line global-mode-string))
+    (elfeed-playlist--mode-line-clear)))
+
+;;; Destination helpers
+
+(defun elfeed-playlist--send-vlc (files)
+  "Upload FILES to VLC Wi-Fi sharing."
+  (let ((url (format "http://%s:%d/upload.json"
+                     elfeed-playlist-vlc-host
+                     elfeed-playlist-vlc-port)))
+    (dolist (f files)
+      (let ((buf (generate-new-buffer
+                  (format " *elfeed-playlist-vlc: %s*"
+                          (file-name-nondirectory f)))))
+        (start-process "elfeed-playlist-vlc" buf
+                       "curl" "-s" "-F"
+                       (format "files[]=@%s" f)
+                       url)))
+    (message "elfeed-playlist: uploading %d file(s) to VLC" (length files))))
+
+(defun elfeed-playlist--send-norns (files)
+  "Upload FILES to norns dust/audio/ via sftp in a date-stamped folder."
+  (let* ((folder (downcase (format-time-string "%b%d")))
+         (remote-dir (format "dust/audio/%s" folder))
+         (host elfeed-playlist-norns-host)
+         (user elfeed-playlist-norns-user)
+         (buf (generate-new-buffer " *elfeed-playlist-norns*"))
+         (cmds (concat (format "mkdir %s\n" remote-dir)
+                       (mapconcat (lambda (f)
+                                    (format "put %s %s/" f remote-dir))
+                                  files "\n")
+                       "\nbye\n")))
+    (with-current-buffer buf
+      (insert cmds))
+    (let ((proc (start-process "elfeed-playlist-norns" buf
+                               "sftp" "-b" "-"
+                               (format "%s@%s" user host))))
+      (set-process-query-on-exit-flag proc nil)
+      (process-send-string proc cmds)
+      (process-send-eof proc)
+      (set-process-sentinel
+       proc
+       (lambda (p _event)
+         (when (memq (process-status p) '(exit signal))
+           (if (zerop (process-exit-status p))
+               (message "elfeed-playlist: uploaded %d file(s) to norns:%s"
+                        (length files) remote-dir)
+             (message "elfeed-playlist: norns upload failed (exit %d) — see %s"
+                      (process-exit-status p)
+                      (buffer-name (process-buffer p)))))))))
+
+(defun elfeed-playlist--send-open-folder (files)
+  "Open the directory containing FILES in the system file manager."
+  (when files
+    (let ((dir (file-name-directory (car files))))
+      (if (fboundp 'browse-url-xdg-open)
+          (browse-url-xdg-open dir)
+        (browse-url (concat "file://" dir))))))
+
+;;; Core
+
+(defun elfeed-playlist--collect-urls ()
+  "Return a list of URLs from all entries in the current elfeed search."
+  (unless (derived-mode-p 'elfeed-search-mode)
+    (user-error "Not in an elfeed-search buffer"))
+  (cl-loop for entry in elfeed-search-entries
+           for link = (elfeed-entry-link entry)
+           when link collect link))
+
+(defun elfeed-playlist--download (urls callback)
+  "Download audio for URLS with yt-dlp, then call CALLBACK with the file list.
+Runs at most `elfeed-playlist-max-concurrent' downloads at a time."
+  (let* ((dir elfeed-playlist-download-dir)
+         (state (list :queue (copy-sequence urls)
+                      :active 0
+                      :total (length urls)
+                      :files nil
+                      :callback callback
+                      :dir dir)))
+    (make-directory dir t)
+    (message "elfeed-playlist: downloading %d entries..." (length urls))
+    (elfeed-playlist--mode-line-update state)
+    (elfeed-playlist--drain state)))
+
+(defun elfeed-playlist--drain (state)
+  "Start downloads from STATE's queue up to the concurrency limit."
+  (while (and (plist-get state :queue)
+              (< (plist-get state :active) elfeed-playlist-max-concurrent))
+    (let ((url (pop (plist-get state :queue))))
+      ;; Mutation: we popped from :queue above, but plist-put is needed
+      ;; only for :active since pop already modified the cons in place.
+      (plist-put state :active (1+ (plist-get state :active)))
+      (elfeed-playlist--start-one url state))))
+
+(defun elfeed-playlist--start-one (url state)
+  "Start a single yt-dlp download for URL, updating STATE on completion."
+  (let* ((dir (plist-get state :dir))
+         (args (append elfeed-playlist-ytdlp-args (list url)))
+         (buf (generate-new-buffer " *elfeed-playlist-dl*"))
+         (proc (with-current-buffer buf
+                 (setq default-directory dir)
+                 (apply #'start-process "elfeed-playlist-dl" buf
+                        "yt-dlp" args))))
+    (set-process-query-on-exit-flag proc nil)
+    (set-process-sentinel
+     proc
+     (lambda (p _event)
+       (when (memq (process-status p) '(exit signal))
+         (with-current-buffer (process-buffer p)
+           (goto-char (point-min))
+           (when (re-search-forward
+                  "\\[ExtractAudio\\] Destination: \\(.+\\)$" nil t)
+             (let ((file (expand-file-name (match-string 1) dir)))
+               (when (file-exists-p file)
+                 (plist-put state :files
+                            (cons file (plist-get state :files))))))
+           (goto-char (point-min))
+           (when (re-search-forward
+                  "\\[download\\] \\(.+\\) has already been downloaded" nil t)
+             (let ((file (expand-file-name (match-string 1) dir)))
+               (when (file-exists-p file)
+                 (plist-put state :files
+                            (cons file (plist-get state :files)))))))
+         (kill-buffer (process-buffer p))
+         (plist-put state :active (1- (plist-get state :active)))
+         (elfeed-playlist--mode-line-update state)
+         (let ((done (- (plist-get state :total)
+                        (plist-get state :active)
+                        (length (plist-get state :queue)))))
+           (message "elfeed-playlist: %d/%d done"
+                    done (plist-get state :total)))
+         (if (and (null (plist-get state :queue))
+                  (zerop (plist-get state :active)))
+             (let ((files (nreverse (plist-get state :files))))
+               (elfeed-playlist--mode-line-clear)
+               (message "elfeed-playlist: downloads complete (%d files)"
+                        (length files))
+               (funcall (plist-get state :callback) files))
+           (elfeed-playlist--drain state)))))))
+
+;;;###autoload
+(defun elfeed-playlist-download-and-send ()
+  "Download audio for all entries in the current elfeed search, then
+prompt for a destination."
+  (interactive)
+  (let ((urls (elfeed-playlist--collect-urls)))
+    (when (null urls)
+      (user-error "No entries in the current search"))
+    (elfeed-playlist--download
+     urls
+     (lambda (files)
+       (if (null files)
+           (message "elfeed-playlist: no files were downloaded")
+         (let* ((names (mapcar #'car elfeed-playlist-destinations))
+                (choice (completing-read
+                         (format "Send %d file(s) to: " (length files))
+                         names nil t))
+                (fn (alist-get choice elfeed-playlist-destinations
+                               nil nil #'string=)))
+           (funcall fn files)))))))
+#+end_src
+
 ** Gnus
 
 #+begin_src emacs-lisp :tangle ~/.emacs
@@ -2655,6 +2898,12 @@ If `DEVICE-NAME' is provided, it will be used instead of prompting the user."
 #+end_src
 
 #+begin_src emacs-lisp :tangle ~/.emacs
+(if (not im-at-work)
+    (use-package emacs-playlist
+      :straight (:host github :repo "noonker/emacs-playlist")))
+#+end_src
+
+#+begin_src emacs-lisp :tangle ~/.emacs
 (use-package norns
   :config
   (add-hook 'lua-mode-hook #'norns-mode-maybe-activate)
@@ -3363,6 +3612,7 @@ Load my RSS feeds
 ;; Initial States
 (evil-set-initial-state 'magit-status-mode 'emacs)
 (evil-set-initial-state 'kubel-mode 'emacs)
+(evil-set-initial-state 'emacs-playlist 'emacs)
 
 ;; Trying out leader
 (use-package which-key

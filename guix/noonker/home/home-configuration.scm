@@ -17,6 +17,7 @@
 	     (gnu home services xdg)
 	     (gnu home services desktop)
 	     (gnu home services sound)
+	     (gnu home services gnupg)
              (gnu home services shells)
 	     (guix packages)
 	     (guix build-system font)
@@ -249,6 +250,12 @@
 	      ("xdg-desktop-portal/portals.conf" ,(local-file (dotfile "guix/configs/portals.conf")))
 	      ("kitty/kitty.conf" ,(local-file (dotfile "guix/configs/kitty.conf")))
 	      ))
+   (service home-gpg-agent-service-type
+            (home-gpg-agent-configuration
+             (pinentry-program
+              (file-append (specification->package "pinentry") "/bin/pinentry"))
+             (default-cache-ttl 14400)
+             (max-cache-ttl 14400)))
    (service home-bash-service-type
             (home-bash-configuration
              (aliases '(("grep" . "grep --color=auto") ("ll" . "ls -l")
