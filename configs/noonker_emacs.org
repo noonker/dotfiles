@@ -2371,7 +2371,9 @@ These functions are helpers and should be self explanitory
 			   (("DuckDuckGo" "https://duckduckgo.com/" "Search")
 			    ("GitHub" "https://github.com" "GitHub Git Repo")))
 			  ("Social Media"
-			   (("InfoSecExchange" "https://infosec.exchange" "Mastodon"))
+			   (("InfoSecExchange" "https://infosec.exchange" "Mastodon")
+			    ("HackerNews" "https://news.ycombinator.com/" "hackernews")
+			    )
 			   )))
 
 (defun noonker/flatten-category (category)
