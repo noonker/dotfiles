@@ -1284,7 +1284,7 @@ list of downloaded file paths."
                         (length files) remote-dir)
              (message "elfeed-playlist: norns upload failed (exit %d) — see %s"
                       (process-exit-status p)
-                      (buffer-name (process-buffer p)))))))))
+                      (buffer-name (process-buffer p))))))))))
 
 (defun elfeed-playlist--send-open-folder (files)
   "Open the directory containing FILES in the system file manager."
