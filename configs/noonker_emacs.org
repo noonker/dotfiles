@@ -2395,8 +2395,39 @@ These functions are helpers and should be self explanitory
   (json-encode noonker/bookmarks))
 #+end_src
 
-#+RESULTS:
-: noonker/json-bookmarks
+#+begin_src emacs-lisp :tangle ~/.emacs
+(defun noonker/hex-encode-region (start end)
+  "Hex encode the region between START and END."
+  (interactive "r")
+  (let* ((text (buffer-substring-no-properties start end))
+         (hex (mapconcat (lambda (byte) (format "%02x" byte))
+                         (encode-coding-string text 'raw-text)
+                         "")))
+    (delete-region start end)
+    (insert hex)))
+
+(defun noonker/hex-decode-region (start end)
+  "Hex decode the region between START and END.
+E.g. 68656c6c6f -> hello"
+  (interactive "r")
+  (let* ((hex-string (buffer-substring-no-properties start end))
+         ;; Remove any whitespace/newlines
+         (hex-string (replace-regexp-in-string "[ \t\n\r]+" "" hex-string))
+         (len (length hex-string))
+         bytes)
+    (when (oddp len)
+      (error "Hex string has odd length"))
+    (when (string-match-p "[^0-9a-fA-F]" hex-string)
+      (error "Invalid hex characters in region"))
+    (setq bytes (apply #'unibyte-string
+                       (cl-loop for i from 0 below len by 2
+                                collect (string-to-number
+                                         (substring hex-string i (+ i 2))
+                                         16))))
+    (delete-region start end)
+    (insert (decode-coding-string bytes 'raw-text))))
+#+end_src
+
 
 * AI
 ** Gptel
@@ -3777,4 +3808,3 @@ Load my RSS feeds
 #+begin_src emacs-lisp :tangle ~/.emacs
 (server-start)
 #+end_src
-
