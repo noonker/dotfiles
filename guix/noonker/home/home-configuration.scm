@@ -112,7 +112,7 @@
 					   "clojure"
 					   "babashka"
 					   "coreutils"
-					   "openjdk"
+					   "openjdk:jdk"
 					   "clojure-tools"
 					   "remmina"
 					   "blender"
@@ -205,6 +205,7 @@
 					   "ollama-linux-amd64"
 
 					   "hydroxide"
+					   "lilypond"
 					   )))
 
 

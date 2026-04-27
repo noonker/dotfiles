@@ -1814,6 +1814,7 @@ Look for things like, but not limited to, syntax errors, logic errors, severe in
    (C . t)
    (org . t)
    (clojure . t)
+   (lilypond . t)
    (d2 . t)
    (sclang . t)
    (screen . t)
