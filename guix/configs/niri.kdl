@@ -1,0 +1,219 @@
+// Niri config — migrated from sway.conf
+
+// Autostart
+spawn-at-startup "dbus-update-activation-environment" "--all"
+spawn-at-startup "wlsunset" "-l" "44.4" "-L" "88.0"
+spawn-at-startup "mako" "--border-radius=2" "--font=JetBrains Mono 8" "--max-visible=5" "--outer-margin=5" "--margin=3" "--background=#1c1f26" "--border-color=#89AAEB" "--border-size=1" "--default-timeout=7000"
+spawn-at-startup "emacsclient" "-c"
+spawn-at-startup "wl-paste" "--watch" "cliphist" "store"
+spawn-at-startup "waybar"
+spawn-at-startup "xwayland-satellite"
+spawn-at-startup "swayidle" "-w" "timeout" "300" "niri msg action power-off-monitors" "resume" "niri msg action power-on-monitors"
+spawn-at-startup "sh" "-c" "shaderbg '*' ~/.config/shaders/background.frag"
+
+// Prefer server-side decorations so niri can draw its own borders
+prefer-no-csd
+
+// Input
+input {
+    keyboard {
+        xkb {
+            options "caps:ctrl_modifier"
+        }
+    }
+
+    touchpad {
+        tap
+        natural-scroll
+        dwt
+    }
+
+    mouse {
+        // accel-speed 0.0
+    }
+}
+
+// Appearance
+layout {
+    gaps 6
+
+    center-focused-column "never"
+
+    default-column-width {
+        proportion 0.5
+    }
+
+    focus-ring {
+        width 2
+        active-color "#3584e4"
+        inactive-color "#2d2d2d"
+    }
+
+    border {
+        off
+    }
+}
+
+// Cursor
+cursor {
+    xcursor-theme "Adwaita"
+    xcursor-size 68
+}
+
+// Screenshots
+screenshot-path "~/Pictures/screenshot-%Y%m%d-%H%M%S.png"
+
+// Environment
+environment {
+    DISPLAY ":0"
+}
+
+// Window rules
+window-rule {
+    // Make all windows slightly transparent when not focused (optional, remove if unwanted)
+    // opacity 0.95
+}
+
+window-rule {
+    match app-id="pavucontrol"
+    open-floating true
+}
+
+window-rule {
+    match app-id="nm-connection-editor"
+    open-floating true
+}
+
+window-rule {
+    match app-id="blueman-manager"
+    open-floating true
+}
+
+window-rule {
+    match app-id="gnome-calculator"
+    open-floating true
+}
+
+window-rule {
+    match title="File Operation Progress"
+    open-floating true
+}
+
+// Block out focused windows from screen capture
+window-rule {
+    match is-active=true
+    block-out-from "screen-capture"
+}
+
+// Key bindings
+binds {
+    // Basics
+    Mod+Q { close-window; }
+    Mod+Shift+E { quit; }
+    // Mod+Shift+C — no direct reload in niri; it picks up config changes automatically
+    Mod+Escape { spawn "swaylock" "-f" "-c" "333333"; }
+    Mod+Tab { spawn "rofi" "-show" "window"; }
+    Mod+Space { spawn "rofi" "-show" "drun"; }
+
+    // Terminal / Apps
+    Mod+Return { spawn "emacsclient" "-c"; }
+    Mod+Backslash { spawn "firefox"; }
+
+    // Password Store
+    Mod+P { spawn "rofi-pass"; }
+
+    // Cliphist
+    Mod+I { spawn "sh" "-c" "cliphist list | fuzzel --dmenu | cliphist decode | wl-copy"; }
+
+    // Bookmarks
+    Mod+B { spawn "sh" "-c" "~/bin/bookmark-search"; }
+
+    // Org capture
+    Mod+C { spawn "sh" "-c" "~/bin/org-today-capture"; }
+
+    // Focus (niri uses columns instead of left/right, and windows within column for up/down)
+    Mod+H { focus-column-left; }
+    Mod+J { focus-window-or-workspace-down; }
+    Mod+K { focus-window-or-workspace-up; }
+    Mod+L { focus-column-right; }
+
+    // Move windows
+    Mod+Shift+H { move-column-left; }
+    Mod+Shift+J { move-window-down-or-to-workspace-down; }
+    Mod+Shift+K { move-window-up-or-to-workspace-up; }
+    Mod+Shift+L { move-column-right; }
+
+    // Workspaces (niri workspaces are dynamic and vertical)
+    Mod+1 { focus-workspace 1; }
+    Mod+2 { focus-workspace 2; }
+    Mod+3 { focus-workspace 3; }
+    Mod+4 { focus-workspace 4; }
+    Mod+5 { focus-workspace 5; }
+    Mod+6 { focus-workspace 6; }
+    Mod+7 { focus-workspace 7; }
+    Mod+8 { focus-workspace 8; }
+    Mod+9 { focus-workspace 9; }
+
+    Mod+Shift+1 { move-column-to-workspace 1; }
+    Mod+Shift+2 { move-column-to-workspace 2; }
+    Mod+Shift+3 { move-column-to-workspace 3; }
+    Mod+Shift+4 { move-column-to-workspace 4; }
+    Mod+Shift+5 { move-column-to-workspace 5; }
+    Mod+Shift+6 { move-column-to-workspace 6; }
+    Mod+Shift+7 { move-column-to-workspace 7; }
+    Mod+Shift+8 { move-column-to-workspace 8; }
+    Mod+Shift+9 { move-column-to-workspace 9; }
+
+    // Layout
+    Mod+F { maximize-column; }
+    Mod+Shift+F { fullscreen-window; }
+    Mod+Shift+Space { toggle-window-floating; }
+
+    // Column width adjustments (niri's scrollable tiling model)
+    Mod+Minus { set-column-width "-10%"; }
+    Mod+Equal { set-column-width "+10%"; }
+    Mod+Shift+Minus { set-window-height "-10%"; }
+    Mod+Shift+Equal { set-window-height "+10%"; }
+
+    // Consume/expel: move a window into/out of a column (niri's equivalent of splits)
+    Mod+Comma { consume-window-into-column; }
+    Mod+Period { expel-window-from-column; }
+
+    // Center / presets
+    Mod+S { center-column; }
+    Mod+W { switch-preset-column-width; }
+    Mod+Shift+W { switch-preset-window-height; }
+
+    // Quick navigation
+    Mod+Grave { focus-workspace-previous; }
+    Mod+Home { focus-column-first; }
+    Mod+End { focus-column-last; }
+
+    // Tabbed columns
+    Mod+T { toggle-column-tabbed-display; }
+
+    // Overview
+    Mod+O { toggle-overview; }
+
+    // Monitors
+    Mod+Shift+O { power-off-monitors; }
+
+    // Screenshots
+    Print { screenshot; }
+    Shift+Print { screenshot-screen; }
+    Mod+Print { screenshot; }
+
+    // Media keys
+    XF86AudioRaiseVolume allow-when-locked=true { spawn "wpctl" "set-volume" "@DEFAULT_AUDIO_SINK@" "5%+"; }
+    XF86AudioLowerVolume allow-when-locked=true { spawn "wpctl" "set-volume" "@DEFAULT_AUDIO_SINK@" "5%-"; }
+    XF86AudioMute allow-when-locked=true { spawn "wpctl" "set-mute" "@DEFAULT_AUDIO_SINK@" "toggle"; }
+    XF86AudioMicMute allow-when-locked=true { spawn "wpctl" "set-mute" "@DEFAULT_AUDIO_SOURCE@" "toggle"; }
+    XF86MonBrightnessUp allow-when-locked=true { spawn "brightnessctl" "set" "+5%"; }
+    XF86MonBrightnessDown allow-when-locked=true { spawn "brightnessctl" "set" "5%-"; }
+    XF86AudioPlay { spawn "playerctl" "play-pause"; }
+    XF86AudioNext { spawn "playerctl" "next"; }
+    XF86AudioPrev { spawn "playerctl" "previous"; }
+
+    // Switch between keyboard layouts (if configured)
+    // Mod+Shift+Space { switch-layout "next"; }
+}

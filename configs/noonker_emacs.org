@@ -2429,7 +2429,6 @@ E.g. 68656c6c6f -> hello"
     (insert (decode-coding-string bytes 'raw-text))))
 #+end_src
 
-
 * AI
 ** Gptel
 #+begin_src emacs-lisp :tangle ~/.emacs

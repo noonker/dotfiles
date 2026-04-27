@@ -117,7 +117,7 @@
 			 (greetd-agreety-session
 			  (command
 			   (greetd-user-session
-			    (command (file-append sway "/bin/sway"))
+			    (command (file-append niri "/bin/niri-session"))
 			    (command-args '())
 			    (xdg-session-type "wayland"))))))))))
 	  (service screen-locker-service-type
@@ -126,6 +126,8 @@
                    (program (file-append swaylock "/bin/swaylock"))
                    (using-pam? #t)
                    (using-setuid? #f)))
+	  (extra-special-file "/etc/ssl/certs/xk-lan-ca.crt"
+			     (local-file "/home/person/git/dotfiles/guix/configs/xk-lan-ca.crt"))
 	  (udev-rules-service 'bladerf %bladerf-udev-rule)
 	  (udev-rules-service 'monome %monome-udev-rule)
 	  (udev-hardware-service 'capslock %capslock-hwdb-udev-rule) 

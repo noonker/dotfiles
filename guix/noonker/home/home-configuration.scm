@@ -11,17 +11,17 @@
 	     (noonker home ollama)
 	     (noonker home hydroxide)
 	     (noonker home git-repos)
-             (gnu packages)
-             (gnu services)
+	     (gnu packages)
+	     (gnu services)
 	     (gnu home services)
 	     (gnu home services xdg)
 	     (gnu home services desktop)
 	     (gnu home services sound)
 	     (gnu home services gnupg)
-             (gnu home services shells)
+	     (gnu home services shells)
 	     (guix packages)
 	     (guix build-system font)
-             (guix gexp)
+	     (guix gexp)
 	     ;; For ~/bin helper
 	     (ice-9 ftw)
 	     (ice-9 regex)
@@ -63,150 +63,161 @@
 (home-environment
  ;; Below is the list of packages that will show up in your
  ;; Home profile, under ~/.guix-home/profile.
- (packages (specifications->packages (list "7zip"
-					   "unzip"
-					   "kicad"
-					   "texlive-scheme-full"
-					   "inkscape"
-                                           "radare2"
-                                           "python"
-					   "python-wrapper"
-                                           "curl"
-					   "bluez"
-                                           "rsync"
-                                           "the-silver-searcher"
-					   "brightnessctl"
-                                           "passt"
-                                           "podman-compose"
-                                           "podman"
-                                           "slirp4netns"
-                                           "distrobox"
-                                           "gcc-toolchain"
-                                           ;; "cairo"
-                                           "poppler"
-                                           "node"
-                                           "clang"
-                                           "perl"
-                                           "libtool"
-                                           "pkg-config"
-                                           "qemu"
-                                           "automake"
-                                           "autoconf"
-                                           "cmake"
-                                           "make"
-                                           "openssh"
-                                           "git"
-					   "mpv"
-					   "imagemagick"
-                                           "nss-certs"
-                                           "kubectl"
-                                           "font-jetbrains-mono"
-                                           "pinentry"
-					   "gnuradio"
-                                           "file"
-                                           "gnome-tweaks"
-                                           "password-store"
-                                           "flatpak"
-					   "emacs-pgtk"
-                                           "signal-desktop"
-					   "clojure"
-					   "babashka"
-					   "coreutils"
-					   "openjdk:jdk"
-					   "clojure-tools"
-					   "remmina"
-					   "blender"
-					   "supercollider"
-					   "carla"
-					   "wine64"
-					   "direnv"
-					   "screen"
-					   "bind:utils"
-					   "alsa-utils"
-					   "qpwgraph"
-					   ;; "lua"
-					   ;; Guile Hacking
-					   "guile"
-					   "emacs-geiser"
-					   "emacs-geiser-guile"
+ (packages (specifications->packages (list
+					;; Niri / Wayland
+					"brightnessctl"
+					"cliphist"
+					"grim"
+					"kitty"
+					"mako"
+					"network-manager-applet"
+					"niri"
+					"rofi"
+					"rofi-pass"
+					"slurp"
+					"swayidle"
+					"swaylock"
+					"waybar"
+					"wl-clipboard"
+					"wlsunset"
+					"wtype"
+					"xwayland-satellite"
 
-					   ;; Cli
-					   "tmux"
+					;; CLI
+					"7zip"
+					"coreutils"
+					"curl"
+					"direnv"
+					"file"
+					"htop"
+					"jq"
+					"rsync"
+					"s-tui"
+					"screen"
+					"the-silver-searcher"
+					"tmux"
+					"unzip"
+					"vim"
 
-					   ;; Radio
-					   "gnuradio"
+					;; Build tools
+					"autoconf"
+					"automake"
+					"clang"
+					"cmake"
+					"gcc-toolchain"
+					"libtool"
+					"make"
+					"pkg-config"
 
-					   ;; Needed to build gr-bladeRF
-					   "spdlog"
-					   "gmp"
-					   "boost"
-					   "volk"
-					   "pybind11"
-					   "gr-osmosdr"
-					   "mako"
-					   "glib:bin"
-					   "yabridgectl"
+					;; Programming
+					"git"
+					"node"
+					"perl"
+					"python"
+					"python-wrapper"
 
-					   ;; VPN
-					   "proton-vpn-cli"
+					;; Clojure
+					"babashka"
+					"clojure"
+					"clojure-tools"
+					"openjdk:jdk"
 
-					   ;; Sway
-					   "sway"
-					   "shaderbg"
-					   "swayidle"
-					   "swaylock"
-					   "grim"
-					   "mako"
-					   "rofi"
-					   "kitty"
-					   "htop"
-					   "s-tui"
-					   "grimshot"
-					   "waybar"
-					   "cliphist"
-					   "grim"
-					   "rofi-pass"
-					   "slurp"
-					   "wtype"
-					   "pwgen"
-					   "pass-otp"
-					   "wl-clipboard"
-					   "network-manager-applet"
-					   "jq"
-					   "wlsunset"
-					   "vim"
+					;; Guile
+					"emacs-geiser"
+					"emacs-geiser-guile"
+					"guile"
 
-					   ;; Browser
-					   "icecat"
-					   
-					   ;; Compatibility for older Xorg applications
-					   "xorg-server-xwayland"
+					;; Emacs
+					"emacs-pgtk"
 
-					   ;; Flatpak and XDG utilities
-					   "xdg-utils" ;; For xdg-open, etc
-					   "xdg-dbus-proxy"
-					   "shared-mime-info"
+					;; Radio / SDR
+					"gnuradio"
+					"gr-osmosdr"
+					;; Needed to build gr-bladeRF
+					"boost"
+					"glib:bin"
+					"gmp"
+					"pybind11"
+					"spdlog"
+					"volk"
 
-					   ;; Appearance
-					   "gnome-themes-extra"
-					   "adwaita-icon-theme"
+					;; Audio
+					"alsa-utils"
+					"carla"
+					"qpwgraph"
+					"supercollider"
+					"yabridgectl"
 
-					   ;; Fonts
-					   "font-jetbrains-mono"
-					   "font-liberation"
-					   "font-awesome"
+					;; Media
+					"imagemagick"
+					"mpv"
 
-					   ;; Screen Share
-					   "xdg-desktop-portal-wlr"
-					   "xdg-desktop-portal-gtk"
-					   "xdg-desktop-portal"
+					;; Creative
+					"blender"
+					"inkscape"
+					"kicad"
+					"lilypond"
+					"texlive-scheme-full"
 
-					   ;; Ollama
-					   "ollama-linux-amd64"
+					;; Networking
+					"bind:utils"
+					"bluez"
+					"nss-certs"
+					"openssh"
 
-					   "hydroxide"
-					   "lilypond"
-					   )))
+					;; Containers
+					"distrobox"
+					"passt"
+					"podman"
+					"podman-compose"
+					"slirp4netns"
+
+					;; Security / Passwords
+					"pass-otp"
+					"password-store"
+					"pinentry"
+					"pwgen"
+					"radare2"
+
+					;; Fonts
+					"font-awesome"
+					"font-jetbrains-mono"
+					"font-liberation"
+
+					;; Appearance
+					"adwaita-icon-theme"
+					"gnome-themes-extra"
+					"gnome-tweaks"
+
+					;; Flatpak / XDG
+					"flatpak"
+					"poppler"
+					"shared-mime-info"
+					"xdg-dbus-proxy"
+					"xdg-desktop-portal"
+					"xdg-desktop-portal-gnome"
+					"xdg-desktop-portal-gtk"
+					"xdg-utils"
+
+					;; Browser
+					"icecat"
+
+					;; Communication
+					"signal-desktop"
+
+					;; VPN
+					"proton-vpn-cli"
+
+					;; Services
+					"hydroxide"
+					"ollama-linux-amd64"
+
+					;; Virtualization
+					"kubectl"
+					"qemu"
+					"remmina"
+					"wine64"
+					)))
 
 
  ;; Below is the list of Home services.  To search for available
@@ -230,6 +241,8 @@
                    home-files-service-type
                    (list
                     `(".tmux.conf"  ,(local-file (dotfile "guix/configs/tmux.conf")))
+                    `(".local/share/ca-certificates/xk-lan-ca.crt"
+                      ,(local-file (dotfile "guix/configs/xk-lan-ca.crt")))
                     ))
    (service home-git-repos-service-type
          (home-git-repos-configuration
@@ -239,7 +252,7 @@
                    ))))
    (service home-xdg-configuration-files-service-type
             `(
-	      ("sway/config" ,(local-file (dotfile "guix/configs/sway.conf")))
+	      ("niri/config.kdl" ,(local-file (dotfile "guix/configs/niri.kdl")))
 	      ("rofi/config.rasi" ,(local-file (dotfile "guix/configs/config.rasi")))
 	      ("rofi-pass/config" ,(local-file (dotfile "guix/configs/rofi-pass.conf")))
 	      ("waybar/config" ,(local-file (dotfile "guix/configs/waybar.conf")))
@@ -267,9 +280,8 @@
 				      ("ALTERNATE_EDITOR" . "vim")
 				      ("PATH" . "$PATH:$HOME/.local/bin")
 				      ("XCURSOR_SIZE" . "24")
-				      ("XDG_CURRENT_DESKTOP" . "sway")
+				      ("XDG_CURRENT_DESKTOP" . "niri")
 				      ("XDG_SESSION_TYPE" . "wayland")
-				      ;; ("XDG_DESKTOP_PORTAL_DIR" . "$HOME/.guix-home/profile/share/xdg-desktop-portal/portals")
 				      ))
              (bashrc (list (local-file
                             "/home/person/git/dotfiles/guix/noonker/home/.bashrc"
@@ -278,4 +290,3 @@
                                   "/home/person/git/dotfiles/guix/noonker/home/.bash_profile"
                                   "bash_profile")))))
    )))
-
