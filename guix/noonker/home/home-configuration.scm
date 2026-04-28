@@ -162,7 +162,6 @@
 					;; Networking
 					"bind:utils"
 					"bluez"
-					"nss-certs"
 					"openssh"
 
 					;; Containers
