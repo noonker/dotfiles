@@ -283,7 +283,7 @@ Leuven Theme and Comic Mono
       (set-face-attribute 'default nil :font "Comic Code" :height 100))
 
   (if im-at-work
-      (set-face-attribute 'default nil :font "JetBrains Mono" :height 160))
+      (set-face-attribute 'default nil :font "JetBrains Mono" :height 180))
       )
     )
  )
@@ -683,6 +683,20 @@ export PYTHONPATH=%s
       (shell-command (format "black %s" (shell-quote-argument (buffer-file-name))))
       (with-current-buffer buf
         (revert-buffer t t t)))))
+
+
+(defun noonker/maybe-create-python-venv ()
+  "Automatically create a UV venv if the project contains .py files but no .venv."
+  (when (and buffer-file-name
+             (projectile-project-p)
+             (string-suffix-p ".py" buffer-file-name)
+             (not (file-directory-p
+                   (expand-file-name ".venv" (projectile-project-root))))
+             (executable-find "uv"))
+    (message "Python project without venv detected, creating UV environment...")
+    (noonker/create-python-project-environment)))
+
+(add-hook 'python-mode-hook #'noonker/maybe-create-python-venv)
 
 (add-hook 'python-mode-hook
           (lambda ()
@@ -1547,20 +1561,31 @@ Look for things like, but not limited to, syntax errors, logic errors, severe in
 %s
 ")
 
+(defvar noonker/code-review-allowed-domains '("xk.is")
+  "List of git remote domains where automatic code review is enabled.")
+
+(defun noonker/code-review-domain-allowed-p ()
+  "Return non-nil if the current repo's remote is in the allowed domains list."
+  (let ((remote-url (or (magit-get "remote" "origin" "url") "")))
+    (cl-some (lambda (domain)
+               (string-match-p (regexp-quote domain) remote-url))
+             noonker/code-review-allowed-domains)))
+
 (defun noonker/llm-review-changes ()
-  "Review staged git changes with LLM."
+  "Review staged git changes with LLM, only for allowed domains."
   (interactive)
-  (message "Begin code review....")
-  (let ((diff (shell-command-to-string "git diff HEAD^ HEAD")))
-    (when (> (length diff) 0)
-      (gptel-request
-       (format code-review-prompt diff)
-       :callback (lambda (response info)
-                   (with-current-buffer (get-buffer-create "*Code Review*")
-                     (erase-buffer)
-                     (insert response)
-		     (org-mode)
-                     (display-buffer (current-buffer))))))))
+  (when (noonker/code-review-domain-allowed-p)
+    (message "Begin code review....")
+    (let ((diff (shell-command-to-string "git diff HEAD^ HEAD")))
+      (when (> (length diff) 0)
+        (gptel-request
+         (format code-review-prompt diff)
+         :callback (lambda (response info)
+                     (with-current-buffer (get-buffer-create "*Code Review*")
+                       (erase-buffer)
+                       (insert response)
+                       (org-mode)
+                       (display-buffer (current-buffer)))))))))
 
 (add-hook 'git-commit-post-finish-hook #'noonker/llm-review-changes)
 #+end_src
@@ -1715,8 +1740,8 @@ Look for things like, but not limited to, syntax errors, logic errors, severe in
 (setq org-clock-out-remove-zero-time-clocks nil)
 (setq org-startup-indented t) ;; Indent content of blocks to visual indent
 (setq org-edit-src-content-indentation 0)
-(eval-after-load 'org
-  (add-hook 'org-babel-after-execute-hook 'org-redisplay-inline-images))
+;;(eval-after-load 'org
+;;  (add-hook 'org-babel-after-execute-hook 'org-redisplay-inline-images))
 (setq org-startup-with-inline-images t)
 
 (use-package hl-todo)
@@ -2016,12 +2041,14 @@ Supports: t (Today→Tasks), n (Now + clock-in), b (Backlog→Backlog)."
   ;;         a hookable mode anymore, you're advised to pick something yourself
   ;;         if you don't care about startup time, use
   ;;  :hook (after-init . org-roam-ui-mode)
+  :straight (:host github :repo "noonker/org-roam-ui")
   :config
   (setq org-roam-ui-sync-theme t
 	org-roam-ui-follow t
 	org-roam-ui-update-on-save t
 	org-roam-ui-open-on-start t
 	)
+
  (org-roam-db-autosync-mode) ;; Automatically update the org roam database 
   )
 #+end_src
@@ -2394,6 +2421,15 @@ These functions are helpers and should be self explanitory
 (defun noonker/json-bookmarks ()
   (interactive)
   (json-encode noonker/bookmarks))
+
+(defun noonker/copy-file-path ()
+  "Copy the full path of the current buffer's file."
+  (interactive)
+  (if buffer-file-name
+      (progn
+        (kill-new buffer-file-name)
+        (message "Copied: %s" buffer-file-name))
+    (message "Buffer is not visiting a file")))
 #+end_src
 
 #+begin_src emacs-lisp :tangle ~/.emacs
@@ -2908,7 +2944,7 @@ If `DEVICE-NAME' is provided, it will be used instead of prompting the user."
 #+end_src
 
 ** Agent-Shell
-#+begin_src emacs-lisp 
+#+begin_src emacs-lisp :tangle ~/.emacs 
 (use-package agent-shell
     :ensure t
     :ensure-system-package
