@@ -1588,6 +1588,8 @@ Look for things like, but not limited to, syntax errors, logic errors, severe in
                        (display-buffer (current-buffer)))))))))
 
 (add-hook 'git-commit-post-finish-hook #'noonker/llm-review-changes)
+
+(setq git-commit-post-finish-hook '())
 #+end_src
 
 ** Counsel
@@ -2969,7 +2971,13 @@ If `DEVICE-NAME' is provided, it will be used instead of prompting the user."
 #+begin_src emacs-lisp :tangle ~/.emacs
 (if (not im-at-work)
     (use-package emacs-playlist
-      :straight (:host github :repo "noonker/emacs-playlist")))
+      :straight (:host github :repo "noonker/emacs-playlist")
+      :custom
+      (emacs-playlist-source 'jellyfin)
+      (emacs-playlist-jellyfin-host "http://jellyfin.xk.is")
+      (emacs-playlist-jellyfin-api-key (password-store-get "Home/JellyfinAPI"))
+      (emacs-playlist-norns-host "norns.local")
+      ))
 #+end_src
 
 #+begin_src emacs-lisp :tangle ~/.emacs
@@ -2989,7 +2997,6 @@ If `DEVICE-NAME' is provided, it will be used instead of prompting the user."
          :map norns-sc-repl-mode-map
          ("C-." . norns-sc-stop))
   )
-
 
 (setq norns-host "norns.local")
 #+end_src
@@ -3308,7 +3315,6 @@ Load my RSS feeds
 	("https://www.youtube.com/feeds/videos.xml?channel_id=UCvBqzzvUBLCs8Y7Axb-jZew" sixety-symbols youtube)
 	("https://www.youtube.com/feeds/videos.xml?channel_id=UCGaVdbSav8xWuFWTadK6loA" vlogbrothers youtube)
 	("https://www.youtube.com/feeds/videos.xml?channel_id=UCy-AwzC0US6T_DALeiqnLHQ" yan-z youtube music)
-	("https://www.youtube.com/feeds/videos.xml?channel_id=UC4eYXhJI4-7wSWc8UNRwD4A" tiny-desk youtube  music)
 	("https://www.youtube.com/feeds/videos.xml?channel_id=UCdBnxYbzwu5CypEdMfu4_jA" leeya-katrina youtube music )
 	("https://www.youtube.com/feeds/videos.xml?channel_id=UCzIlUODCqKo7Og_OIp66x9g" lucy-riddett youtube music)
 	("https://www.youtube.com/feeds/videos.xml?channel_id=UCaB0Vx7zrGJRrOQb42bI99g" milan youtube  music)
@@ -3400,6 +3406,8 @@ Load my RSS feeds
 	("https://www.npr.org/rss/podcast.php?id=510019" all-songs-considered podcast)
 	("https://feeds.megaphone.fm/darknetdiaries" darknet-diaries podcast)
 	("https://feeds.simplecast.com/dxZsm5kX" pod-save-america podcast)
+	("https://feeds.simplecast.com/Sl5CSM3S" the-daily podcast)
+	("https://feeds.npr.org/510318/podcast.xml" up-first podcast)
 	))
 #+end_src
 

@@ -131,6 +131,15 @@ binds {
     // Org capture
     Mod+C { spawn "sh" "-c" "~/bin/org-today-capture"; }
 
+    // Media: lowercase = play from Jellyfin, Shift = add via *arr.
+    // M = music (Lidarr), V = video/movies (Radarr), N = TV (Sonarr).
+    Mod+M       { spawn "sh" "-c" "~/bin/rofi-jellyfin music"; }
+    Mod+Shift+M { spawn "sh" "-c" "~/bin/rofi-lidarr"; }
+    Mod+V       { spawn "sh" "-c" "~/bin/rofi-jellyfin movie"; }
+    Mod+Shift+V { spawn "sh" "-c" "~/bin/rofi-radarr"; }
+    Mod+N       { spawn "sh" "-c" "~/bin/rofi-jellyfin tv"; }
+    Mod+Shift+N { spawn "sh" "-c" "~/bin/rofi-sonarr"; }
+
     // Focus (niri uses columns instead of left/right, and windows within column for up/down)
     Mod+H { focus-column-left; }
     Mod+J { focus-window-or-workspace-down; }

@@ -18,6 +18,7 @@
   #:use-module (gnu services desktop)
   #:use-module (gnu system accounts)
   #:use-module (gnu system setuid)
+  #:use-module (guix gexp)
   #:use-module (guix records)
   #:use-module (noonker services boltd)
   #:use-module (noonker services podman)
@@ -28,7 +29,7 @@
    #:use-module (nongnu system linux-initrd)
 )
 
-(use-service-modules cups desktop networking ssh xorg avahi)
+(use-service-modules cups dbus desktop networking ssh xorg avahi)
 
 (define %bladerf-udev-rule
   (udev-rule
@@ -47,6 +48,24 @@
    (string-append "SUBSYSTEM==\"tty\", ATTRS{idVendor}==\"cafe\", MODE=\"0666\"")
    )
   )
+
+;; Allow members of the netdev group to manage NetworkManager without
+;; a polkit authentication prompt — needed because niri does not run a
+;; polkit authentication agent, so otherwise nmtui/nmcli silently fail
+;; to apply changes.
+(define %netdev-nm-polkit-rules
+  (file-union
+   "netdev-nm-polkit-rules"
+   `(("share/polkit-1/rules.d/40-netdev-nm.rules"
+      ,(plain-file
+        "40-netdev-nm.rules"
+        "polkit.addRule(function(action, subject) {
+    if (action.id.indexOf(\"org.freedesktop.NetworkManager.\") == 0 &&
+        subject.isInGroup(\"netdev\")) {
+        return polkit.Result.YES;
+    }
+});
+")))))
 
 (operating-system 
   (locale "en_US.utf8")
@@ -128,13 +147,27 @@
                    (using-setuid? #f)))
 	  (udev-rules-service 'bladerf %bladerf-udev-rule)
 	  (udev-rules-service 'monome %monome-udev-rule)
-	  (udev-hardware-service 'capslock %capslock-hwdb-udev-rule) 
+	  (udev-hardware-service 'capslock %capslock-hwdb-udev-rule)
+	  (simple-service 'netdev-nm-polkit
+			  polkit-service-type
+			  (list %netdev-nm-polkit-rules))
 	  audio-realtime-service
           podman-iptables
+	  (extra-special-file "/etc/ssl/certs/xk-lan-ca.pem"
+			      (local-file "../../configs/xk-lan-ca.crt"))
            ;; This is the default list of services we
            ;; are appending to.
 	  (modify-services %desktop-services
-		 (delete gdm-service-type))))
+		 (delete gdm-service-type)
+		 (guix-service-type config =>
+		   (guix-configuration
+		    (inherit config)
+		    (substitute-urls
+		     (cons "http://guix.xk.is"
+			   %default-substitute-urls))
+		    (authorized-keys
+		     (cons (local-file "../../configs/xk-substitutes.pub")
+			   %default-authorized-guix-keys)))))))
   (bootloader (bootloader-configuration
                 (bootloader grub-efi-bootloader)
                 (targets (list "/boot/efi"))

@@ -1,0 +1,114 @@
+#!/usr/bin/env bash
+# Search Jellyfin and stream the result via $ROFI_MEDIA_PLAYER.
+#
+# Usage: rofi-jellyfin [music|movie|tv|all]
+#
+# Env:
+#   ROFI_JELLYFIN_URL       (default: http://localhost:8096)
+#   ROFI_JELLYFIN_API_KEY   (optional; falls back to `pass show Home/JellyfinAPI`)
+#   ROFI_JELLYFIN_USER_ID   (optional; auto-detected from /Users)
+#   ROFI_MEDIA_PLAYER       (default: mpv)
+set -euo pipefail
+
+URL="${ROFI_JELLYFIN_URL:-http://localhost:8096}"
+KEY="${ROFI_JELLYFIN_API_KEY:-$(pass show Home/JellyfinAPI 2>/dev/null || true)}"
+PLAYER="${ROFI_MEDIA_PLAYER:-mpv}"
+KIND="${1:-all}"
+
+err() { notify-send "rofi-jellyfin" "$1" 2>/dev/null || echo "$1" >&2; }
+
+[ -n "$KEY" ] || { err "no API key (set ROFI_JELLYFIN_API_KEY or run: pass insert Home/JellyfinAPI)"; exit 1; }
+
+api() { curl -fsS --connect-timeout 5 --max-time 15 -H "X-Emby-Token: $KEY" "$@"; }
+
+case "$KIND" in
+  music) types="MusicAlbum,Audio";          prompt="Jellyfin music" ;;
+  movie) types="Movie";                      prompt="Jellyfin movies" ;;
+  tv)    types="Series";                     prompt="Jellyfin tv" ;;
+  all|*) types="Movie,Series,MusicAlbum,Audio"; prompt="Jellyfin" ;;
+esac
+
+UID_J="${ROFI_JELLYFIN_USER_ID:-}"
+[ -n "$UID_J" ] || UID_J=$(api "$URL/Users" | jq -r '.[0].Id')
+[ -n "$UID_J" ] && [ "$UID_J" != "null" ] || { err "could not resolve user id"; exit 1; }
+
+stream_url() {
+  # Use Download for byte-exact transfer; mpv handles both video & audio.
+  printf '%s/Items/%s/Download?api_key=%s' "$URL" "$1" "$KEY"
+}
+
+play() {
+  # shellcheck disable=SC2068
+  $PLAYER $@ &
+  disown || true
+}
+
+pick() {
+  # $1 = list with "label\tID\tType" lines; $2 = prompt
+  printf '%s\n' "$1" | rofi -dmenu -i -matching fuzzy -p "$2" \
+    -display-columns 1 -display-column-separator '\t' || true
+}
+
+format_items() {
+  jq -r '.Items[] |
+    if .Type == "Episode" then
+      "[Ep] \(.SeriesName // "?") S\(.ParentIndexNumber // 0 | tostring | if length < 2 then "0" + . else . end)E\(.IndexNumber // 0 | tostring | if length < 2 then "0" + . else . end) — \(.Name)\t\(.Id)\t\(.Type)"
+    elif .Type == "Audio" then
+      "[Track] \(.AlbumArtist // .Artists[0]? // "?") — \(.Album // "?") — \(.Name)\t\(.Id)\t\(.Type)"
+    elif .Type == "MusicAlbum" then
+      "[Album] \(.AlbumArtist // .Artists[0]? // "?") — \(.Name)\t\(.Id)\t\(.Type)"
+    elif .Type == "Series" then
+      "[Show] \(.Name) (\(.ProductionYear // "?"))\t\(.Id)\t\(.Type)"
+    else
+      "[\(.Type)] \(.Name) (\(.ProductionYear // "?"))\t\(.Id)\t\(.Type)"
+    end'
+}
+
+query=$(rofi -dmenu -p "$prompt" </dev/null || true)
+[ -n "$query" ] || exit 0
+
+items=$(api -G \
+  --data-urlencode "searchTerm=$query" \
+  --data-urlencode "IncludeItemTypes=$types" \
+  --data-urlencode "Recursive=true" \
+  --data-urlencode "Limit=50" \
+  "$URL/Users/$UID_J/Items") || { err "search failed"; exit 1; }
+
+choices=$(echo "$items" | format_items)
+[ -n "$choices" ] || { err "no results"; exit 0; }
+
+picked=$(pick "$choices" "$prompt")
+[ -n "$picked" ] || exit 0
+
+id=$(printf '%s' "$picked"   | awk -F'\t' '{print $2}')
+type=$(printf '%s' "$picked" | awk -F'\t' '{print $3}')
+
+case "$type" in
+  Series)
+    eps=$(api -G \
+      --data-urlencode "UserId=$UID_J" \
+      "$URL/Shows/$id/Episodes") || { err "episode list failed"; exit 1; }
+    ep_choices=$(echo "$eps" | format_items)
+    [ -n "$ep_choices" ] || { err "no episodes"; exit 0; }
+    ep_pick=$(pick "$ep_choices" "Episode")
+    [ -n "$ep_pick" ] || exit 0
+    ep_id=$(printf '%s' "$ep_pick" | awk -F'\t' '{print $2}')
+    play "$(stream_url "$ep_id")"
+    ;;
+  MusicAlbum)
+    tracks=$(api -G \
+      --data-urlencode "ParentId=$id" \
+      --data-urlencode "SortBy=ParentIndexNumber,IndexNumber" \
+      --data-urlencode "Recursive=true" \
+      --data-urlencode "IncludeItemTypes=Audio" \
+      "$URL/Users/$UID_J/Items") || { err "track list failed"; exit 1; }
+    urls=$(echo "$tracks" | jq -r --arg url "$URL" --arg key "$KEY" \
+      '.Items[] | "\($url)/Items/\(.Id)/Download?api_key=\($key)"')
+    [ -n "$urls" ] || { err "no tracks"; exit 0; }
+    mapfile -t arr <<< "$urls"
+    play "${arr[@]}"
+    ;;
+  *)
+    play "$(stream_url "$id")"
+    ;;
+esac

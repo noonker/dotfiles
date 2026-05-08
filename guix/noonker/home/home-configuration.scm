@@ -11,6 +11,7 @@
 	     (noonker home ollama)
 	     (noonker home hydroxide)
 	     (noonker home git-repos)
+	     (noonker packages wine)
 	     (gnu packages)
 	     (gnu services)
 	     (gnu home services)
@@ -25,6 +26,7 @@
 	     ;; For ~/bin helper
 	     (ice-9 ftw)
 	     (ice-9 regex)
+	     (srfi srfi-1)
 	     )
 
 (define pipewire-config
@@ -43,6 +45,9 @@
     (description "Comic Code monospace font.")
     (home-page "")
     (license #f)))
+
+(define wine-packages
+  (list wine-9.21-staging wine64-9.21-staging))
 
 (define %dotfiles-dir "/home/person/git/dotfiles/")
 
@@ -63,7 +68,8 @@
 (home-environment
  ;; Below is the list of packages that will show up in your
  ;; Home profile, under ~/.guix-home/profile.
- (packages (specifications->packages (list
+ (packages
+		  (specifications->packages (list
 					;; Niri / Wayland
 					"brightnessctl"
 					"cliphist"
@@ -146,7 +152,10 @@
 					"carla"
 					"qpwgraph"
 					"supercollider"
-					"yabridgectl"
+					"winetricks"
+					;;"wine64"
+					;;"yabridge"
+					;;"yabridgectl"
 
 					;; Media
 					"imagemagick"
@@ -199,6 +208,7 @@
 					"xdg-utils"
 
 					;; Browser
+					"firefox"
 					"icecat"
 
 					;; Communication
@@ -215,7 +225,6 @@
 					"kubectl"
 					"qemu"
 					"remmina"
-					"wine64"
 					)))
 
 
@@ -228,6 +237,20 @@
    emacs-daemon-service
    ollama-daemon-service
    hydroxide-daemon-service
+   (simple-service 'yabridge-setup
+                   home-activation-service-type
+                   #~(begin
+                       ;; Register VST directories
+                       (for-each
+                        (lambda (dir)
+                          (when (file-exists? dir)
+                            (system* "yabridgectl" "add" dir)))
+                        '("/home/person/.wine/drive_c/Program Files/Common Files/VST3"
+                          "/home/person/.wine/drive_c/Program Files/Common Files/VST2"
+                          "/home/person/.wine/drive_c/Program Files/Steinberg/VstPlugins"
+                          "/home/person/.wine/drive_c/Program Files/Common Files/CLAP"
+                          "/home/person/.wine/drive_c/Program Files/VSTPlugins"))
+                       (system* "yabridgectl" "sync")))
    (simple-service 'my-font-packages
                    home-profile-service-type
                    (list my-comic-code-font))
@@ -249,6 +272,14 @@
           (repos '(("dotfiles"  . "git@github.com:noonker/dotfiles.git")
                    ("hunting-mode"   . "git@github.com:noonker/hunting-mode.git")
                    ))))
+   (service home-xdg-mime-applications-service-type
+            (home-xdg-mime-applications-configuration
+             (default '((x-scheme-handler/http . firefox.desktop)
+                        (x-scheme-handler/https . firefox.desktop)
+                        (x-scheme-handler/about . firefox.desktop)
+                        (x-scheme-handler/unknown . firefox.desktop)
+                        (text/html . firefox.desktop)
+                        (application/xhtml+xml . firefox.desktop)))))
    (service home-xdg-configuration-files-service-type
             `(
 	      ("niri/config.kdl" ,(local-file (dotfile "guix/configs/niri.kdl")))
@@ -269,19 +300,28 @@
               (file-append (specification->package "pinentry") "/bin/pinentry"))
              (default-cache-ttl 14400)
              (max-cache-ttl 14400)))
+   ;; Written to ~/.profile so they're picked up by the graphical
+   ;; session (Niri via the DM) and non-login shells, not just
+   ;; bash login shells.
+   (simple-service 'my-env-vars
+                   home-environment-variables-service-type
+                   '(("EDITOR" . "emacsclient -c")
+                     ("VISUAL" . "emacsclient -c")
+                     ("ALTERNATE_EDITOR" . "vim")
+                     ("XCURSOR_SIZE" . "24")
+                     ("XDG_CURRENT_DESKTOP" . "niri")
+                     ("XDG_SESSION_TYPE" . "wayland")
+                     ;; rofi-{lidarr,radarr,sonarr,jellyfin}.
+                     ;; API keys live outside git in ~/.bashrc.
+                     ("ROFI_LIDARR_URL"   . "https://lidarr.xk.is")
+                     ("ROFI_RADARR_URL"   . "https://radarr.xk.is")
+                     ("ROFI_SONARR_URL"   . "https://sonarr.xk.is")
+                     ("ROFI_JELLYFIN_URL" . "http://jellyfin.xk.is")
+                     ("ROFI_MEDIA_PLAYER" . "mpv")))
    (service home-bash-service-type
             (home-bash-configuration
              (aliases '(("grep" . "grep --color=auto") ("ll" . "ls -l")
                         ("ls" . "ls -p --color=auto")))
-	     (environment-variables '(
-				      ("EDITOR" . "emacsclient -c")
-				      ("VISUAL" . "emacsclient -c")
-				      ("ALTERNATE_EDITOR" . "vim")
-				      ("PATH" . "$PATH:$HOME/.local/bin")
-				      ("XCURSOR_SIZE" . "24")
-				      ("XDG_CURRENT_DESKTOP" . "niri")
-				      ("XDG_SESSION_TYPE" . "wayland")
-				      ))
              (bashrc (list (local-file
                             "/home/person/git/dotfiles/guix/noonker/home/.bashrc"
                             "bashrc")))

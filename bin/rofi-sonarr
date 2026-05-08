@@ -1,0 +1,56 @@
+#!/usr/bin/env bash
+# Search Sonarr and add a TV series.
+#
+# Env:
+#   ROFI_SONARR_URL      (default: http://localhost:8989)
+#   ROFI_SONARR_API_KEY  (optional; falls back to `pass show Home/SonarrAPI`)
+set -euo pipefail
+
+URL="${ROFI_SONARR_URL:-http://localhost:8989}"
+KEY="${ROFI_SONARR_API_KEY:-$(pass show Home/SonarrAPI 2>/dev/null || true)}"
+
+err() { notify-send "rofi-sonarr" "$1" 2>/dev/null || echo "$1" >&2; }
+
+[ -n "$KEY" ] || { err "no API key (set ROFI_SONARR_API_KEY or run: pass insert Home/SonarrAPI)"; exit 1; }
+
+api() { curl -fsSk -H "X-Api-Key: $KEY" "$@"; }
+
+query=$(rofi -dmenu -p "Sonarr search" </dev/null || true)
+[ -n "$query" ] || exit 0
+
+results=$(api -G --data-urlencode "term=$query" "$URL/api/v3/series/lookup") \
+  || { err "lookup failed"; exit 1; }
+
+choices=$(echo "$results" | jq -r '
+  to_entries[] |
+  "\(.value.title) (\(.value.year // "?"))\t\(.key)"')
+
+[ -n "$choices" ] || { err "no results"; exit 0; }
+
+picked=$(printf '%s\n' "$choices" | rofi -dmenu -i -matching fuzzy -p "Add" \
+  -display-columns 1 -display-column-separator '\t' || true)
+[ -n "$picked" ] || exit 0
+
+idx=$(printf '%s' "$picked" | awk -F'\t' '{print $NF}')
+
+qpid=$(api "$URL/api/v3/qualityprofile" | jq '.[0].id')
+root=$(api "$URL/api/v3/rootfolder" | jq -r '.[0].path')
+
+payload=$(echo "$results" | jq --argjson i "$idx" --argjson q "$qpid" --arg r "$root" '
+  .[$i] + {
+    qualityProfileId: $q,
+    rootFolderPath: $r,
+    monitored: true,
+    seasonFolder: true,
+    addOptions: {
+      monitor: "all",
+      searchForMissingEpisodes: true,
+      searchForCutoffUnmetEpisodes: false
+    }
+  }')
+
+resp=$(curl -fsSk -X POST -H "X-Api-Key: $KEY" -H "Content-Type: application/json" \
+  -d "$payload" "$URL/api/v3/series") \
+  || { err "add failed: $(echo "$payload" | jq -r '.title')"; exit 1; }
+
+err "Added: $(echo "$resp" | jq -r '.title')"

@@ -1,0 +1,146 @@
+#!/usr/bin/env bash
+#
+# push-yt-cookies - Export YouTube cookies from Firefox and push them as a
+# Kubernetes Secret to every namespace that needs them.
+#
+# YouTube rotates cookies aggressively. Run this whenever yt-dlp starts
+# erroring with "Sign in to confirm you're not a bot" or "The provided
+# YouTube account cookies are no longer valid".
+#
+# Usage:
+#   push-yt-cookies [namespace ...]         export cookies and push the Secret
+#   push-yt-cookies login [namespace ...]   open Firefox to refresh the login,
+#                                           then push after the window closes
+#
+# With no namespace args, pushes to: stream-grabber, ytdl-sub.
+#
+# Cookies are pulled from a dedicated Firefox profile named "ytdlp" so that
+# day-to-day browsing in the default profile cannot trigger the server-side
+# cookie rotation that invalidates the exported set. Only this script should
+# touch that profile — never browse YouTube in it interactively.
+#
+# Use `login` for first-time setup or whenever YouTube has rotated the
+# session out and yt-dlp starts erroring on auth.
+
+set -euo pipefail
+
+LOGIN_MODE=0
+if [[ ${1:-} == "login" ]]; then
+  LOGIN_MODE=1
+  shift
+fi
+
+NAMESPACES=("$@")
+if [[ ${#NAMESPACES[@]} -eq 0 ]]; then
+  NAMESPACES=(stream-grabber ytdl-sub)
+fi
+
+SECRET_NAME=yt-dlp-cookies
+FIREFOX_PROFILE=ytdlp
+FIREFOX_DIR="$HOME/.mozilla/firefox"
+PROFILES_INI="$FIREFOX_DIR/profiles.ini"
+TMP=$(mktemp -d)
+trap 'rm -rf "$TMP"' EXIT
+COOKIES="$TMP/cookies.txt"
+
+find_profile_path() {
+  awk -v name="$FIREFOX_PROFILE" '
+    /^\[Profile/ {in_p=1; n=""; p=""; next}
+    /^\[/ {in_p=0; next}
+    in_p && /^Name=/ {n=substr($0,6)}
+    in_p && /^Path=/ {p=substr($0,6)}
+    in_p && n==name && p {print p; exit}
+  ' "$PROFILES_INI" 2>/dev/null
+}
+
+profile_path=$(find_profile_path || true)
+
+if [[ -z "$profile_path" ]]; then
+  echo "Firefox profile '$FIREFOX_PROFILE' not found. Creating it..."
+  firefox -CreateProfile "$FIREFOX_PROFILE $FIREFOX_DIR/$FIREFOX_PROFILE" >/dev/null 2>&1
+  profile_path=$(find_profile_path)
+fi
+
+# Resolve to absolute path (profiles.ini paths are relative to ~/.mozilla/firefox).
+[[ "$profile_path" = /* ]] || profile_path="$FIREFOX_DIR/$profile_path"
+
+if (( LOGIN_MODE )); then
+  echo "[login] Opening Firefox profile '$FIREFOX_PROFILE'."
+  echo "        Log in to YouTube, then close the window to continue."
+  firefox -P "$FIREFOX_PROFILE" -no-remote >/dev/null 2>&1 || true
+fi
+
+if [[ ! -f "$profile_path/cookies.sqlite" ]]; then
+  cat <<EOF >&2
+ERROR: $profile_path/cookies.sqlite does not exist — the profile has never
+been opened. Run:
+
+  push-yt-cookies login
+
+to open Firefox, log in to YouTube, then push the Secret.
+EOF
+  exit 2
+fi
+
+echo "[1/3] Exporting cookies from Firefox profile '$FIREFOX_PROFILE'..."
+# Read cookies.sqlite directly. yt-dlp's --cookies-from-browser also extracts
+# from this file, but it does so as a side effect of resolving a URL — and
+# https://www.youtube.com/ on a logged-in account expands to the homepage
+# feed and runs format selection across every shelf item. Going to SQLite
+# directly is faster and has no side effects.
+python3 - "$profile_path/cookies.sqlite" "$COOKIES" <<'PY'
+import sqlite3, sys
+src, dst = sys.argv[1], sys.argv[2]
+# mode=ro+immutable so we don't fight Firefox for a lock and can't corrupt it.
+uri = f"file:{src}?mode=ro&immutable=1"
+with sqlite3.connect(uri, uri=True) as conn, open(dst, "w") as f:
+    f.write("# Netscape HTTP Cookie File\n")
+    f.write("# https://curl.se/docs/http-cookies.html\n")
+    f.write("# This is a generated file. Do not edit.\n\n")
+    rows = conn.execute(
+        "SELECT host, path, isSecure, expiry, name, value, isHttpOnly "
+        "FROM moz_cookies"
+    )
+    for host, path, secure, expiry, name, value, http_only in rows:
+        prefix = "#HttpOnly_" if http_only else ""
+        flag = "TRUE" if host.startswith(".") else "FALSE"
+        sec = "TRUE" if secure else "FALSE"
+        f.write(f"{prefix}{host}\t{flag}\t{path}\t{sec}\t{expiry}\t{name}\t{value}\n")
+PY
+
+if [[ ! -s "$COOKIES" ]]; then
+  echo "ERROR: cookies export is empty." >&2
+  exit 1
+fi
+
+# Sanity check: the export should contain a youtube.com session cookie.
+if ! grep -qE '^\.?youtube\.com\s' "$COOKIES"; then
+  echo "ERROR: no youtube.com cookies in export. Are you logged in to YouTube in Firefox?" >&2
+  exit 1
+fi
+
+echo "      $(grep -cE '^\.?youtube\.com\s' "$COOKIES") youtube.com cookies exported"
+
+ARCHIVE="$HOME/Documents/cookies.txt"
+install -m 600 "$COOKIES" "$ARCHIVE"
+echo "      archived to $ARCHIVE"
+
+echo "[2/3] Pushing Secret/$SECRET_NAME to: ${NAMESPACES[*]}"
+for ns in "${NAMESPACES[@]}"; do
+  kubectl -n "$ns" create secret generic "$SECRET_NAME" \
+    --from-file=cookies.txt="$COOKIES" \
+    --dry-run=client -o yaml \
+    | kubectl apply -f - >/dev/null
+  echo "      $ns ✓"
+done
+
+echo "[3/3] Restarting consumers..."
+# stream-grabber runs as a long-lived Deployment that reads the Secret only
+# at pod start, so it needs a restart. ytdl-sub is a CronJob — the next run
+# (or any manually-kicked Job) will pick up the new Secret automatically.
+if kubectl -n stream-grabber get deploy stream-grabber >/dev/null 2>&1; then
+  kubectl -n stream-grabber rollout restart deployment/stream-grabber >/dev/null
+  echo "      stream-grabber deployment restarted"
+fi
+
+echo "Done."
