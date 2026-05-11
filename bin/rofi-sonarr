@@ -1,19 +1,24 @@
 #!/usr/bin/env bash
 # Search Sonarr and add a TV series.
 #
-# Env:
-#   ROFI_SONARR_URL      (default: http://localhost:8989)
-#   ROFI_SONARR_API_KEY  (optional; falls back to `pass show Home/SonarrAPI`)
+# Reads from `pass show Home/SonarrAPI`:
+#   line 1: API key
+#   url:    base URL
+# Env overrides: ROFI_SONARR_URL, ROFI_SONARR_API_KEY
 set -euo pipefail
 
-URL="${ROFI_SONARR_URL:-http://localhost:8989}"
-KEY="${ROFI_SONARR_API_KEY:-$(pass show Home/SonarrAPI 2>/dev/null || true)}"
+PASS_DATA="$(pass show Home/SonarrAPI 2>/dev/null || true)"
+pass_field() { printf '%s\n' "$PASS_DATA" | awk -v k="^$1:" 'tolower($0) ~ tolower(k) { sub(/^[^:]+:[[:space:]]*/, ""); print; exit }'; }
+
+KEY="${ROFI_SONARR_API_KEY:-$(printf '%s\n' "$PASS_DATA" | head -n1)}"
+URL="${ROFI_SONARR_URL:-$(pass_field url)}"
+URL="${URL:-https://localhost:8989}"
 
 err() { notify-send "rofi-sonarr" "$1" 2>/dev/null || echo "$1" >&2; }
 
 [ -n "$KEY" ] || { err "no API key (set ROFI_SONARR_API_KEY or run: pass insert Home/SonarrAPI)"; exit 1; }
 
-api() { curl -fsSk -H "X-Api-Key: $KEY" "$@"; }
+api() { curl -fsS -H "X-Api-Key: $KEY" "$@"; }
 
 query=$(rofi -dmenu -p "Sonarr search" </dev/null || true)
 [ -n "$query" ] || exit 0
@@ -49,7 +54,7 @@ payload=$(echo "$results" | jq --argjson i "$idx" --argjson q "$qpid" --arg r "$
     }
   }')
 
-resp=$(curl -fsSk -X POST -H "X-Api-Key: $KEY" -H "Content-Type: application/json" \
+resp=$(curl -fsS -X POST -H "X-Api-Key: $KEY" -H "Content-Type: application/json" \
   -d "$payload" "$URL/api/v3/series") \
   || { err "add failed: $(echo "$payload" | jq -r '.title')"; exit 1; }
 

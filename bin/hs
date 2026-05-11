@@ -1,0 +1,68 @@
+#!/usr/bin/env bash
+#
+# hs - thin wrapper around the headscale CLI running in the home k8s cluster.
+#
+# Resolves user names → IDs (headscale 0.26+ requires numeric --user).
+# Pretty-prints by stripping the ANSI noise headscale emits over kubectl exec.
+# Unknown subcommands fall through to `headscale` directly.
+#
+# Examples:
+#   hs ls                            # list nodes
+#   hs users
+#   hs routes
+#   hs approve 1 192.168.50.0/24
+#   hs key infra                     # single-use, 1h
+#   hs key infra 24h
+#   hs reusable infra                # reusable, 1y
+#   hs rm 3                          # delete node 3
+#   hs raw apikeys list              # passthrough
+
+set -euo pipefail
+
+NS=headscale
+DEPLOY=deploy/headscale
+
+hs() { kubectl -n "$NS" exec -i "$DEPLOY" -- headscale "$@" | sed $'s/\x1b\\[[0-9;]*m//g'; }
+
+# Resolve a username to its numeric ID. Echoes ID, or exits non-zero.
+uid() {
+    local name="$1"
+    hs users list 2>/dev/null \
+        | awk -F'|' -v n="$name" 'NR>1 { gsub(/^ +| +$/,"",$3); gsub(/^ +| +$/,"",$1); if ($3==n) { print $1; found=1 } } END { exit !found }' \
+        || { echo "hs: no user named '$name'" >&2; exit 1; }
+}
+
+usage() {
+    sed -n '3,/^$/p' "$0" | sed 's/^# \?//'
+    exit "${1:-0}"
+}
+
+cmd="${1:-ls}"; shift || true
+
+case "$cmd" in
+    ls|nodes)
+        hs nodes list ;;
+    users)
+        hs users list ;;
+    routes)
+        hs nodes list-routes ;;
+    approve)
+        [[ $# -eq 2 ]] || { echo "usage: hs approve <node-id> <cidr>" >&2; exit 2; }
+        hs nodes approve-routes --identifier "$1" --routes "$2" ;;
+    key)
+        user="${1:-infra}"; dur="${2:-1h}"
+        hs preauthkeys create --user "$(uid "$user")" --expiration "$dur" | tail -n1 ;;
+    reusable)
+        user="${1:-infra}"
+        hs preauthkeys create --user "$(uid "$user")" --reusable --expiration 8760h | tail -n1 ;;
+    rm|delete)
+        [[ $# -eq 1 ]] || { echo "usage: hs rm <node-id>" >&2; exit 2; }
+        hs nodes delete --identifier "$1" --force ;;
+    raw)
+        hs "$@" ;;
+    -h|--help|help)
+        usage ;;
+    *)
+        echo "hs: unknown subcommand '$cmd'" >&2
+        usage 2 ;;
+esac

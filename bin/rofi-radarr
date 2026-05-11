@@ -1,19 +1,24 @@
 #!/usr/bin/env bash
 # Search Radarr and add a movie.
 #
-# Env:
-#   ROFI_RADARR_URL      (default: http://localhost:7878)
-#   ROFI_RADARR_API_KEY  (optional; falls back to `pass show Home/RadarrAPI`)
+# Reads from `pass show Home/RadarrAPI`:
+#   line 1: API key
+#   url:    base URL
+# Env overrides: ROFI_RADARR_URL, ROFI_RADARR_API_KEY
 set -euo pipefail
 
-URL="${ROFI_RADARR_URL:-http://localhost:7878}"
-KEY="${ROFI_RADARR_API_KEY:-$(pass show Home/RadarrAPI 2>/dev/null || true)}"
+PASS_DATA="$(pass show Home/RadarrAPI 2>/dev/null || true)"
+pass_field() { printf '%s\n' "$PASS_DATA" | awk -v k="^$1:" 'tolower($0) ~ tolower(k) { sub(/^[^:]+:[[:space:]]*/, ""); print; exit }'; }
+
+KEY="${ROFI_RADARR_API_KEY:-$(printf '%s\n' "$PASS_DATA" | head -n1)}"
+URL="${ROFI_RADARR_URL:-$(pass_field url)}"
+URL="${URL:-https://localhost:7878}"
 
 err() { notify-send "rofi-radarr" "$1" 2>/dev/null || echo "$1" >&2; }
 
 [ -n "$KEY" ] || { err "no API key (set ROFI_RADARR_API_KEY or run: pass insert Home/RadarrAPI)"; exit 1; }
 
-api() { curl -fsSk -H "X-Api-Key: $KEY" "$@"; }
+api() { curl -fsS -H "X-Api-Key: $KEY" "$@"; }
 
 query=$(rofi -dmenu -p "Radarr search" </dev/null || true)
 [ -n "$query" ] || exit 0
@@ -48,7 +53,7 @@ payload=$(echo "$results" | jq --argjson i "$idx" --argjson q "$qpid" --arg r "$
     }
   }')
 
-resp=$(curl -fsSk -X POST -H "X-Api-Key: $KEY" -H "Content-Type: application/json" \
+resp=$(curl -fsS -X POST -H "X-Api-Key: $KEY" -H "Content-Type: application/json" \
   -d "$payload" "$URL/api/v3/movie") \
   || { err "add failed: $(echo "$payload" | jq -r '.title')"; exit 1; }
 

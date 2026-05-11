@@ -1,19 +1,24 @@
 #!/usr/bin/env bash
 # Search Lidarr and add an album (auto-adding the artist if needed).
 #
-# Env:
-#   ROFI_LIDARR_URL      (default: http://localhost:8686)
-#   ROFI_LIDARR_API_KEY  (optional; falls back to `pass show Home/LidarrAPI`)
+# Reads from `pass show Home/LidarrAPI`:
+#   line 1: API key
+#   url:    base URL
+# Env overrides: ROFI_LIDARR_URL, ROFI_LIDARR_API_KEY
 set -euo pipefail
 
-URL="${ROFI_LIDARR_URL:-http://localhost:8686}"
-KEY="${ROFI_LIDARR_API_KEY:-$(pass show Home/LidarrAPI 2>/dev/null || true)}"
+PASS_DATA="$(pass show Home/LidarrAPI 2>/dev/null || true)"
+pass_field() { printf '%s\n' "$PASS_DATA" | awk -v k="^$1:" 'tolower($0) ~ tolower(k) { sub(/^[^:]+:[[:space:]]*/, ""); print; exit }'; }
+
+KEY="${ROFI_LIDARR_API_KEY:-$(printf '%s\n' "$PASS_DATA" | head -n1)}"
+URL="${ROFI_LIDARR_URL:-$(pass_field url)}"
+URL="${URL:-https://localhost:8686}"
 
 err() { notify-send "rofi-lidarr" "$1" 2>/dev/null || echo "$1" >&2; }
 
 [ -n "$KEY" ] || { err "no API key (set ROFI_LIDARR_API_KEY or run: pass insert Home/LidarrAPI)"; exit 1; }
 
-api() { curl -fsSk -H "X-Api-Key: $KEY" "$@"; }
+api() { curl -fsS -H "X-Api-Key: $KEY" "$@"; }
 
 query=$(rofi -dmenu -p "Lidarr search" </dev/null || true)
 [ -n "$query" ] || exit 0
@@ -55,7 +60,7 @@ payload=$(echo "$results" | jq --argjson i "$idx" \
     })
   }')
 
-resp=$(curl -fsSk -X POST -H "X-Api-Key: $KEY" -H "Content-Type: application/json" \
+resp=$(curl -fsS -X POST -H "X-Api-Key: $KEY" -H "Content-Type: application/json" \
   -d "$payload" "$URL/api/v1/album") \
   || { err "add failed"; exit 1; }
 

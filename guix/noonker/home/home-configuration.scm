@@ -263,8 +263,6 @@
                    home-files-service-type
                    (list
                     `(".tmux.conf"  ,(local-file (dotfile "guix/configs/tmux.conf")))
-                    `(".local/share/ca-certificates/xk-lan-ca.crt"
-                      ,(local-file (dotfile "guix/configs/xk-lan-ca.crt")))
                     ))
    (service home-git-repos-service-type
          (home-git-repos-configuration
@@ -311,12 +309,6 @@
                      ("XCURSOR_SIZE" . "24")
                      ("XDG_CURRENT_DESKTOP" . "niri")
                      ("XDG_SESSION_TYPE" . "wayland")
-                     ;; rofi-{lidarr,radarr,sonarr,jellyfin}.
-                     ;; API keys live outside git in ~/.bashrc.
-                     ("ROFI_LIDARR_URL"   . "https://lidarr.xk.is")
-                     ("ROFI_RADARR_URL"   . "https://radarr.xk.is")
-                     ("ROFI_SONARR_URL"   . "https://sonarr.xk.is")
-                     ("ROFI_JELLYFIN_URL" . "http://jellyfin.xk.is")
                      ("ROFI_MEDIA_PLAYER" . "mpv")))
    (service home-bash-service-type
             (home-bash-configuration

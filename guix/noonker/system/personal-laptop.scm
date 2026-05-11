@@ -23,6 +23,7 @@
   #:use-module (noonker services boltd)
   #:use-module (noonker services podman)
   #:use-module (noonker services audio)
+  #:use-module (noonker packages tailscale)
 
   ;; Nongnu (shhh.....)
    #:use-module (nongnu packages linux)
@@ -76,7 +77,10 @@
   (kernel linux)
   (kernel-arguments
    (append
-    (list "quiet")
+    (list "quiet"
+          ;; Prevent the DVB-T driver from claiming RTL2832-based SDR
+          ;; dongles so op25 (and other SDR tools) can open them.
+          "modprobe.blacklist=dvb_usb_rtl28xxu,rtl2832,rtl2830,rtl2838")
     %default-kernel-arguments))
   (initrd microcode-initrd)
   (firmware (list linux-firmware))
@@ -103,8 +107,9 @@
   ;; under their own account: use 'guix search KEYWORD' to search
   ;; for packages and 'guix install PACKAGE' to install a package.
    (packages (append (list (specification->package "nss-certs"))
-		     (list bolt openssh bladerf cups
-			   system-config-printer)
+		     (list bolt openssh bladerf rtl-sdr airspy cups
+			   system-config-printer
+			   tailscale tailscaled)
 		     %base-packages))
 
   ;; Below is the list of system services.  To search for available
@@ -146,6 +151,8 @@
                    (using-pam? #t)
                    (using-setuid? #f)))
 	  (udev-rules-service 'bladerf %bladerf-udev-rule)
+	  (udev-rules-service 'rtl-sdr rtl-sdr)
+	  (udev-rules-service 'airspy airspy)
 	  (udev-rules-service 'monome %monome-udev-rule)
 	  (udev-hardware-service 'capslock %capslock-hwdb-udev-rule)
 	  (simple-service 'netdev-nm-polkit
@@ -153,8 +160,7 @@
 			  (list %netdev-nm-polkit-rules))
 	  audio-realtime-service
           podman-iptables
-	  (extra-special-file "/etc/ssl/certs/xk-lan-ca.pem"
-			      (local-file "../../configs/xk-lan-ca.crt"))
+	  (service tailscale-service-type)
            ;; This is the default list of services we
            ;; are appending to.
 	  (modify-services %desktop-services

@@ -9,6 +9,11 @@
     (openpgp-fingerprint
      "BBB0 2DDF 2CEA F6A8 0D1D  E643 A2A0 6DF2 A33A 54FA"))))
  (channel
+  (name 'tailscale)
+  (url "https://github.com/umanwizard/guix-tailscale")
+  (branch "main")
+  (commit "58bc8b05520b8565a3230e21388e97f00b886e4b"))
+ (channel
   (name 'ollama-guix)
   (url "https://codeberg.org/tusharhero/ollama-guix")) 
  (channel

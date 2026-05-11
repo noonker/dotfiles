@@ -3,15 +3,19 @@
 #
 # Usage: rofi-jellyfin [music|movie|tv|all]
 #
-# Env:
-#   ROFI_JELLYFIN_URL       (default: http://localhost:8096)
-#   ROFI_JELLYFIN_API_KEY   (optional; falls back to `pass show Home/JellyfinAPI`)
-#   ROFI_JELLYFIN_USER_ID   (optional; auto-detected from /Users)
-#   ROFI_MEDIA_PLAYER       (default: mpv)
+# Reads from `pass show Home/JellyfinAPI`:
+#   line 1: API key
+#   url:    base URL
+# Env overrides: ROFI_JELLYFIN_URL, ROFI_JELLYFIN_API_KEY,
+#                ROFI_JELLYFIN_USER_ID, ROFI_MEDIA_PLAYER
 set -euo pipefail
 
-URL="${ROFI_JELLYFIN_URL:-http://localhost:8096}"
-KEY="${ROFI_JELLYFIN_API_KEY:-$(pass show Home/JellyfinAPI 2>/dev/null || true)}"
+PASS_DATA="$(pass show Home/JellyfinAPI 2>/dev/null || true)"
+pass_field() { printf '%s\n' "$PASS_DATA" | awk -v k="^$1:" 'tolower($0) ~ tolower(k) { sub(/^[^:]+:[[:space:]]*/, ""); print; exit }'; }
+
+KEY="${ROFI_JELLYFIN_API_KEY:-$(printf '%s\n' "$PASS_DATA" | head -n1)}"
+URL="${ROFI_JELLYFIN_URL:-$(pass_field url)}"
+URL="${URL:-https://localhost:8096}"
 PLAYER="${ROFI_MEDIA_PLAYER:-mpv}"
 KIND="${1:-all}"
 
