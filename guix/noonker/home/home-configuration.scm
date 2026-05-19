@@ -309,6 +309,7 @@
                      ("XCURSOR_SIZE" . "24")
                      ("XDG_CURRENT_DESKTOP" . "niri")
                      ("XDG_SESSION_TYPE" . "wayland")
+		     ("MOZ_ENABLE_WAYLAND" . "0")
                      ("ROFI_MEDIA_PLAYER" . "mpv")))
    (service home-bash-service-type
             (home-bash-configuration

@@ -10,10 +10,10 @@
 #                ROFI_JELLYFIN_USER_ID, ROFI_MEDIA_PLAYER
 set -euo pipefail
 
-PASS_DATA="$(pass show Home/JellyfinAPI 2>/dev/null || true)"
+PASS_DATA="$(pass show Home/jellyfin 2>/dev/null || true)"
 pass_field() { printf '%s\n' "$PASS_DATA" | awk -v k="^$1:" 'tolower($0) ~ tolower(k) { sub(/^[^:]+:[[:space:]]*/, ""); print; exit }'; }
 
-KEY="${ROFI_JELLYFIN_API_KEY:-$(printf '%s\n' "$PASS_DATA" | head -n1)}"
+KEY="${ROFI_JELLYFIN_API_KEY:-$(pass_field apikey)}"
 URL="${ROFI_JELLYFIN_URL:-$(pass_field url)}"
 URL="${URL:-https://localhost:8096}"
 PLAYER="${ROFI_MEDIA_PLAYER:-mpv}"
