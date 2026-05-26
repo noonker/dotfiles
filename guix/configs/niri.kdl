@@ -2,6 +2,7 @@
 
 // Autostart
 spawn-at-startup "dbus-update-activation-environment" "--all"
+spawn-at-startup "sh" "-c" "$HOME/.guix-home/profile/libexec/polkit-gnome-authentication-agent-1"
 spawn-at-startup "wlsunset" "-l" "44.4" "-L" "88.0"
 spawn-at-startup "mako" "--border-radius=2" "--font=JetBrains Mono 8" "--max-visible=5" "--outer-margin=5" "--margin=3" "--background=#1c1f26" "--border-color=#89AAEB" "--border-size=1" "--default-timeout=7000"
 spawn-at-startup "emacsclient" "-c"
@@ -90,11 +91,6 @@ window-rule {
 }
 
 window-rule {
-    match app-id="gnome-calculator"
-    open-floating true
-}
-
-window-rule {
     match title="File Operation Progress"
     open-floating true
 }
@@ -123,7 +119,7 @@ binds {
     Mod+P { spawn "rofi-pass"; }
 
     // Cliphist
-    Mod+I { spawn "sh" "-c" "cliphist list | fuzzel --dmenu | cliphist decode | wl-copy"; }
+    Mod+I { spawn "sh" "-c" "cliphist list | rofi -dmenu | cliphist decode | wl-copy"; }
 
     // Bookmarks
     Mod+B { spawn "sh" "-c" "~/bin/bookmark-search"; }

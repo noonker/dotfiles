@@ -4,9 +4,23 @@
 # Export 'SHELL' to child processes.  Programs such as 'screen'
 # honor it and otherwise use /bin/sh.
 export SHELL
-# export SSL_CERT_DIR="$HOME/.guix-profile/etc/ssl/certs"
-# export SSL_CERT_FILE="$HOME/.guix-profile/etc/ssl/certs/ca-certificates.crt"
-# export GIT_SSL_CAINFO="$SSL_CERT_FILE" 
+
+# Guix exports SSL_CERT_FILE/CURL_CA_BUNDLE/etc. pointing into the store
+# (via nss-certs search paths). Inside a distrobox/toolbox /gnu/store isn't
+# mounted, so that path dangles and TLS (pip, curl, git) breaks. When the
+# Guix bundle is unreachable, fall back to the container's own bundle.
+# No-op on the host, where the path resolves.
+if [ -n "$SSL_CERT_FILE" ] && [ ! -e "$SSL_CERT_FILE" ]; then
+    for _b in /etc/ssl/certs/ca-certificates.crt /etc/pki/tls/certs/ca-bundle.crt; do
+        if [ -e "$_b" ]; then
+            export SSL_CERT_FILE="$_b" CURL_CA_BUNDLE="$_b" \
+                   GIT_SSL_CAINFO="$_b" REQUESTS_CA_BUNDLE="$_b"
+            export SSL_CERT_DIR=/etc/ssl/certs
+            break
+        fi
+    done
+    unset _b
+fi
 
 if [[ $- != *i* ]]
 then

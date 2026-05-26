@@ -3,3 +3,4 @@ josh.py
 josh.pyc
 *.pyc
 .aider*
+/.agent-shell/

@@ -427,6 +427,7 @@ Lispy mode makes lisp-mode editing significantly more efficent
 ** Eglot
 #+begin_src emacs-lisp :tangle ~/.emacs
 (use-package eglot
+  :straight (:host github :repo "joaotavora/eglot" )
   :ensure t
   :defer t
   :hook ((python-mode . eglot-ensure)
@@ -2955,6 +2956,11 @@ If `DEVICE-NAME' is provided, it will be used instead of prompting the user."
      (claude-agent-acp . "npm install -g @agentclientprotocol/claude-agent-acp")))
 
 (setq agent-shell-preferred-agent-config (agent-shell-anthropic-make-claude-code-config))
+
+(use-package agent-shell-monome
+  :straight (:host github
+	     :repo "noonker/agent-shell-monome"
+	     :files ("*.el")))
 #+end_src
 
 * Music
@@ -2972,12 +2978,17 @@ If `DEVICE-NAME' is provided, it will be used instead of prompting the user."
 (if (not im-at-work)
     (use-package emacs-playlist
       :straight (:host github :repo "noonker/emacs-playlist")
-      :custom
-      (emacs-playlist-source 'jellyfin)
-      (emacs-playlist-jellyfin-host "http://jellyfin.xk.is")
-      (emacs-playlist-jellyfin-api-key (password-store-get "Home/JellyfinAPI"))
-      (emacs-playlist-norns-host "norns.local")
-      ))
+      :commands (emacs-playlist-search
+                 emacs-playlist-toggle-source
+                 emacs-playlist-show-playlist)
+      :config
+      ;; Deferred to :config so these only run when emacs-playlist is first
+      ;; invoked — in particular `password-store-get' no longer prompts at
+      ;; Emacs startup, only on first use of the package.
+      (setq emacs-playlist-source 'jellyfin
+            emacs-playlist-jellyfin-host "http://jellyfin.xk.is"
+            emacs-playlist-jellyfin-api-key (password-store-get "Home/JellyfinAPI")
+            emacs-playlist-norns-host "norns.local")))
 #+end_src
 
 #+begin_src emacs-lisp :tangle ~/.emacs

@@ -12,6 +12,7 @@
 	     (noonker home hydroxide)
 	     (noonker home git-repos)
 	     (noonker packages wine)
+	     (noonker packages serialosc)
 	     (gnu packages)
 	     (gnu services)
 	     (gnu home services)
@@ -69,8 +70,11 @@
  ;; Below is the list of packages that will show up in your
  ;; Home profile, under ~/.guix-home/profile.
  (packages
-		  (specifications->packages (list
+  (append
+   (list serialosc)
+   (specifications->packages (list
 					;; Niri / Wayland
+					"blueman"
 					"brightnessctl"
 					"cliphist"
 					"grim"
@@ -78,6 +82,9 @@
 					"mako"
 					"network-manager-applet"
 					"niri"
+					"pavucontrol"
+					"playerctl"
+					"polkit-gnome"
 					"rofi"
 					"rofi-pass"
 					"slurp"
@@ -88,13 +95,16 @@
 					"wlsunset"
 					"wtype"
 					"xwayland-satellite"
+					"yad"
 
 					;; CLI
 					"7zip"
 					"coreutils"
 					"curl"
+					"daikichi"
 					"direnv"
 					"file"
+					"fortunes-jkirchartz"
 					"htop"
 					"jq"
 					"rsync"
@@ -150,6 +160,7 @@
 					;; Audio
 					"alsa-utils"
 					"carla"
+					"liblo"          ;oscsend, oscdump
 					"qpwgraph"
 					"supercollider"
 					"winetricks"
@@ -158,8 +169,10 @@
 					;;"yabridgectl"
 
 					;; Media
+					"ffmpeg"
 					"imagemagick"
 					"mpv"
+					"yt-dlp"
 
 					;; Creative
 					"blender"
@@ -225,7 +238,7 @@
 					"kubectl"
 					"qemu"
 					"remmina"
-					)))
+					))))
 
 
  ;; Below is the list of Home services.  To search for available
@@ -236,21 +249,7 @@
    (service home-dbus-service-type)
    emacs-daemon-service
    ollama-daemon-service
-   hydroxide-daemon-service
-   (simple-service 'yabridge-setup
-                   home-activation-service-type
-                   #~(begin
-                       ;; Register VST directories
-                       (for-each
-                        (lambda (dir)
-                          (when (file-exists? dir)
-                            (system* "yabridgectl" "add" dir)))
-                        '("/home/person/.wine/drive_c/Program Files/Common Files/VST3"
-                          "/home/person/.wine/drive_c/Program Files/Common Files/VST2"
-                          "/home/person/.wine/drive_c/Program Files/Steinberg/VstPlugins"
-                          "/home/person/.wine/drive_c/Program Files/Common Files/CLAP"
-                          "/home/person/.wine/drive_c/Program Files/VSTPlugins"))
-                       (system* "yabridgectl" "sync")))
+   hydroxide-daemon-service 
    (simple-service 'my-font-packages
                    home-profile-service-type
                    (list my-comic-code-font))
@@ -263,6 +262,7 @@
                    home-files-service-type
                    (list
                     `(".tmux.conf"  ,(local-file (dotfile "guix/configs/tmux.conf")))
+                    `(".npmrc"      ,(local-file (dotfile "guix/configs/npmrc")))
                     ))
    (service home-git-repos-service-type
          (home-git-repos-configuration
@@ -310,7 +310,8 @@
                      ("XDG_CURRENT_DESKTOP" . "niri")
                      ("XDG_SESSION_TYPE" . "wayland")
 		     ("MOZ_ENABLE_WAYLAND" . "0")
-                     ("ROFI_MEDIA_PLAYER" . "mpv")))
+                     ("ROFI_MEDIA_PLAYER" . "mpv")
+                     ("PATH" . "$HOME/.npm-global/bin:$PATH")))
    (service home-bash-service-type
             (home-bash-configuration
              (aliases '(("grep" . "grep --color=auto") ("ll" . "ls -l")
