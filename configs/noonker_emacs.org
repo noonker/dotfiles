@@ -946,7 +946,9 @@ INITIAL-INPUT can be given as the initial minibuffer input."
   ;; If you have use-package-hook-name-suffix set to nil, uncomment and use the
   ;; line below instead:
   ;; :hook (eshell-mode-hook . esh-autosuggest-mode)
-  :ensure t)
+  :ensure t
+  :config
+  (define-key esh-autosuggest-active-map (kbd "RET") #'eshell-send-input))
 
 (straight-use-package
  '(eat :type git
@@ -3701,6 +3703,8 @@ Load my RSS feeds
 ;; Initial States
 (evil-set-initial-state 'magit-status-mode 'emacs)
 (evil-set-initial-state 'kubel-mode 'emacs)
+(evil-set-initial-state 'eshell-mode 'emacs)
+(evil-set-initial-state 'agent-shell-mode 'emacs)
 (evil-set-initial-state 'emacs-playlist 'emacs)
 
 ;; Trying out leader
