@@ -52,6 +52,7 @@ Company is an autocomplete option framework for emacs
   (setq company-dabbrev-downcase 0)
   (setq company-idle-delay 0.38)
   (setq company-minimum-prefix-length 2)
+  (setq company-frontends '(company-preview-frontend))
 
   (defun complete-or-indent ()
     (interactive)
@@ -156,27 +157,6 @@ Company is an autocomplete option framework for emacs
 (global-set-key (kbd "C-2") #'switch-to-buffer)
 (global-set-key (kbd "C-3") #'yank-from-kill-ring)
 (global-set-key (kbd "C-4") #'bookmark-jump)
-
-(use-package corfu
-  ;; Optional customizations
-  ;; :custom
-  ;; (corfu-cycle t)                ;; Enable cycling for `corfu-next/previous'
-  ;; (corfu-quit-at-boundary nil)   ;; Never quit at completion boundary
-  ;; (corfu-quit-no-match nil)      ;; Never quit, even if there is no match
-  ;; (corfu-preview-current nil)    ;; Disable current candidate preview
-  ;; (corfu-preselect 'prompt)      ;; Preselect the prompt
-  ;; (corfu-on-exact-match nil)     ;; Configure handling of exact matches
-
-  ;; Enable Corfu only for certain modes. See also `global-corfu-modes'.
- ;; :hook ((prog-mode . corfu-mode)
-  ;;        (shell-mode . corfu-mode)
-  ;;        (eshell-mode . corfu-mode))
-
-  ;; Recommended: Enable Corfu globally.  This is recommended since Dabbrev can
-  ;; be used globally (M-/).  See also the customization variable
-  ;; `global-corfu-modes' to exclude certain modes.
-  :init
-  (global-corfu-mode))
 
 ;; A few more useful configurations...
 (use-package emacs
@@ -859,6 +839,7 @@ INITIAL-INPUT can be given as the initial minibuffer input."
 (add-hook 'eshell-mode-hook
           (lambda ()
             (progn
+	      (setq-local completion-category-overrides nil)
 	      (evil-local-set-key 'normal (kbd "gr") #'timmy/counsel-eshell-history)
 	      (evil-local-set-key 'insert (kbd "C-r") #'timmy/counsel-eshell-history))))
 
