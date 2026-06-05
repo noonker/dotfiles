@@ -3495,6 +3495,7 @@ Load my RSS feeds
 	("https://www.404media.co/rss" 404media tech security)
 	("https://feeds.feedburner.com/TheHackersNews" second skim thehackernews tech security)
 	("https://monome.org/rss.xml" monome tech)
+	("https://rss.arxiv.org/rss/cs" arxiv tech)
 	))
 #+end_src
 
