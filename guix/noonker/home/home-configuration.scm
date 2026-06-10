@@ -165,8 +165,32 @@
 					"supercollider"
 					"winetricks"
 					;;"wine64"
-					;;"yabridge"
-					;;"yabridgectl"
+					"yabridge"
+					"yabridgectl"
+
+					;; Runtime libs for foreign VST/LV2/CLAP
+					;; binaries (rpath'd in by ~/bin/patch-vsts)
+					"alsa-lib"
+					;;"cairo"
+					"dbus"
+					"fontconfig"
+					"freetype"
+					"gdk-pixbuf"
+					;;"glib"
+					"gtk+"
+					"libglvnd"
+					"libice"          ;Vital
+					"libsm"           ;Vital
+					"libx11"
+					"libxcb"
+					"libxcursor"
+					"libxext"
+					"libxinerama"
+					"libxkbcommon"
+					"libxrandr"
+					"mesa"
+					"pango"
+					"zlib"
 
 					;; Media
 					"ffmpeg"

@@ -1,0 +1,78 @@
+#!/usr/bin/env bash
+# Walk Linux plugin directories and rpath every .so at the home profile
+# so foreign prebuilt VSTs find libGL, libX11, etc. on Guix.
+#
+# Required libs are declared in home-configuration.scm.
+# Re-running is safe; the script skips .so files whose rpath already
+# includes the target.
+#
+# Usage:
+#   patch-vsts            # patch ~/.vst ~/.vst3 ~/.lv2 ~/.clap
+#   patch-vsts DIR ...    # patch specific directories
+#   patch-vsts --check    # report missing libs only, don't patch
+
+set -euo pipefail
+
+RPATH="$HOME/.guix-home/profile/lib"
+
+if [[ ! -d "$RPATH" ]]; then
+    echo "error: $RPATH does not exist — run 'make -C ~/git/dotfiles/guix home' first" >&2
+    exit 1
+fi
+
+check_only=0
+if [[ "${1:-}" == "--check" ]]; then
+    check_only=1
+    shift
+fi
+
+if [[ $# -gt 0 ]]; then
+    dirs=("$@")
+else
+    dirs=("$HOME/.vst" "$HOME/.vst3" "$HOME/.lv2" "$HOME/.clap")
+fi
+
+patched=0 skipped=0 failed=0 missing=0
+
+for dir in "${dirs[@]}"; do
+    [[ -d "$dir" ]] || continue
+    while IFS= read -r -d '' so; do
+        # Only ELF shared objects.
+        head -c4 "$so" | grep -q $'\x7fELF' || continue
+
+        if (( check_only )); then
+            if LD_LIBRARY_PATH="$RPATH" ldd "$so" 2>/dev/null | grep -q "not found"; then
+                echo "MISSING DEPS: $so"
+                LD_LIBRARY_PATH="$RPATH" ldd "$so" 2>/dev/null | grep "not found" | sed 's/^/  /'
+                ((++missing))
+            fi
+            continue
+        fi
+
+        existing="$(patchelf --print-rpath "$so" 2>/dev/null || true)"
+        if [[ ":$existing:" == *":$RPATH:"* ]]; then
+            ((++skipped))
+            continue
+        fi
+        new_rpath="$RPATH"
+        [[ -n "$existing" ]] && new_rpath="$existing:$RPATH"
+
+        if patchelf --set-rpath "$new_rpath" "$so" 2>/dev/null; then
+            echo "patched: $so"
+            ((++patched))
+        else
+            echo "FAILED:  $so" >&2
+            ((++failed))
+        fi
+    done < <(find "$dir" \
+        -type d -name yabridge -prune -o \
+        -type f \( -name '*.so' -o -name '*.so.*' -o -name '*.clap' \) -print0)
+done
+
+if (( check_only )); then
+    echo
+    echo "files with missing deps: $missing"
+else
+    echo
+    echo "patched: $patched   already done: $skipped   failed: $failed"
+fi
