@@ -380,6 +380,11 @@ Lispy mode makes lisp-mode editing significantly more efficent
   :config
   (evil-collection-init))
 
+;; Bugfix for transients that don't allow an enter press
+(with-eval-after-load 'transient
+  (keymap-set transient-base-map "<return>"
+              (keymap-lookup transient-base-map "RET")))
+
 (use-package evil-surround
   :ensure t
   :config
@@ -903,7 +908,7 @@ INITIAL-INPUT can be given as the initial minibuffer input."
 
 (setq eshell-visual-commands '("htop" "vi" "screen" "top" "less"
       			       "more" "lynx" "ncftp" "pine" "tin" "trn" "elm"
-      			       "vim" "mitmproxy" "aider" "r2" "ssh"))
+      			       "vim" "mitmproxy" "aider" "r2" "ssh" "uv" "claude"))
 
 (setq eshell-visual-subcommands '())
 (add-to-list 'eshell-visual-subcommands '("git" "log" "diff" "show"))
@@ -928,18 +933,7 @@ INITIAL-INPUT can be given as the initial minibuffer input."
   ;; line below instead:
   ;; :hook (eshell-mode-hook . esh-autosuggest-mode)
   :ensure t
-  :config
-  (define-key esh-autosuggest-active-map (kbd "RET") #'eshell-send-input))
-
-(straight-use-package
- '(eat :type git
-       :host codeberg
-       :repo "akib/emacs-eat"
-       :files ("*.el" ("term" "term/*.el") "*.texi"
-               "*.ti" ("terminfo/e" "terminfo/e/*")
-               ("terminfo/65" "terminfo/65/*")
-               ("integration" "integration/*")
-               (:exclude ".dir-locals.el" "*-tests.el"))))
+  )
 #+end_src
 
 ** Tramp
@@ -3683,11 +3677,9 @@ Load my RSS feeds
 
 #+begin_src emacs-lisp :tangle ~/.emacs
 ;; Initial States
-(evil-set-initial-state 'magit-status-mode 'emacs)
 (evil-set-initial-state 'kubel-mode 'emacs)
-(evil-set-initial-state 'eshell-mode 'emacs)
-(evil-set-initial-state 'agent-shell-mode 'emacs)
 (evil-set-initial-state 'emacs-playlist 'emacs)
+(evil-set-initial-state 'term-mode 'emacs)
 
 ;; Trying out leader
 (use-package which-key
