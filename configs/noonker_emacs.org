@@ -833,6 +833,9 @@ INITIAL-INPUT can be given as the initial minibuffer input."
     items))
 ;; end
 
+(evil-set-initial-state 'eshell-mode 'emacs)
+
+
 (use-package eshell-git-prompt)
 
 (use-package eshell
