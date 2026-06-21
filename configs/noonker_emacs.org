@@ -243,7 +243,7 @@ Leuven Theme and Comic Mono
 #+begin_src emacs-lisp :tangle ~/.emacs
 (use-package autothemer)
 
-(defvar how-ya-feeling 'burn-my-eyes)
+(defvar how-ya-feeling 'dark-tbh)
 
 (cond
  ((eq how-ya-feeling 'dark-tbh)

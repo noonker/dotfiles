@@ -1,0 +1,12 @@
+[Desktop Entry]
+Name=Carla (JACK multi-client)
+GenericName=Carla Plugin Host (JACK multi-client mode)
+Comment=Audio Plugin Host, in JACK multi-client mode
+Exec=pw-jack carla-jack-multi %u
+Icon=carla
+Terminal=false
+Type=Application
+Version=1.0
+NoDisplay=true
+X-NSM-Capable=true
+X-NSM-Exec=carla-jack-multi

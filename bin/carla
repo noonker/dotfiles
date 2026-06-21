@@ -1,0 +1,5 @@
+#!/bin/sh
+# Run Carla under PipeWire's JACK shim. Shadows the carla in the Guix
+# profile via PATH order ($HOME/bin first); execs the real binary by
+# absolute path so we don't loop.
+exec pw-jack "$HOME/.guix-home/profile/bin/carla" "$@"

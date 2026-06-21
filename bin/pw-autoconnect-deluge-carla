@@ -1,0 +1,36 @@
+#!/usr/bin/env bash
+# Keep Deluge MIDI 1 <-> Carla wired, and Carla audio-out to the default sink.
+# Re-runs on every PipeWire graph change; pw-link is a no-op if the link exists.
+set -u
+
+export PATH="$HOME/.guix-home/profile/bin:$PATH"
+
+SINK_FALLBACK="alsa_output.pci-0000_c1_00.6.analog-stereo"
+
+link() { pw-link "$1" "$2" >/dev/null 2>&1 || true; }
+
+default_sink() {
+  local s
+  s=$(pactl get-default-sink 2>/dev/null) || s=""
+  if [ -z "$s" ] || ! pw-link -i 2>/dev/null | grep -q "^${s}:playback_FL$"; then
+    s="$SINK_FALLBACK"
+  fi
+  printf '%s' "$s"
+}
+
+reconnect() {
+  local sink
+  sink=$(default_sink)
+  link "Deluge:Deluge MIDI 1" "Carla:events-in"
+  link "Carla:events-out"     "Deluge:Deluge MIDI 1"
+  link "Carla:audio-out1"     "${sink}:playback_FL"
+  link "Carla:audio-out2"     "${sink}:playback_FR"
+}
+
+reconnect
+
+# Wait for graph changes, collapse bursts (300ms quiet window), then reconnect.
+pw-mon 2>/dev/null | while IFS= read -r _; do
+  while IFS= read -r -t 0.3 _; do :; done
+  reconnect
+done

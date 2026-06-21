@@ -10,6 +10,7 @@
 	     (noonker home emacs)
 	     (noonker home ollama)
 	     (noonker home hydroxide)
+	     (noonker home pw-autoconnect)
 	     (noonker home git-repos)
 	     (noonker packages wine)
 	     (noonker packages serialosc)
@@ -164,7 +165,7 @@
 					"qpwgraph"
 					"supercollider"
 					"winetricks"
-					;;"wine64"
+					"wine64"
 					"yabridge"
 					"yabridgectl"
 
@@ -273,7 +274,8 @@
    (service home-dbus-service-type)
    emacs-daemon-service
    ollama-daemon-service
-   hydroxide-daemon-service 
+   hydroxide-daemon-service
+   pw-autoconnect-daemon-service
    (simple-service 'my-font-packages
                    home-profile-service-type
                    (list my-comic-code-font))
@@ -282,6 +284,11 @@
                    (dotfiles-bin-directory
                     "/home/person/git/dotfiles/bin"
                     "bin"))
+   (simple-service 'my-desktop-overrides
+                   home-files-service-type
+                   (dotfiles-bin-directory
+                    "/home/person/git/dotfiles/guix/configs/applications"
+                    ".local/share/applications"))
    (simple-service 'my-dotfiles
                    home-files-service-type
                    (list
@@ -335,7 +342,8 @@
                      ("XDG_SESSION_TYPE" . "wayland")
 		     ("MOZ_ENABLE_WAYLAND" . "0")
                      ("ROFI_MEDIA_PLAYER" . "mpv")
-                     ("PATH" . "$HOME/.npm-global/bin:$PATH")))
+                     ("XDG_DATA_DIRS" . "$HOME/.local/share/flatpak/exports/share:/var/lib/flatpak/exports/share:$XDG_DATA_DIRS")
+                     ("PATH" . "$HOME/bin:$HOME/.npm-global/bin:$PATH")))
    (service home-bash-service-type
             (home-bash-configuration
              (aliases '(("grep" . "grep --color=auto") ("ll" . "ls -l")
