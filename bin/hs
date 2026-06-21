@@ -62,6 +62,8 @@ case "$cmd" in
         hs "$@" ;;
     -h|--help|help)
         usage ;;
+    connect)
+	sudo tailscale up --login-server https://headscale.xk.is --authkey $@ ;;
     *)
         echo "hs: unknown subcommand '$cmd'" >&2
         usage 2 ;;
