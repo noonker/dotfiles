@@ -1,0 +1,9 @@
+# -*- mode: snippet -*-
+# name: ndef
+# key: nd
+# --
+Ndef(\\${1:name}, {
+    |freq = ${2:220}, amp = ${3:0.2}|
+    ${4:SinOsc.ar(freq)} * amp ! 2
+}).play;
+$0

@@ -1,0 +1,8 @@
+# -*- mode: snippet -*-
+# name: server-boot
+# key: boot
+# --
+s.boot;
+s.waitForBoot({
+    $0
+});

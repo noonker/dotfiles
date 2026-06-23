@@ -1,0 +1,5 @@
+# -*- mode: snippet -*-
+# name: LPF
+# key: lpf
+# --
+LPF.ar(${1:sig}, ${2:1000})$0

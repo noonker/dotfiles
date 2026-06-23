@@ -1,0 +1,13 @@
+# -*- mode: snippet -*-
+# name: GrainBuf
+# key: grain
+# --
+GrainBuf.ar(
+    ${1:2},
+    Impulse.kr(${2:10}),
+    ${3:0.1},
+    ${4:buf},
+    ${5:1},
+    LFNoise1.kr(0.5).range(0, 1),
+    ${6:2}
+)$0

@@ -1,0 +1,5 @@
+# -*- mode: snippet -*-
+# name: Pulse
+# key: pul
+# --
+Pulse.${1:ar}(${2:freq}, ${3:0.5}, ${4:1})$0

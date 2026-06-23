@@ -1,0 +1,5 @@
+# -*- mode: snippet -*-
+# name: HPF
+# key: hpf
+# --
+HPF.ar(${1:sig}, ${2:200})$0

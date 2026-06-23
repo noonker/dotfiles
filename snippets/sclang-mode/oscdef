@@ -1,0 +1,8 @@
+# -*- mode: snippet -*-
+# name: OSCdef
+# key: osc
+# --
+OSCdef(\\${1:name}, { |msg, time, addr, recvPort|
+    msg.postln;
+    $0
+}, '${2:/path}');

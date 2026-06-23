@@ -1,0 +1,5 @@
+# -*- mode: snippet -*-
+# name: CombC-delay
+# key: del
+# --
+CombC.ar(${1:sig}, ${2:0.5}, ${3:0.25}, ${4:3})$0

@@ -14,6 +14,9 @@
 	     (noonker home git-repos)
 	     (noonker packages wine)
 	     (noonker packages serialosc)
+	     (noonker packages renoise)
+	     (noonker packages tidalcycles)
+	     (noonker packages sc3-plugins)
 	     (gnu packages)
 	     (gnu services)
 	     (gnu home services)
@@ -72,7 +75,7 @@
  ;; Home profile, under ~/.guix-home/profile.
  (packages
   (append
-   (list serialosc)
+   (list serialosc renoise tidalcycles)
    (specifications->packages (list
 					;; Niri / Wayland
 					"blueman"
@@ -322,7 +325,17 @@
 	      ("guix/channels.scm" ,(local-file (dotfile "guix/configs/guix_channels")))
 	      ("xdg-desktop-portal/portals.conf" ,(local-file (dotfile "guix/configs/portals.conf")))
 	      ("kitty/kitty.conf" ,(local-file (dotfile "guix/configs/kitty.conf")))
+	      ("SuperCollider/startup.scd" ,(local-file (dotfile "guix/configs/supercollider-startup.scd")))
 	      ))
+   ;; Expose sc3-plugins to scsynth/sclang by symlinking the package's
+   ;; SC3plugins tree into the user's SuperCollider Extensions directory,
+   ;; which both processes scan unconditionally.
+   (simple-service 'my-sc-extensions
+                   home-files-service-type
+                   (list
+                    `(".local/share/SuperCollider/Extensions/SC3plugins"
+                      ,(file-append sc3-plugins
+                                    "/share/SuperCollider/Extensions/SC3plugins"))))
    (service home-gpg-agent-service-type
             (home-gpg-agent-configuration
              (pinentry-program
@@ -340,9 +353,13 @@
                      ("XCURSOR_SIZE" . "24")
                      ("XDG_CURRENT_DESKTOP" . "niri")
                      ("XDG_SESSION_TYPE" . "wayland")
-		     ("MOZ_ENABLE_WAYLAND" . "0")
+		     ("MOZ_ENABLE_WAYLAND" . "1")
                      ("ROFI_MEDIA_PLAYER" . "mpv")
                      ("XDG_DATA_DIRS" . "$HOME/.local/share/flatpak/exports/share:/var/lib/flatpak/exports/share:$XDG_DATA_DIRS")
+                     ;; Make pipewire's libjack shim win over the real libjack
+                     ;; so SuperCollider (and other JACK clients) route through
+                     ;; pipewire without needing the `pw-jack` wrapper.
+                     ("LD_LIBRARY_PATH" . "$HOME/.guix-home/profile/lib/pipewire-0.3/jack${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}")
                      ("PATH" . "$HOME/bin:$HOME/.npm-global/bin:$PATH")))
    (service home-bash-service-type
             (home-bash-configuration

@@ -1,0 +1,5 @@
+# -*- mode: snippet -*-
+# name: Out.ar
+# key: out
+# --
+Out.ar(${1:out}, ${2:sig} ! 2);$0

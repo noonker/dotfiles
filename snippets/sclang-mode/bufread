@@ -1,0 +1,6 @@
+# -*- mode: snippet -*-
+# name: Buffer.read
+# key: bufr
+# --
+~${1:buf} = Buffer.read(s, "${2:/path/to/sample.wav}");
+$0

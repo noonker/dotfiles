@@ -1,0 +1,5 @@
+# -*- mode: snippet -*-
+# name: Prand
+# key: prn
+# --
+Prand([${1:0, 2, 4, 7}], ${2:inf})$0

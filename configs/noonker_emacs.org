@@ -243,7 +243,7 @@ Leuven Theme and Comic Mono
 #+begin_src emacs-lisp :tangle ~/.emacs
 (use-package autothemer)
 
-(defvar how-ya-feeling 'dark-tbh)
+(defvar how-ya-feeling 'burn-my-eyes)
 
 (cond
  ((eq how-ya-feeling 'dark-tbh)
@@ -2950,7 +2950,12 @@ If `DEVICE-NAME' is provided, it will be used instead of prompting the user."
       (add-to-list 'load-path "/home/person/.local/share/SuperCollider/downloaded-quarks/scel/el")
       (require 'sclang)
       (load-file "~/git/scel/el/sclang-interp.el")
-      (setq sclang-use-pw-jack t)
+      ;; Headless Qt platform so sclang (built with Qt) doesn't try to load
+      ;; a wayland/xcb plugin when launched as an emacs subprocess.
+      (setenv "QT_QPA_PLATFORM" "offscreen")
+      ;; LD_LIBRARY_PATH for pipewire's libjack shim is set in
+      ;; home-configuration.scm, so `pw-jack` is no longer needed.
+      (setq sclang-use-pw-jack nil)
       ))
 #+end_src
 

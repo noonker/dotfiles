@@ -1,0 +1,5 @@
+# -*- mode: snippet -*-
+# name: EnvGen-perc
+# key: envp
+# --
+EnvGen.kr(Env.perc(${1:0.01}, ${2:0.3}), doneAction: 2)$0

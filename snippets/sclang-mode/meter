@@ -1,0 +1,5 @@
+# -*- mode: snippet -*-
+# name: s.meter
+# key: meter
+# --
+s.meter;$0

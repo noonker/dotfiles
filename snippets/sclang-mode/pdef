@@ -1,0 +1,13 @@
+# -*- mode: snippet -*-
+# name: pdef
+# key: pd
+# --
+Pdef(\\${1:name},
+    Pbind(
+        \\instrument, \\${2:default},
+        \\degree, Pseq([${3:0, 2, 4, 7}], inf),
+        \\dur, ${4:0.25},
+        \\amp, ${5:0.2}
+    )
+).play;
+$0

@@ -1,0 +1,12 @@
+# -*- mode: snippet -*-
+# name: synthdef
+# key: sd
+# --
+SynthDef(\\${1:name}, {
+    |out = 0, freq = ${2:440}, amp = ${3:0.2}, gate = 1|
+    var sig, env;
+    env = EnvGen.kr(Env.adsr(${4:0.01}, ${5:0.2}, ${6:0.7}, ${7:0.3}), gate, doneAction: 2);
+    sig = ${8:SinOsc.ar(freq)} * env * amp;
+    Out.ar(out, sig ! 2);
+}).add;
+$0

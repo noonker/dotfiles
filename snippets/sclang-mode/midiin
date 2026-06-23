@@ -1,0 +1,15 @@
+# -*- mode: snippet -*-
+# name: MIDI-in
+# key: midi
+# --
+MIDIClient.init;
+MIDIIn.connectAll;
+
+MIDIdef.noteOn(\\${1:noteOn}, { |vel, num, chan, src|
+    [\\noteOn, num, vel].postln;
+    $0
+});
+
+MIDIdef.noteOff(\\${2:noteOff}, { |vel, num, chan, src|
+    [\\noteOff, num].postln;
+});

@@ -1,0 +1,5 @@
+# -*- mode: snippet -*-
+# name: Pwhite
+# key: pw
+# --
+Pwhite(${1:0.0}, ${2:1.0}, ${3:inf})$0

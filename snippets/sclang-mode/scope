@@ -1,0 +1,5 @@
+# -*- mode: snippet -*-
+# name: s.scope
+# key: scope
+# --
+s.scope;$0

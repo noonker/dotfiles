@@ -1,0 +1,5 @@
+# -*- mode: snippet -*-
+# name: FreeVerb
+# key: rev
+# --
+FreeVerb.ar(${1:sig}, ${2:0.33}, ${3:0.5}, ${4:0.5})$0

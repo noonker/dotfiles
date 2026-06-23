@@ -1,0 +1,5 @@
+# -*- mode: snippet -*-
+# name: RLPF
+# key: rlpf
+# --
+RLPF.ar(${1:sig}, ${2:1000}, ${3:0.3})$0

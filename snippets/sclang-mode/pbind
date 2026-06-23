@@ -1,0 +1,12 @@
+# -*- mode: snippet -*-
+# name: pbind
+# key: pb
+# --
+Pbind(
+    \\instrument, \\${1:default},
+    \\degree, Pseq([${2:0, 2, 4, 7}], ${3:inf}),
+    \\dur, ${4:0.25},
+    \\amp, ${5:0.2},
+    \\legato, ${6:0.5}
+).play;
+$0

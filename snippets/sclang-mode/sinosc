@@ -1,0 +1,5 @@
+# -*- mode: snippet -*-
+# name: SinOsc
+# key: sin
+# --
+SinOsc.${1:ar}(${2:freq}, ${3:0}, ${4:1}, ${5:0})$0

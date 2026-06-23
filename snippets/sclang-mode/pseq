@@ -1,0 +1,5 @@
+# -*- mode: snippet -*-
+# name: Pseq
+# key: psq
+# --
+Pseq([${1:0, 2, 4, 7}], ${2:inf})$0

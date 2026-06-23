@@ -1,0 +1,10 @@
+# -*- mode: snippet -*-
+# name: Routine
+# key: r
+# --
+Routine({
+    loop {
+        $0
+        ${1:1}.wait;
+    };
+}).play;
