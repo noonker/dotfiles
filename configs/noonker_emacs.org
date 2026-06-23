@@ -2960,6 +2960,29 @@ If `DEVICE-NAME' is provided, it will be used instead of prompting the user."
 #+end_src
 
 #+begin_src emacs-lisp :tangle ~/.emacs
+;; TidalCycles: Haskell-side live-coding REPL that drives SuperDirt.
+;; Prereqs:
+;;   - `tidalcycles' Guix package is in the home profile (brings ghc + cabal).
+;;   - Run `tidal-bootstrap' once at the shell to `cabal install --lib tidal',
+;;     which also installs BootTidal.hs into the user cabal store.
+(use-package haskell-mode)
+
+(use-package tidal
+  :after haskell-mode
+  :mode ("\\.tidal\\'" . tidal-mode)
+  :config
+  ;; Auto-discover BootTidal.hs from the user's cabal store so we don't have
+  ;; to hardcode the ghc version / tidal version into the path.
+  (let* ((hits (ignore-errors
+                 (process-lines
+                  "bash" "-lc"
+                  "ls -t ~/.cabal/store/*/tidal-*/share/BootTidal.hs 2>/dev/null | head -1"))))
+    (when (and hits (file-exists-p (car hits)))
+      (setq tidal-boot-script-path (car hits))))
+  (setq tidal-interpreter "ghci"))
+#+end_src
+
+#+begin_src emacs-lisp :tangle ~/.emacs
 (if (not im-at-work)
     (use-package emacs-playlist
       :straight (:host github :repo "noonker/emacs-playlist")
