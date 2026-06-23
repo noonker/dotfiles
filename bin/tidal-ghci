@@ -1,0 +1,21 @@
+#!/usr/bin/env bash
+# Launches ghci pre-loaded with the tidal library's BootTidal.hs.
+#
+# Why this script: ghci picks up `.ghc.environment.*` and `.ghci` files from
+# CWD upwards, which can shadow the user-global env that has the tidal
+# library registered. Running from /tmp sidesteps that. The BootTidal.hs
+# path also changes after every `cabal install --lib tidal`, so resolve it
+# at run time rather than baking the version into a config file.
+
+set -euo pipefail
+
+BOOT=$(ls -t "$HOME"/.cabal/store/*/tidal-*/share/BootTidal.hs 2>/dev/null | head -1)
+
+if [[ -z "${BOOT}" || ! -r "${BOOT}" ]]; then
+    echo "tidal-ghci: no BootTidal.hs found under ~/.cabal/store" >&2
+    echo "Run 'tidal-bootstrap' first to cabal install --lib tidal." >&2
+    exit 1
+fi
+
+cd /tmp
+exec ghci -ghci-script "${BOOT}" "$@"
