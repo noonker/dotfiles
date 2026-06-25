@@ -2935,6 +2935,10 @@ If `DEVICE-NAME' is provided, it will be used instead of prompting the user."
     ((claude . "brew install claude-code")
      (claude-agent-acp . "npm install -g @agentclientprotocol/claude-agent-acp")))
 
+(if im-at-work
+    (setenv "CLAUDE_CODE_EXECUTABLE" "/opt/homebrew/bin/claude")
+  )
+
 (setq agent-shell-preferred-agent-config (agent-shell-anthropic-make-claude-code-config))
 
 (use-package agent-shell-monome
