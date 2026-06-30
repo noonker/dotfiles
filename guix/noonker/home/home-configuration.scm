@@ -279,6 +279,8 @@
    ollama-daemon-service
    hydroxide-daemon-service
    pw-autoconnect-daemon-service
+   pw-autoconnect-renoise-daemon-service
+   pw-autoconnect-m8-daemon-service
    (simple-service 'my-font-packages
                    home-profile-service-type
                    (list my-comic-code-font))
@@ -336,6 +338,18 @@
                     `(".local/share/SuperCollider/Extensions/SC3plugins"
                       ,(file-append sc3-plugins
                                     "/share/SuperCollider/Extensions/SC3plugins"))))
+   ;; Expose Carla's prebuilt VST2 plugin bundles (CarlaPatchbay/Rack/FX)
+   ;; into ~/.vst/ so Renoise picks them up. Renoise can't host Carla via
+   ;; LV2 and Guix's Carla doesn't ship a VST3 export; VST2 is the only
+   ;; in-process path. The whole bundle must be symlinked together —
+   ;; CarlaPatchbay.so resolves carla-bridge-native and resources via
+   ;; relative paths inside the .vst directory.
+   (simple-service 'my-carla-vst2
+                   home-files-service-type
+                   (list
+                    `(".vst/carla.vst"
+                      ,(file-append (specification->package "carla")
+                                    "/lib/vst/carla.vst"))))
    (service home-gpg-agent-service-type
             (home-gpg-agent-configuration
              (pinentry-program

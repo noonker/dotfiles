@@ -29,8 +29,24 @@ reconnect() {
 
 reconnect
 
-# Wait for graph changes, collapse bursts (300ms quiet window), then reconnect.
-pw-mon 2>/dev/null | while IFS= read -r _; do
-  while IFS= read -r -t 0.3 _; do :; done
-  reconnect
-done
+# Wait for real graph topology changes, then reconnect.
+#
+# IMPORTANT: react only to Node add/remove events. pw-link and pactl
+# themselves spawn short-lived pipewire Clients that show up in pw-mon
+# as add/remove events — reacting to those creates a feedback loop
+# (each reconnect fires ~5 pw-link/pactl calls, each generates more
+# events, each event re-triggers reconnect). Result: ~60 graph
+# reschedules/sec which causes audio glitches in Renoise/ALSA clients.
+#
+# The awk filter emits a tick only when an "added:" / "removed:" event
+# is for an Interface:Node; the debounce after that collapses any
+# burst (e.g. a USB device replug emitting multiple node events).
+pw-mon 2>/dev/null \
+  | awk '
+      /^(added|removed):/   { ev=$1; next }
+      ev && /PipeWire:Interface:Node / { print ev; fflush(); ev="" }
+    ' \
+  | while IFS= read -r _; do
+      while IFS= read -r -t 0.5 _; do :; done
+      reconnect
+    done

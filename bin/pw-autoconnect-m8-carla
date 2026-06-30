@@ -1,0 +1,62 @@
+#!/usr/bin/env bash
+# Keep M8 MIDI 1 wired to Carla's events-in, and Carla's stereo out
+# wired to the M8's analog-stereo sink.
+# Re-runs on every PipeWire graph change; pw-link is a no-op if the link exists.
+set -u
+
+export PATH="$HOME/.guix-home/profile/bin:$PATH"
+
+M8_SINK="alsa_output.usb-Dirtywave_M8_19540190-02.analog-stereo"
+M8_MULTI="alsa_input.usb-Dirtywave_M8_19540190-02.multichannel-input"
+HD_IN="alsa_input.pci-0000_c1_00.6.analog-stereo"
+
+link()   { pw-link    "$1" "$2" >/dev/null 2>&1 || true; }
+unlink() { pw-link -d "$1" "$2" >/dev/null 2>&1 || true; }
+
+reconnect() {
+  # Use port aliases ("M8:M8 MIDI 1", "Renoise MIDI Input:...") rather
+  # than the underlying "Midi-Bridge:..." names — those are ambiguous
+  # (capture + playback share a port.name) and pw-link refuses to
+  # resolve them. The aliases are direction-disambiguated by pw-link.
+  link "M8:M8 MIDI 1" "Carla:events-in"
+  link "Carla:audio-out1"      "${M8_SINK}:playback_FL"
+  link "Carla:audio-out2"      "${M8_SINK}:playback_FR"
+
+  # Bidirectional M8 <-> Renoise MIDI.
+  link "M8:M8 MIDI 1"                          "Renoise MIDI Input:Renoise MIDI In Port A"
+  link "Renoise MIDI Output:Renoise MIDI Out Sync" "M8:M8 MIDI 1"
+
+  # M8 Multichannel capture AUX0..AUX23 -> Renoise input_01..input_12 (L/R pairs).
+  # Renoise registers as the lowercase "renoise" JACK client.
+  for i in $(seq 0 11); do
+    aux_l=$((i * 2))
+    aux_r=$((i * 2 + 1))
+    in=$(printf "%02d" $((i + 1)))
+    link "${M8_MULTI}:capture_AUX${aux_l}" "renoise:input_${in}_left"
+    link "${M8_MULTI}:capture_AUX${aux_r}" "renoise:input_${in}_right"
+  done
+
+  # Defensive: keep the on-board "Family 17h/19h HD Audio Controller"
+  # capture from auto-attaching to any Renoise input. WirePlumber's
+  # default-source policy will link it whenever no other source is
+  # already attached (e.g. on Renoise start before M8 is plugged in).
+  for in_num in $(seq -w 1 16); do
+    unlink "${HD_IN}:capture_FL" "renoise:input_${in_num}_left"
+    unlink "${HD_IN}:capture_FR" "renoise:input_${in_num}_right"
+  done
+}
+
+reconnect
+
+# See pw-autoconnect-deluge-carla for why we filter to Node add/remove
+# events only and debounce — reacting to all pw-mon events causes a
+# feedback loop from pw-link's own short-lived Client events.
+pw-mon 2>/dev/null \
+  | awk '
+      /^(added|removed):/   { ev=$1; next }
+      ev && /PipeWire:Interface:Node / { print ev; fflush(); ev="" }
+    ' \
+  | while IFS= read -r _; do
+      while IFS= read -r -t 0.5 _; do :; done
+      reconnect
+    done

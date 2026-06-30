@@ -1,0 +1,2 @@
+#!/usr/bin/env bash
+cd "$HOME/.wine/drive_c/ProgramData/Spectrasonics" && exec wine Omnisphere.exe "$@"

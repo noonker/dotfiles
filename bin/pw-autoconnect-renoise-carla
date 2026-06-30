@@ -1,0 +1,31 @@
+#!/usr/bin/env bash
+# Keep Renoise's "MIDI Out Sync" port wired to Carla's events-in.
+# Re-runs on every PipeWire graph change; pw-link is a no-op if the link exists.
+set -u
+
+export PATH="$HOME/.guix-home/profile/bin:$PATH"
+
+link() { pw-link "$1" "$2" >/dev/null 2>&1 || true; }
+
+reconnect() {
+  # Renoise's MIDI ports live under the Midi-Bridge node, and its
+  # JACK audio client registers as lowercase "renoise" — not "Renoise:".
+  link "Midi-Bridge:Renoise MIDI OutputRenoise MIDI Out Sync" "Carla:events-in"
+  link "Carla:audio-out1" "renoise:input_01_left"
+  link "Carla:audio-out2" "renoise:input_01_right"
+}
+
+reconnect
+
+# See pw-autoconnect-deluge-carla for why we filter to Node add/remove
+# events only and debounce — reacting to all pw-mon events causes a
+# feedback loop from pw-link's own short-lived Client events.
+pw-mon 2>/dev/null \
+  | awk '
+      /^(added|removed):/   { ev=$1; next }
+      ev && /PipeWire:Interface:Node / { print ev; fflush(); ev="" }
+    ' \
+  | while IFS= read -r _; do
+      while IFS= read -r -t 0.5 _; do :; done
+      reconnect
+    done

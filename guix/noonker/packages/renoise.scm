@@ -96,9 +96,24 @@
                 (install-file "./Installer/renoise-pattern-effects.5.gz"
                               (string-append share "/man/man5"))
 
+                ;; Prefix the user's home-profile lib dir so renoise and
+                ;; its AudioPluginServer child resolve libstdc++/libgcc
+                ;; from the same place as the rpath'd VST3 plugins
+                ;; (see ~/bin/patch-vsts). Without this, the package's
+                ;; build-time gcc-lib mismatches the home profile's
+                ;; gcc-lib and plugins crash on GUI init.
+                ;;
+                ;; pipewire-0.3/jack must come BEFORE the main lib dir
+                ;; — the home profile has both a real (legacy) libjack
+                ;; via the jack-0.125.0 package and the pipewire-jack
+                ;; shim, and whichever appears first in LD_LIBRARY_PATH
+                ;; wins. Without this, Renoise's JACK driver opens the
+                ;; real jack1 (which isn't running) and you have to
+                ;; launch via `pw-jack renoise` to get pipewire.
                 (wrap-program (string-append out "/bin/renoise")
                   `("LD_LIBRARY_PATH" ":" prefix
-                    (,(string-append out "/lib"))))))))))
+                    ("$HOME/.guix-home/profile/lib/pipewire-0.3/jack"
+                     "$HOME/.guix-home/profile/lib")))))))))
     (inputs (list alsa-lib
                   `(,gcc "lib")
                   libx11
