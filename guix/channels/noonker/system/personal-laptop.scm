@@ -24,6 +24,7 @@
   #:use-module (noonker services podman)
   #:use-module (noonker services audio)
   #:use-module (noonker packages tailscale)
+  #:use-module (noonker packages picotool)
 
   ;; Nongnu (shhh.....)
    #:use-module (nongnu packages linux)
@@ -106,10 +107,23 @@
   ;; Packages installed system-wide.  Users can also install packages
   ;; under their own account: use 'guix search KEYWORD' to search
   ;; for packages and 'guix install PACKAGE' to install a package.
-   (packages (append (list (specification->package "nss-certs"))
-		     (list bolt openssh bladerf rtl-sdr airspy cups
+   ;; nss-certs is in %base-packages as of recent Guix; do not list
+   ;; it explicitly or `guix system` warns about a duplicate.
+   (packages (append (list bolt openssh bladerf rtl-sdr airspy cups
 			   system-config-printer
 			   tailscale tailscaled)
+		     ;; Filesystem helpers so udisks (and therefore
+		     ;; udiskie automount) can mount removable media
+		     ;; formatted as NTFS/exFAT/FAT/F2FS/btrfs.  udisks
+		     ;; invokes /run/current-system/profile/sbin/mount.*
+		     ;; helpers, which must live in the system profile.
+		     (map specification->package
+		          (list "ntfs-3g"
+		                "exfatprogs"
+		                "fuse-exfat"
+		                "dosfstools"
+		                "f2fs-tools"
+		                "btrfs-progs"))
 		     %base-packages))
 
   ;; Below is the list of system services.  To search for available
@@ -154,6 +168,11 @@
 	  (udev-rules-service 'rtl-sdr rtl-sdr)
 	  (udev-rules-service 'airspy airspy)
 	  (udev-rules-service 'monome %monome-udev-rule)
+	  ;; Picotool ships its own 60-picotool.rules under
+	  ;; lib/udev/rules.d/; the rule uses TAG+="uaccess" so any
+	  ;; active-seat user gets BOOTSEL access via elogind — no
+	  ;; extra group membership needed.
+	  (udev-rules-service 'picotool picotool)
 	  (udev-hardware-service 'capslock %capslock-hwdb-udev-rule)
 	  (simple-service 'netdev-nm-polkit
 			  polkit-service-type
@@ -172,7 +191,7 @@
 		     (cons "http://guix.xk.is"
 			   %default-substitute-urls))
 		    (authorized-keys
-		     (cons (local-file "../../configs/xk-substitutes.pub")
+		     (cons (local-file "../../../configs/xk-substitutes.pub")
 			   %default-authorized-guix-keys)))))))
   (bootloader (bootloader-configuration
                 (bootloader grub-efi-bootloader)

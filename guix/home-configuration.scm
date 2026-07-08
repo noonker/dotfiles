@@ -4,35 +4,40 @@
 ;; need to capture the channels being used, as returned by "guix describe".
 ;; See the "Replicating Guix" section in the manual.
 
-(define-module (noonker home home-configuration))
+;; This file is loaded as a *script* by `guix home reconfigure FILE`
+;; (see the `home:` target in ./Makefile). It is not a module — no
+;; other Scheme code imports it, and it deliberately lives OUTSIDE
+;; ./channels/ so `guix shell -L $PWD/channels` (or the equivalent
+;; from any consumer project's .envrc) doesn't try to load it as an
+;; importable module and evaluate its top-level `home-environment`
+;; form out of scope.
 
 (use-modules (gnu home)
-	     (noonker home emacs)
-	     (noonker home ollama)
-	     (noonker home hydroxide)
-	     (noonker home pw-autoconnect)
-	     (noonker home git-repos)
-	     (noonker packages wine)
-	     (noonker packages serialosc)
-	     (noonker packages renoise)
-	     (noonker packages tidalcycles)
-	     (noonker packages sc3-plugins)
-	     (gnu packages)
-	     (gnu services)
-	     (gnu home services)
-	     (gnu home services xdg)
-	     (gnu home services desktop)
-	     (gnu home services sound)
-	     (gnu home services gnupg)
-	     (gnu home services shells)
-	     (guix packages)
-	     (guix build-system font)
-	     (guix gexp)
-	     ;; For ~/bin helper
-	     (ice-9 ftw)
-	     (ice-9 regex)
-	     (srfi srfi-1)
-	     )
+             (noonker home emacs)
+             (noonker home ollama)
+             (noonker home hydroxide)
+             (noonker home pw-autoconnect)
+             (noonker home git-repos)
+             (noonker packages wine)
+             (noonker packages serialosc)
+             (noonker packages renoise)
+             (noonker packages tidalcycles)
+             (noonker packages sc3-plugins)
+             (gnu packages)
+             (gnu services)
+             (gnu home services)
+             (gnu home services xdg)
+             (gnu home services desktop)
+             (gnu home services sound)
+             (gnu home services gnupg)
+             (gnu home services shells)
+             (guix packages)
+             (guix build-system font)
+             (guix gexp)
+             ;; For ~/bin helper
+             (ice-9 ftw)
+             (ice-9 regex)
+             (srfi srfi-1))
 
 (define pipewire-config
   (home-pipewire-configuration
@@ -94,6 +99,7 @@
 					"slurp"
 					"swayidle"
 					"swaylock"
+					"udiskie"
 					"waybar"
 					"wl-clipboard"
 					"wlsunset"
@@ -281,6 +287,7 @@
    pw-autoconnect-daemon-service
    pw-autoconnect-renoise-daemon-service
    pw-autoconnect-m8-daemon-service
+   pw-autoconnect-m8-crone-daemon-service
    (simple-service 'my-font-packages
                    home-profile-service-type
                    (list my-comic-code-font))
@@ -380,9 +387,9 @@
              (aliases '(("grep" . "grep --color=auto") ("ll" . "ls -l")
                         ("ls" . "ls -p --color=auto")))
              (bashrc (list (local-file
-                            "/home/person/git/dotfiles/guix/noonker/home/.bashrc"
+                            "/home/person/git/dotfiles/guix/channels/noonker/home/.bashrc"
                             "bashrc")))
              (bash-profile (list (local-file
-                                  "/home/person/git/dotfiles/guix/noonker/home/.bash_profile"
+                                  "/home/person/git/dotfiles/guix/channels/noonker/home/.bash_profile"
                                   "bash_profile")))))
    )))

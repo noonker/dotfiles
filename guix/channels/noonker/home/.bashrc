@@ -58,3 +58,7 @@ fi
 alias ls='ls -p --color=auto'
 alias ll='ls -l'
 alias grep='grep --color=auto'
+
+if command -v direnv >/dev/null 2>&1; then
+    eval "$(direnv hook bash)"
+fi

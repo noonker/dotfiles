@@ -1,0 +1,104 @@
+#!/usr/bin/env bash
+# Keep M8 audio + MIDI wired to crone / matron (norns-desktop):
+#   M8 stereo out  -> crone:input_1/2
+#   crone:output_1/2 -> M8 analog-stereo sink
+#   M8 MIDI 1 <-> matron's Virtual RawMIDI (both directions)
+# Re-runs on every PipeWire graph change; pw-link is a no-op if the link exists.
+set -u
+
+export PATH="$HOME/.guix-home/profile/bin:$PATH"
+
+M8_SINK="alsa_output.usb-Dirtywave_M8_19540190-02.analog-stereo"
+M8_SRC_STEREO="alsa_input.usb-Dirtywave_M8_19540190-02.analog-stereo"
+M8_SRC_MULTI="alsa_input.usb-Dirtywave_M8_19540190-02.multichannel-input"
+
+link()   { pw-link    "$1" "$2" >/dev/null 2>&1 || true; }
+unlink() { pw-link -d "$1" "$2" >/dev/null 2>&1 || true; }
+
+# Every output port belonging to a node whose description starts with
+# "Family" — i.e. the on-board "Family 17h/19h HD Audio Controller".
+# Emits "node.name:port.name" per line.
+family_output_ports() {
+  pw-dump 2>/dev/null | jq -r '
+    (map(select(.type=="PipeWire:Interface:Node"
+                and (.info.props["node.description"] // "" | startswith("Family"))))
+      | map({key: (.id|tostring), value: .info.props["node.name"]})
+      | from_entries) as $fam
+    | .[]
+    | select(.type=="PipeWire:Interface:Port"
+             and .info.props["port.direction"]=="out"
+             and ($fam[.info.props["node.id"]|tostring] != null))
+    | ($fam[.info.props["node.id"]|tostring] + ":" + .info.props["port.name"])
+  '
+}
+
+# matron registers as an ALSA seq client with a dynamic id; the PipeWire
+# midi-bridge exposes it as "Client-<N>:Virtual RawMIDI". Resolve <N> by
+# matching the pid in `aconnect -l` against /proc/<pid>/comm.
+matron_midi_alias() {
+  aconnect -l 2>/dev/null \
+    | awk '/^client [0-9]+:.*pid=/ {
+             cid=$2; sub(/:$/,"",cid);
+             pid=$0; sub(/.*pid=/,"",pid); sub(/].*/,"",pid);
+             print cid, pid
+           }' \
+    | while read -r cid pid; do
+        [ -r "/proc/$pid/comm" ] || continue
+        if [ "$(cat "/proc/$pid/comm")" = "matron" ]; then
+          printf 'Client-%s:Virtual RawMIDI' "$cid"
+          break
+        fi
+      done
+}
+
+reconnect() {
+  # M8 -> crone audio. Prefer analog-stereo capture ports; fall back to
+  # the multichannel profile where the M8's main mix lives on AUX0/AUX1.
+  if pw-link -o 2>/dev/null | grep -q "^${M8_SRC_STEREO}:capture_FL$"; then
+    link "${M8_SRC_STEREO}:capture_FL" "crone:input_1"
+    link "${M8_SRC_STEREO}:capture_FR" "crone:input_2"
+  else
+    link "${M8_SRC_MULTI}:capture_AUX0" "crone:input_1"
+    link "${M8_SRC_MULTI}:capture_AUX1" "crone:input_2"
+  fi
+
+  # crone -> M8 audio in
+  link "crone:output_1" "${M8_SINK}:playback_FL"
+  link "crone:output_2" "${M8_SINK}:playback_FR"
+
+  # MIDI both ways. "M8:M8 MIDI 1" is the port.alias — see
+  # pw-autoconnect-m8-carla for why we prefer the alias over the
+  # Midi-Bridge node name.
+  local matron
+  matron=$(matron_midi_alias)
+  if [ -n "$matron" ]; then
+    link "M8:M8 MIDI 1" "$matron"
+    link "$matron"      "M8:M8 MIDI 1"
+  fi
+
+  # Kill any link from the on-board "Family 17h/19h" HD Audio card into
+  # crone. Wireplumber auto-links the default source to JACK-style
+  # clients on start; we don't want the laptop's built-in mic bleeding
+  # into crone's inputs. pw-link -d is a no-op if the link is absent.
+  while IFS= read -r fam_port; do
+    [ -n "$fam_port" ] || continue
+    for i in 1 2 3 4 5 6; do
+      unlink "$fam_port" "crone:input_$i"
+    done
+  done < <(family_output_ports)
+}
+
+reconnect
+
+# See pw-autoconnect-deluge-carla for why we filter to Node add/remove
+# events only and debounce — reacting to all pw-mon events causes a
+# feedback loop from pw-link's own short-lived Client events.
+pw-mon 2>/dev/null \
+  | awk '
+      /^(added|removed):/   { ev=$1; next }
+      ev && /PipeWire:Interface:Node / { print ev; fflush(); ev="" }
+    ' \
+  | while IFS= read -r _; do
+      while IFS= read -r -t 0.5 _; do :; done
+      reconnect
+    done

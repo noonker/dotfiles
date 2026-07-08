@@ -4,7 +4,8 @@
   #:use-module (guix gexp)
   #:export (pw-autoconnect-daemon-service
             pw-autoconnect-renoise-daemon-service
-            pw-autoconnect-m8-daemon-service))
+            pw-autoconnect-m8-daemon-service
+            pw-autoconnect-m8-crone-daemon-service))
 
 (define (pw-autoconnect-service name script-basename doc)
   (shepherd-service
@@ -43,3 +44,11 @@
                          'pw-autoconnect-m8
                          "pw-autoconnect-m8-carla"
                          "Auto-link M8 MIDI 1 -> Carla events-in and Carla audio-out -> M8 analog-stereo."))))
+
+(define pw-autoconnect-m8-crone-daemon-service
+  (simple-service 'pw-autoconnect-m8-crone-daemon
+                  home-shepherd-service-type
+                  (list (pw-autoconnect-service
+                         'pw-autoconnect-m8-crone
+                         "pw-autoconnect-m8-crone"
+                         "Auto-link M8 audio+MIDI <-> crone/matron (norns-desktop)."))))
