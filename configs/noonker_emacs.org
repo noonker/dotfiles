@@ -2960,7 +2960,18 @@ If `DEVICE-NAME' is provided, it will be used instead of prompting the user."
       ;;   Quarks.install("https://github.com/scztt/LanguageServer.quark");
       (with-eval-after-load 'eglot
         (add-to-list 'eglot-server-programs
-                     '(sclang-mode . ("sclang-lsp-proxy"))))
+                     '(sclang-mode . ("sclang-lsp-proxy")))
+        ;; LanguageServer.quark's methodSignature/constructorSignature
+        ;; ship MarkupContent with no :value field, which crashes
+        ;; eglot--format-markup on signatureHelp responses. Coerce nil
+        ;; :value to "" so eldoc doesn't error out.
+        (define-advice eglot--format-markup
+            (:filter-args (args) sclang-nil-value-fix)
+          (let ((markup (car args)))
+            (when (and (listp markup) (not (stringp markup))
+                       (null (plist-get markup :value)))
+              (setcar args (plist-put (copy-sequence markup) :value ""))))
+          args))
       (add-hook 'sclang-mode-hook #'eglot-ensure)
       ;; Attach the tree-sitter parser to every sclang-mode buffer so
       ;; `treesit-explore-mode' and other treesit-driven features work.
