@@ -451,6 +451,7 @@ Lispy mode makes lisp-mode editing significantly more efficent
 	(toml "https://github.com/tree-sitter/tree-sitter-toml")
 	(rust "https://github.com/tree-sitter/tree-sitter-rust")
 	(lua "https://github.com/tree-sitter-grammars/tree-sitter-lua")
+	(supercollider "https://github.com/madskjeldgaard/tree-sitter-supercollider")
 	(tsx "https://github.com/tree-sitter/tree-sitter-typescript" "master" "tsx/src")
 	(typescript "https://github.com/tree-sitter/tree-sitter-typescript" "master" "typescript/src")
 	(yaml "https://github.com/ikatyang/tree-sitter-yaml")))
@@ -2944,6 +2945,7 @@ If `DEVICE-NAME' is provided, it will be used instead of prompting the user."
 (if is-guix
     (progn
       (add-to-list 'load-path "/home/person/.local/share/SuperCollider/downloaded-quarks/scel/el")
+      (defvar company-backends nil)
       (require 'sclang)
       (load-file "~/git/scel/el/sclang-interp.el")
       ;; Headless Qt platform so sclang (built with Qt) doesn't try to load
@@ -2952,6 +2954,21 @@ If `DEVICE-NAME' is provided, it will be used instead of prompting the user."
       ;; LD_LIBRARY_PATH for pipewire's libjack shim is set in
       ;; home-configuration.scm, so `pw-jack` is no longer needed.
       (setq sclang-use-pw-jack nil)
+      ;; scztt's LanguageServer.quark speaks LSP over UDP; the
+      ;; `sclang-lsp-proxy' guix package bridges that to stdio so eglot
+      ;; can drive it. One-time SC-side setup:
+      ;;   Quarks.install("https://github.com/scztt/LanguageServer.quark");
+      (with-eval-after-load 'eglot
+        (add-to-list 'eglot-server-programs
+                     '(sclang-mode . ("sclang-lsp-proxy"))))
+      (add-hook 'sclang-mode-hook #'eglot-ensure)
+      ;; Attach the tree-sitter parser to every sclang-mode buffer so
+      ;; `treesit-explore-mode' and other treesit-driven features work.
+      ;; The grammar library is `libtree-sitter-supercollider.so'.
+      (add-hook 'sclang-mode-hook
+                (lambda ()
+                  (when (treesit-ready-p 'supercollider)
+                    (treesit-parser-create 'supercollider))))
       ))
 #+end_src
 

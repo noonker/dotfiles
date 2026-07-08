@@ -23,6 +23,7 @@
              (noonker packages renoise)
              (noonker packages tidalcycles)
              (noonker packages sc3-plugins)
+             (noonker packages sclang-lsp-proxy)
              (gnu packages)
              (gnu services)
              (gnu home services)
@@ -80,7 +81,7 @@
  ;; Home profile, under ~/.guix-home/profile.
  (packages
   (append
-   (list serialosc renoise tidalcycles)
+   (list serialosc renoise tidalcycles sclang-lsp-proxy)
    (specifications->packages (list
 					;; Niri / Wayland
 					"blueman"
