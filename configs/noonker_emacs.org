@@ -157,6 +157,18 @@ This section sets up [[https://github.com/radian-software/straight.el][straight.
   :init
   (global-corfu-mode))
 
+(use-package corfu-popupinfo
+  :straight nil ;; ships inside the corfu package under extensions/
+  :after corfu
+  :hook (corfu-mode . corfu-popupinfo-mode)
+  :custom
+  (corfu-popupinfo-delay '(0.25 . 0.1))
+  (corfu-popupinfo-max-width 80)
+  (corfu-popupinfo-max-height 20))
+
+(use-package eldoc-box
+  :hook (eglot-managed-mode . eldoc-box-hover-at-point-mode))
+
 ;; A few more useful configurations...
 (use-package emacs
   :custom
