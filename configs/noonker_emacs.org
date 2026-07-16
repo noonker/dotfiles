@@ -162,9 +162,9 @@ This section sets up [[https://github.com/radian-software/straight.el][straight.
   :after corfu
   :hook (corfu-mode . corfu-popupinfo-mode)
   :custom
-  (corfu-popupinfo-delay '(0.25 . 0.1))
+  (corfu-popupinfo-delay '(1.0 . 1.0))
   (corfu-popupinfo-max-width 80)
-  (corfu-popupinfo-max-height 20))
+  (corfu-popupinfo-max-height 40))
 
 (use-package eldoc-box
   :hook (eglot-managed-mode . eldoc-box-hover-at-point-mode))
@@ -2138,6 +2138,13 @@ Blogging with hugo
 	    (require 'edraw-org)
 	    (edraw-org-setup-default)
 	    (evil-set-initial-state 'edraw-property-editor-mode 'emacs)
+	    (setq edraw-default-document-properties
+		  '((width . 800)
+		    (height . 600)
+		    (background . "#fff")))
+
+	    ;; Turn off the grid by default
+	    (setq edraw-editor-default-grid-visible nil)
 	    ))
 #+end_src
 
