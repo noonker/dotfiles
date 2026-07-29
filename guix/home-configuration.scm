@@ -57,6 +57,20 @@
     (home-page "")
     (license #f)))
 
+(define my-mpi-nouveau-font
+  (package
+   (name "font-mpi-nouveau")
+   (version "1.0")
+   (source (local-file "/home/person/.password-store/OTF"
+                       #:recursive? #t))
+   (build-system font-build-system)
+   (synopsis "MPI Nouveau Font")
+   (description "MPI Nouveau Font")
+   (home-page "")
+   (license #f)
+   )
+  )
+
 (define wine-packages
   (list wine-9.21-staging wine64-9.21-staging))
 
@@ -291,7 +305,8 @@
    pw-autoconnect-m8-crone-daemon-service
    (simple-service 'my-font-packages
                    home-profile-service-type
-                   (list my-comic-code-font))
+                   (list my-comic-code-font
+			 my-mpi-nouveau-font))
    (simple-service 'my-bins
                    home-files-service-type
                    (dotfiles-bin-directory

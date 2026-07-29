@@ -47,9 +47,18 @@
 (define %monome-udev-rule
   (udev-rule
    "50-monome.rules"
-   (string-append "SUBSYSTEM==\"tty\", ATTRS{idVendor}==\"cafe\", MODE=\"0666\"")
+   (string-append "SUBSYSTEM==\"tty\", ATTRS{idVendor}==\"cafe\", MODE=\"0666\", ENV{ID_MM_DEVICE_IGNORE}=\"1\"")
    )
   )
+
+;; Raspberry Pi Debugprobe (CMSIS-DAP) — VID 2e8a:000c. Picotool's own
+;; rules cover the RP2350 BOOTSEL VIDs but not the CMSIS-DAP interface,
+;; so probe-rs shows the probe as "inaccessible" without this. Uses
+;; TAG+="uaccess" so the active-seat user gets access via elogind.
+(define %debugprobe-udev-rule
+  (udev-rule
+   "70-debugprobe.rules"
+   (string-append "SUBSYSTEM==\"usb\", ATTRS{idVendor}==\"2e8a\", ATTRS{idProduct}==\"000c\", TAG+=\"uaccess\"")))
 
 ;; Allow members of the netdev group to manage NetworkManager without
 ;; a polkit authentication prompt — needed because niri does not run a
@@ -173,6 +182,7 @@
 	  ;; active-seat user gets BOOTSEL access via elogind — no
 	  ;; extra group membership needed.
 	  (udev-rules-service 'picotool picotool)
+	  (udev-rules-service 'debugprobe %debugprobe-udev-rule)
 	  (udev-hardware-service 'capslock %capslock-hwdb-udev-rule)
 	  (simple-service 'netdev-nm-polkit
 			  polkit-service-type

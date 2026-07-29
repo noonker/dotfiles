@@ -3030,10 +3030,26 @@ If `DEVICE-NAME' is provided, it will be used instead of prompting the user."
             emacs-playlist-norns-host "norns.local")))
 #+end_src
 
+** Norns & Lua
+
 #+begin_src emacs-lisp :tangle ~/.emacs
 (add-to-list 'auto-mode-alist '("\\.lua\\'" . lua-ts-mode))
 (add-to-list 'major-mode-remap-alist '(lua-mode . lua-ts-mode))
 (add-hook 'lua-ts-mode-hook 'eglot-ensure)
+
+(setq-default tab-width 2)
+
+(defun noonker/lua-format-with-stylua ()
+  "Run stylua on the current file before saving."
+  (when (eq major-mode 'lua-ts-mode)
+    (let ((buf (current-buffer)))
+      (shell-command (format "stylua %s" (shell-quote-argument (buffer-file-name))))
+      (with-current-buffer buf
+        (revert-buffer t t t)))))
+
+(add-hook 'lua-ts-mode-hook
+          (lambda ()
+            (add-hook 'after-save-hook #'noonker/lua-format-with-stylua nil 'local)))
 
 (use-package norns
   :config
@@ -3053,6 +3069,33 @@ If `DEVICE-NAME' is provided, it will be used instead of prompting the user."
   )
 
 (setq norns-host "norns.local")
+
+(defun noonker/norns-rsync-repo ()
+  "Async rsync of git-changed files in the current repo to n:dust/code/<repo>/."
+  (interactive)
+  (let ((root (locate-dominating-file default-directory ".git")))
+    (unless root (user-error "Not in a git repository"))
+    (let* ((root (file-name-as-directory (expand-file-name root)))
+           (repo (file-name-nondirectory (directory-file-name root)))
+           (dest (format "n:dust/code/%s/" repo))
+           (default-directory root)
+           (buf (get-buffer-create "*norns-rsync*"))
+           (cmd (format
+                 "git ls-files -m -o --exclude-standard -z | rsync -av --from0 --files-from=- ./ %s"
+                 (shell-quote-argument dest))))
+      (with-current-buffer buf
+        (erase-buffer)
+        (insert (format "$ %s\n\n" cmd)))
+      (let ((proc (start-process-shell-command "norns-rsync" buf cmd)))
+        (set-process-sentinel
+         proc
+         (lambda (p _e)
+           (when (memq (process-status p) '(exit signal))
+             (if (zerop (process-exit-status p))
+                 (message "norns-rsync: %s ✓" dest)
+               (message "norns-rsync: failed (exit %d) — see %s"
+                        (process-exit-status p)
+                        (buffer-name (process-buffer p)))))))))))
 #+end_src
 
 * Hunting
