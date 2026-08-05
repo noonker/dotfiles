@@ -10,7 +10,7 @@ spawn-at-startup "wl-paste" "--watch" "cliphist" "store"
 spawn-at-startup "waybar"
 spawn-at-startup "udiskie" "--automount" "--notify" "--no-tray"
 spawn-at-startup "xwayland-satellite"
-spawn-at-startup "swayidle" "-w" "timeout" "300" "niri msg action power-off-monitors" "resume" "niri msg action power-on-monitors"
+spawn-at-startup "swayidle" "-w" "timeout" "180" "swaylock -f -c 000000" "timeout" "300" "niri msg action power-off-monitors" "resume" "niri msg action power-on-monitors" "before-sleep" "swaylock -f -c 000000"
 spawn-at-startup "sh" "-c" "shaderbg '*' ~/.config/shaders/background.frag"
 
 // Prefer server-side decorations so niri can draw its own borders

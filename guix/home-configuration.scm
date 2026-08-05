@@ -14,7 +14,6 @@
 
 (use-modules (gnu home)
              (noonker home emacs)
-             (noonker home ollama)
              (noonker home hydroxide)
              (noonker home pw-autoconnect)
              (noonker home git-repos)
@@ -281,7 +280,6 @@
 
 					;; Services
 					"hydroxide"
-					"ollama-linux-amd64"
 
 					;; Virtualization
 					"kubectl"
@@ -297,7 +295,6 @@
    (service home-pipewire-service-type pipewire-config)
    (service home-dbus-service-type)
    emacs-daemon-service
-   ollama-daemon-service
    hydroxide-daemon-service
    pw-autoconnect-daemon-service
    pw-autoconnect-renoise-daemon-service

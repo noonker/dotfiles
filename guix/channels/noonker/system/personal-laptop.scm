@@ -14,7 +14,7 @@
   #:use-module (gnu packages admin)
   #:use-module (gnu packages gnome)
   #:use-module (gnu packages ssh)
-  #:use-module (gnu packages wm)
+  #:use-module (gnu packages window-management)
   #:use-module (gnu services desktop)
   #:use-module (gnu system accounts)
   #:use-module (gnu system setuid)
@@ -140,7 +140,7 @@
   (services
    (cons* (service cups-service-type
 		   (cups-configuration
-		    (web-interface? #t)
+		    (web-interface? #f)
 		    (extensions
 		     (list cups-filters))))
 	  (service subids-service-type
@@ -149,8 +149,10 @@
                     (subuids (list (subid-range (name "person"))))
                     (subgids (list (subid-range (name "person"))))))
           (service boltd-service-type)
-	  (service bluetooth-service-type)
-	  (service block-facebook-hosts-service-type) 
+	  ;; Disabled for travel — re-enable when home. Bluetooth on
+	  ;; hostile networks (e.g. cons) is an unnecessary attack surface.
+	  ;; (service bluetooth-service-type)
+	  (service block-facebook-hosts-service-type)
 	  (service nftables-service-type)
 	  (service greetd-service-type
 		   (greetd-configuration
@@ -188,18 +190,51 @@
 			  polkit-service-type
 			  (list %netdev-nm-polkit-rules))
 	  audio-realtime-service
-          podman-iptables
+	  ;; Disabled for travel — this service applies an
+	  ;; ACCEPT-everything iptables ruleset (see the
+	  ;; `%iptables-accept-all-rules` default in
+	  ;; gnu/services/networking.scm) which fights with
+	  ;; nftables-service-type's drop-by-default policy.
+	  ;; Rootless podman with passt/slirp4netns doesn't need
+	  ;; host iptables rules. Re-enable (with an explicit
+	  ;; ruleset) if you go back to rootful containers.
+	  ;; podman-iptables
 	  (service tailscale-service-type)
            ;; This is the default list of services we
            ;; are appending to.
 	  (modify-services %desktop-services
 		 (delete gdm-service-type)
+		 ;; Disabled for travel — mDNS broadcasts the hostname
+		 ;; and advertised services on every network you join.
+		 (delete avahi-service-type)
+		 ;; Disabled for travel — Guix's ntp-configuration has
+		 ;; no interface-binding option so ntpd binds
+		 ;; 0.0.0.0:123 (and every up interface, including
+		 ;; tailscale0). A few days of clock drift is fine.
+		 (delete ntp-service-type)
+		 ;; Guix's NetworkManager is built with
+		 ;; --with-resolvconf=<openresolv store path>, so its
+		 ;; default rc-manager=auto picks "resolvconf" and hands
+		 ;; DNS updates to a binary that isn't running as a
+		 ;; service — /etc/resolv.conf never gets written and
+		 ;; DNS silently breaks. Force NM to write the file
+		 ;; directly.
+		 (network-manager-service-type config =>
+		   (network-manager-configuration
+		    (inherit config)
+		    (extra-configuration-files
+		     `(("rc-manager.conf"
+			,(plain-file "rc-manager.conf"
+				     "[main]\nrc-manager=file\n"))))))
 		 (guix-service-type config =>
 		   (guix-configuration
 		    (inherit config)
 		    (substitute-urls
-		     (cons "http://guix.xk.is"
-			   %default-substitute-urls))
+		     ;; Disabled for travel — http and leaks the name
+		     ;; of every package you pull to whoever's on the
+		     ;; network path. Restore after the trip:
+		     ;;   (cons "http://guix.xk.is" %default-substitute-urls)
+		     %default-substitute-urls)
 		    (authorized-keys
 		     (cons (local-file "../../../configs/xk-substitutes.pub")
 			   %default-authorized-guix-keys)))))))

@@ -558,6 +558,25 @@ On MacOS you need to add =-DCMAKE_PREFIX_PATH=/usr/local/opt/llvm= after =cmake=
 (add-hook 'rust-ts-mode-hook
           (lambda ()
             (add-hook 'before-save-hook #'eglot-format-buffer nil t)))
+
+;; Trust the .dir-locals.el values used by embedded/thumb Rust projects
+;; `lsp-rust-analyzer-cargo-watch-command' is flagged
+;; risky by lsp-mode, so `put ... 'safe-local-variable' won't silence
+;; the prompt -- the exact (var . value) pair must live in
+;; `safe-local-variable-values'.
+(dolist (pair '((eglot-workspace-configuration
+                 . (:rust-analyzer
+                    (:cargo (:target "thumbv8m.main-none-eabihf"
+                             :allTargets :json-false
+                             :buildScripts (:enable t))
+                     :check (:allTargets :json-false
+                             :command "clippy")
+                     :procMacro (:enable t))))
+                (lsp-rust-analyzer-cargo-target . "thumbv8m.main-none-eabihf")
+                (lsp-rust-analyzer-cargo-all-targets . nil)
+                (lsp-rust-analyzer-check-all-targets . nil)
+                (lsp-rust-analyzer-cargo-watch-command . "clippy")))
+  (add-to-list 'safe-local-variable-values pair))
 #+end_src
 
 ** Go

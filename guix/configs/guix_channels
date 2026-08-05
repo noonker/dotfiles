@@ -12,10 +12,7 @@
   (name 'tailscale)
   (url "https://github.com/umanwizard/guix-tailscale")
   (branch "main")
-  (commit "58bc8b05520b8565a3230e21388e97f00b886e4b"))
- (channel
-  (name 'ollama-guix)
-  (url "https://codeberg.org/tusharhero/ollama-guix")) 
+  (commit "4fd673d378f1e82ded518c93624257eaefa5abcc"))
  (channel
   (name 'nonguix)
   (url "https://gitlab.com/nonguix/nonguix")

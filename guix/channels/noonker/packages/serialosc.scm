@@ -2,7 +2,7 @@
   #:use-module ((guix licenses) #:prefix license:)
   #:use-module (gnu packages)
   #:use-module (gnu packages audio)        ;liblo
-  #:use-module (gnu packages avahi)        ;avahi (libdns_sd)
+  #:use-module (gnu packages dns)          ;avahi (libdns_sd)
   #:use-module (gnu packages libevent)     ;libuv
   #:use-module (gnu packages linux)        ;eudev
   #:use-module (gnu packages ncurses)
