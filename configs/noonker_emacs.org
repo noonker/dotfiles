@@ -343,7 +343,8 @@ Projectile enriches Emacs's ability to understand git projects
 (use-package projectile
   :bind (("s-p" . projectile-command-map)
 	 ("C-c p" . projectile-command-map))
-  :config (projectile-global-mode)
+  :config
+	(projectile-mode +1)
   (setq projectile-current-project-on-switch 'keep)
   (define-key projectile-mode-map (kbd "s-p") 'projectile-command-map)
   (define-key projectile-mode-map (kbd "C-c p") 'projectile-command-map)
@@ -367,7 +368,6 @@ Emacs can nearly transparently use .gpg encrypted files in emacs. These settings
 (setf epg-pinentry-mode 'loopback) ;; No UI popup. Ask for password in modeline
 #+end_src
 
-* Tools
 * Evil?
 
 Lispy mode makes lisp-mode editing significantly more efficent
@@ -432,29 +432,6 @@ Lispy mode makes lisp-mode editing significantly more efficent
   (add-to-list 'eglot-server-programs
                `(python-mode . ("pyright-langserver" "--stdio")
 			     )))
-#+end_src
-
-** Treesitter
-#+begin_src emacs-lisp :tangle ~/.emacs
-(setq treesit-language-source-alist
-      '((bash "https://github.com/tree-sitter/tree-sitter-bash")
-	(cmake "https://github.com/uyha/tree-sitter-cmake")
-	(css "https://github.com/tree-sitter/tree-sitter-css")
-	(elisp "https://github.com/Wilfred/tree-sitter-elisp")
-	(go "https://github.com/tree-sitter/tree-sitter-go")
-	(html "https://github.com/tree-sitter/tree-sitter-html")
-	(javascript "https://github.com/tree-sitter/tree-sitter-javascript" "master" "src")
-	(json "https://github.com/tree-sitter/tree-sitter-json")
-	(make "https://github.com/alemuller/tree-sitter-make")
-	(markdown "https://github.com/ikatyang/tree-sitter-markdown")
-	(python "https://github.com/tree-sitter/tree-sitter-python")
-	(toml "https://github.com/tree-sitter/tree-sitter-toml")
-	(rust "https://github.com/tree-sitter/tree-sitter-rust")
-	(lua "https://github.com/tree-sitter-grammars/tree-sitter-lua")
-	(supercollider "https://github.com/madskjeldgaard/tree-sitter-supercollider")
-	(tsx "https://github.com/tree-sitter/tree-sitter-typescript" "master" "tsx/src")
-	(typescript "https://github.com/tree-sitter/tree-sitter-typescript" "master" "typescript/src")
-	(yaml "https://github.com/ikatyang/tree-sitter-yaml")))
 #+end_src
 
 ** Guile
@@ -597,7 +574,7 @@ On MacOS you need to add =-DCMAKE_PREFIX_PATH=/usr/local/opt/llvm= after =cmake=
 
 #+begin_src emacs-lisp :tangle ~/.emacs
 (use-package envrc
-  :hook (after-init . envrc-global-mode))
+ :hook (after-init . envrc-global-mode))
 
 (use-package python
   :bind (("C-c C-c" . python-shell-send-region)))
