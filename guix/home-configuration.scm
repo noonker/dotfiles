@@ -23,6 +23,7 @@
              (noonker packages tidalcycles)
              (noonker packages sc3-plugins)
              (noonker packages sclang-lsp-proxy)
+             (noonker packages saleae-logic)
              (gnu packages)
              (gnu services)
              (gnu home services)
@@ -94,7 +95,7 @@
  ;; Home profile, under ~/.guix-home/profile.
  (packages
   (append
-   (list serialosc renoise tidalcycles sclang-lsp-proxy)
+   (list serialosc renoise tidalcycles sclang-lsp-proxy saleae-logic)
    (specifications->packages (list
 					;; Niri / Wayland
 					"blueman"

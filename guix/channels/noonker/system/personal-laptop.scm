@@ -25,6 +25,7 @@
   #:use-module (noonker services audio)
   #:use-module (noonker packages tailscale)
   #:use-module (noonker packages picotool)
+  #:use-module (noonker packages saleae-logic)
 
   ;; Nongnu (shhh.....)
    #:use-module (nongnu packages linux)
@@ -59,6 +60,25 @@
   (udev-rule
    "70-debugprobe.rules"
    (string-append "SUBSYSTEM==\"usb\", ATTRS{idVendor}==\"2e8a\", ATTRS{idProduct}==\"000c\", TAG+=\"uaccess\"")))
+
+;; Flipper Zero — VID 0483:5740 is the CDC (normal) interface qFlipper
+;; opens; 0483:df11 is the STM32 DFU interface used during firmware
+;; flashing.
+;;
+;; MODE="0666" (rather than the TAG+="uaccess" pattern used for
+;; debugprobe) because qFlipper is only usable inside a guix shell
+;; --container FHS namespace, and that namespace remaps every uid
+;; other than the invoking user to nobody(65534)/overflow(65534). ACLs
+;; granted to `person` by elogind's uaccess don't survive that
+;; remapping; a world-rw mode does. SUBSYSTEMS== (plural) walks up
+;; the parent chain so the child /dev/ttyACM* CDC device also gets
+;; the mode, not just the USB interface node under /dev/bus/usb.
+(define %flipperzero-udev-rule
+  (udev-rule
+   "42-flipperzero.rules"
+   (string-append
+    "SUBSYSTEMS==\"usb\", ATTRS{idVendor}==\"0483\", ATTRS{idProduct}==\"5740\", MODE=\"0666\"\n"
+    "SUBSYSTEMS==\"usb\", ATTRS{idVendor}==\"0483\", ATTRS{idProduct}==\"df11\", MODE=\"0666\"")))
 
 ;; Allow members of the netdev group to manage NetworkManager without
 ;; a polkit authentication prompt — needed because niri does not run a
@@ -149,9 +169,11 @@
                     (subuids (list (subid-range (name "person"))))
                     (subgids (list (subid-range (name "person"))))))
           (service boltd-service-type)
-	  ;; Disabled for travel — re-enable when home. Bluetooth on
-	  ;; hostile networks (e.g. cons) is an unnecessary attack surface.
-	  ;; (service bluetooth-service-type)
+	  ;; Disable when travelling. Bluetooth on hostile networks
+	  ;; (e.g. cons) is an unnecessary attack surface.
+	  (service bluetooth-service-type
+		   (bluetooth-configuration
+		    (auto-enable? #t)))
 	  (service block-facebook-hosts-service-type)
 	  (service nftables-service-type)
 	  (service greetd-service-type
@@ -184,7 +206,13 @@
 	  ;; active-seat user gets BOOTSEL access via elogind — no
 	  ;; extra group membership needed.
 	  (udev-rules-service 'picotool picotool)
+	  ;; Saleae Logic ships its 99-SaleaeLogic{,-v1}.rules under
+	  ;; lib/udev/rules.d/ — rules set MODE="0666" on the logic
+	  ;; analyzer USB VID/PIDs so the Logic app can open the device
+	  ;; without root.
+	  (udev-rules-service 'saleae-logic saleae-logic)
 	  (udev-rules-service 'debugprobe %debugprobe-udev-rule)
+	  (udev-rules-service 'flipperzero %flipperzero-udev-rule)
 	  (udev-hardware-service 'capslock %capslock-hwdb-udev-rule)
 	  (simple-service 'netdev-nm-polkit
 			  polkit-service-type
@@ -211,7 +239,7 @@
 		 ;; no interface-binding option so ntpd binds
 		 ;; 0.0.0.0:123 (and every up interface, including
 		 ;; tailscale0). A few days of clock drift is fine.
-		 (delete ntp-service-type)
+		 ;; (delete ntp-service-type)
 		 ;; Guix's NetworkManager is built with
 		 ;; --with-resolvconf=<openresolv store path>, so its
 		 ;; default rc-manager=auto picks "resolvconf" and hands
