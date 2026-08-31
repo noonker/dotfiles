@@ -342,6 +342,7 @@
 	      ("rofi-pass/config" ,(local-file (dotfile "guix/configs/rofi-pass.conf")))
 	      ("waybar/config" ,(local-file (dotfile "guix/configs/waybar.conf")))
 	      ("waybar/style.css" ,(local-file (dotfile "guix/configs/waybar_style.css")))
+	      ("waybar/disk-io.sh" ,(local-file (dotfile "guix/configs/waybar-disk-io.sh")))
 	      ("containers/registries.conf" ,(local-file (dotfile "guix/configs/podman_registries.conf")))
 	      ("containers/policy.json" ,(local-file (dotfile "guix/configs/podman_policy.json")))
 	      ("shaders/background.frag" ,(local-file (dotfile "guix/configs/background.frag")))
