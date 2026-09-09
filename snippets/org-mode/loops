@@ -1,0 +1,7 @@
+# -*- mode: snippet -*-
+# name:loop
+# key: loop
+# --
+#+LOOPS: true
+#+TODO: TODO(t) READY(r) INPROGRESS(i) PERMISSION(p) NEEDINFO(n) | DONE(d) CANCELLED(c)
+                  

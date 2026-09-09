@@ -1777,6 +1777,16 @@ Look for things like, but not limited to, syntax errors, logic errors, severe in
 (straight-use-package
  '(ob-gptel :type git :host github :repo "jwiegley/ob-gptel"))
 
+(use-package ob-agent-shell
+  :ensure t
+  :after (agent-shell org)
+  :config
+  (add-to-list 'org-babel-load-languages '(agent-shell . t))
+  (org-babel-do-load-languages 'org-babel-load-languages
+                               org-babel-load-languages)
+  ;; Avoid org fontification error for agent-shell blocks
+  (add-to-list 'org-src-lang-modes '("agent-shell" . text)))
+
 (defvar d2-mode-map
   (let ((map (make-sparse-keymap)))
     (define-key map (kbd "C-c C-c") 'd2-compile)
@@ -1917,7 +1927,9 @@ Look for things like, but not limited to, syntax errors, logic errors, severe in
 	 "\n** TODO %?\n SCHEDULED: %t")
 	("n" "Now" entry (file+headline (lambda () (format "%s/today.org" org-agenda-basedir)) ,(if im-at-work "Today" "Tasks"))
 	 "\n** TODO %?\n SCHEDULED: %t" :clock-in t :clock-keep t)
-	("i" "Interrupt" entry (file+headline (lambda () (format "%s/today.org" org-agenda-basedir)) ,(if im-at-work "Today" "Tasks"))
+	("i" "Immediate" entry (file+headline (lambda () (format "%s/today.org" org-agenda-basedir)) ,(if im-at-work "Today" "Tasks"))
+	 "\n** READY %?\n SCHEDULED: %t" :clock-in t :clock-keep t)
+	("x" "Interrupt" entry (file+headline (lambda () (format "%s/today.org" org-agenda-basedir)) ,(if im-at-work "Today" "Tasks"))
 	 "\n** TODO %?\n SCHEDULED: %t" :clock-in t :clock-resume t)
 	("c" "Cookbook" entry (file "~/org/cookbook.org")
 	 "%(org-chef-get-recipe-from-url)"
@@ -2941,6 +2953,13 @@ If `DEVICE-NAME' is provided, it will be used instead of prompting the user."
   :straight (:host github
 	     :repo "noonker/agent-shell-monome"
 	     :files ("*.el")))
+
+(use-package agent-shell-org-loops
+  :straight (:type git :host github :repo "noonker/agent-shell-org-loops")
+  :after agent-shell
+  :config
+  (require 'agent-shell-anthropic)
+  (global-agent-shell-org-loops-mode 1))
 #+end_src
 
 * Music
@@ -3688,6 +3707,7 @@ Load my RSS feeds
 	("https://マリウス.com/index.xml" tech)
 	("https://the.unknown-universe.co.uk/feed/" unknown-universe tech)
 	("https://xenodium.com/rss" xenodium emacs tech)
+	("https://dadrian.io/blog/" david-adrian tech)
 	))
 #+end_src
 
@@ -3785,6 +3805,7 @@ Load my RSS feeds
 (evil-set-initial-state 'kubel-mode 'emacs)
 (evil-set-initial-state 'emacs-playlist 'emacs)
 (evil-set-initial-state 'term-mode 'emacs)
+(evil-set-initial-state 'org-capture-mode 'insert)
 
 ;; Trying out leader
 (use-package which-key
