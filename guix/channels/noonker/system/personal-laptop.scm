@@ -80,6 +80,29 @@
     "SUBSYSTEMS==\"usb\", ATTRS{idVendor}==\"0483\", ATTRS{idProduct}==\"5740\", MODE=\"0666\"\n"
     "SUBSYSTEMS==\"usb\", ATTRS{idVendor}==\"0483\", ATTRS{idProduct}==\"df11\", MODE=\"0666\"")))
 
+;; Android adb — match the common phone-vendor USB VIDs so adb/fastboot can
+;; talk to a plugged-in device without root. TAG+="uaccess" grants access to
+;; the active-seat user via elogind, same approach as debugprobe. If the
+;; phone's vendor isn't listed, grab its VID from `lsusb` and add a line.
+(define %android-udev-rule
+  (udev-rule
+   "51-android.rules"
+   (string-append
+    "SUBSYSTEM==\"usb\", ATTR{idVendor}==\"18d1\", MODE=\"0660\", TAG+=\"uaccess\"\n"  ;; Google / Pixel / Nexus
+    "SUBSYSTEM==\"usb\", ATTR{idVendor}==\"04e8\", MODE=\"0660\", TAG+=\"uaccess\"\n"  ;; Samsung
+    "SUBSYSTEM==\"usb\", ATTR{idVendor}==\"22b8\", MODE=\"0660\", TAG+=\"uaccess\"\n"  ;; Motorola
+    "SUBSYSTEM==\"usb\", ATTR{idVendor}==\"2a70\", MODE=\"0660\", TAG+=\"uaccess\"\n"  ;; OnePlus
+    "SUBSYSTEM==\"usb\", ATTR{idVendor}==\"2717\", MODE=\"0660\", TAG+=\"uaccess\"\n"  ;; Xiaomi
+    "SUBSYSTEM==\"usb\", ATTR{idVendor}==\"12d1\", MODE=\"0660\", TAG+=\"uaccess\"\n"  ;; Huawei
+    "SUBSYSTEM==\"usb\", ATTR{idVendor}==\"0bb4\", MODE=\"0660\", TAG+=\"uaccess\"\n"  ;; HTC
+    "SUBSYSTEM==\"usb\", ATTR{idVendor}==\"1004\", MODE=\"0660\", TAG+=\"uaccess\"\n"  ;; LG
+    "SUBSYSTEM==\"usb\", ATTR{idVendor}==\"0fce\", MODE=\"0660\", TAG+=\"uaccess\"\n"  ;; Sony
+    "SUBSYSTEM==\"usb\", ATTR{idVendor}==\"05c6\", MODE=\"0660\", TAG+=\"uaccess\"\n"  ;; Qualcomm reference
+    "SUBSYSTEM==\"usb\", ATTR{idVendor}==\"0e8d\", MODE=\"0660\", TAG+=\"uaccess\"\n"  ;; MediaTek reference
+    "SUBSYSTEM==\"usb\", ATTR{idVendor}==\"2b4c\", MODE=\"0660\", TAG+=\"uaccess\"\n"  ;; Nothing
+    "SUBSYSTEM==\"usb\", ATTR{idVendor}==\"19d2\", MODE=\"0660\", TAG+=\"uaccess\"\n"  ;; ZTE
+    "SUBSYSTEM==\"usb\", ATTR{idVendor}==\"109b\", MODE=\"0660\", TAG+=\"uaccess\"")))  ;; Hisense
+
 ;; Allow members of the netdev group to manage NetworkManager without
 ;; a polkit authentication prompt — needed because niri does not run a
 ;; polkit authentication agent, so otherwise nmtui/nmcli silently fail
@@ -213,6 +236,7 @@
 	  (udev-rules-service 'saleae-logic saleae-logic)
 	  (udev-rules-service 'debugprobe %debugprobe-udev-rule)
 	  (udev-rules-service 'flipperzero %flipperzero-udev-rule)
+	  (udev-rules-service 'android %android-udev-rule)
 	  (udev-hardware-service 'capslock %capslock-hwdb-udev-rule)
 	  (simple-service 'netdev-nm-polkit
 			  polkit-service-type

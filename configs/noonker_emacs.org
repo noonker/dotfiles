@@ -9,11 +9,55 @@ It is broken up into several sections:
  - Programming - Packages & tweaks to programming modes
  - Text - Any packages which are used primarily for writing of text (mostly org-mode)
  - Custom Functions - Any simple functions I've added to enrich my emacs life
+* Mobile
+#+begin_src emacs-lisp :tangle ~/.emacs
+(when (string-equal system-type "android")
+  ;; Add Termux binaries to PATH environment
+  (let ((termuxpath "/data/data/com.termux/files/usr/bin")
+	(userpath "/data/data/org.gnu.emacs/files/bin")
+	(clojurepath "/data/data/org.gnu.emacs/files/bin/bin/"))
+    (setenv "PATH" (concat (getenv "PATH") ":" termuxpath))
+    (setenv "PATH" (concat (getenv "PATH") ":" userpath))
+    (setenv "PATH" (concat (getenv "PATH") ":" clojurepath))
+    (setq exec-path (append exec-path (list termuxpath clojurepath userpath)))
+    (getenv "PATH")
+
+    ;; LaTeX
+
+    (let ((texpath "/data/data/com.termux/files/usr/bin/texlive")
+	  (texmfroot "/data/data/com.termux/files/usr/share/texlive/2025")
+	  (texmflocal "/data/data/com.termux/files/usr/share/texlive/texmf-local")
+	  (texfontdir "/data/data/com.termux/files/usr/share/fonts/TTF")
+	  (textrfont "/data/data/com.termux/files/usr/share/groff/{current/font,site-font}/devps"))
+
+      (setenv "PATH" (concat (getenv "PATH") ":" texpath))
+      (setq exec-path (append exec-path (list texpath)))
+      (setenv "TEXMFROOT" texmfroot)
+      (setenv "TEXMFLOCAL" texmflocal)
+      (setenv "OSFONTDIR" texfontdir)
+      (setenv "TRFONTS" textrfont)
+      )
+
+    ;; Enable Emojis on Android 😀
+    (set-fontset-font t 'emoji '("Noto Emoji" . "iso10646-1") nil 'prepend)
+
+    ;; (push "/data/data/com.termux/files/usr/bin" exec-path)
+
+    ;; Not ideal workaround
+
+    ;; (shell-command-to-string "gpgconf --kill gpg-agent")
+
+    (add-hook 'after-change-major-mode-hook (lambda () (set-text-conversion-style nil)))
+
+    (setenv "JAVA_CMD" "/data/data/com.termux/files/usr/bin/java")))
+#+end_src
+
 * Bootstrap Straight.el
 
 This section sets up [[https://github.com/radian-software/straight.el][straight.el]] with [[https://github.com/jwiegley/use-package][use-package]] to simplify setup of emacs. These packages allow me to control how the packages are installed, when they are loaded, and which configurations should be run with them.
 
 #+begin_src emacs-lisp :tangle ~/.emacs
+;; -*- lexical-binding: t -*-
 (defvar bootstrap-version)
 
 (let ((bootstrap-file
@@ -254,7 +298,7 @@ Leuven Theme and Comic Mono
 #+begin_src emacs-lisp :tangle ~/.emacs
 (use-package autothemer)
 
-(defvar how-ya-feeling 'burn-my-eyes)
+(defvar how-ya-feeling 'dark-tbh)
 
 (cond
  ((eq how-ya-feeling 'dark-tbh)
@@ -2966,13 +3010,14 @@ If `DEVICE-NAME' is provided, it will be used instead of prompting the user."
 #+begin_src emacs-lisp :tangle ~/.emacs
 (if is-guix
     (progn
+			(setenv "QT_QPA_PLATFORM" "xcb")
       (add-to-list 'load-path "/home/person/.local/share/SuperCollider/downloaded-quarks/scel/el")
       (defvar company-backends nil)
       (require 'sclang)
       (load-file "~/git/scel/el/sclang-interp.el")
       ;; Headless Qt platform so sclang (built with Qt) doesn't try to load
       ;; a wayland/xcb plugin when launched as an emacs subprocess.
-      (setenv "QT_QPA_PLATFORM" "offscreen")
+      ;; (setenv "QT_QPA_PLATFORM" "offscreen")
       ;; LD_LIBRARY_PATH for pipewire's libjack shim is set in
       ;; home-configuration.scm, so `pw-jack` is no longer needed.
       (setq sclang-use-pw-jack nil)
@@ -3172,7 +3217,7 @@ Load my RSS feeds
 #+end_src
 
 * Doom
-#+begin_src emacs-lisp :tangle ~/.emacs
+#+begin_src emacs-lisp
 (use-package doom-modeline
   :config (doom-modeline-mode 1))
 

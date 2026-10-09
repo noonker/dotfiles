@@ -390,6 +390,15 @@
                      ("XDG_CURRENT_DESKTOP" . "niri")
                      ("XDG_SESSION_TYPE" . "wayland")
 		     ("MOZ_ENABLE_WAYLAND" . "1")
+                     ;; Qt on Guix ships no wayland plugin, so Qt apps
+                     ;; (sclang, qpwgraph, carla) route through XWayland.
+                     ;; DISPLAY must be exported globally — niri's
+                     ;; `environment { DISPLAY ":0" }` only reaches
+                     ;; niri's own children, not shepherd-launched
+                     ;; daemons like the emacs server that later fork
+                     ;; sclang.
+                     ;; ("DISPLAY" . ":0")
+                     ("QT_QPA_PLATFORM" . "xcb")
                      ("ROFI_MEDIA_PLAYER" . "mpv")
                      ("XDG_DATA_DIRS" . "$HOME/.local/share/flatpak/exports/share:/var/lib/flatpak/exports/share:$XDG_DATA_DIRS")
                      ;; Make pipewire's libjack shim win over the real libjack
