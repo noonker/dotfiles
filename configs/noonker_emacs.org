@@ -1614,7 +1614,10 @@ Look for things like, but not limited to, syntax errors, logic errors, severe in
 ** Kubernetes
 
 #+begin_src emacs-lisp :tangle ~/.emacs
-(use-package kubel)
+(use-package kubel
+  ;; Fork with argo/cilium/virtctl/talos/helm porcelains:
+  ;; M-x kubel-argo, kubel-cilium, kubel-virtctl, kubel-talos, kubel-helm
+  :straight (:host github :repo "noonker/kubel"))
 (use-package docker)
 (setq docker-command "podman")
 #+end_src
@@ -3131,7 +3134,7 @@ If `DEVICE-NAME' is provided, it will be used instead of prompting the user."
 (setq norns-host "norns.local")
 
 (defun noonker/norns-rsync-repo ()
-  "Async rsync of git-changed files in the current repo to n:dust/code/<repo>/."
+  "Async rsync of tracked + untracked (non-ignored) files in the current repo to n:dust/code/<repo>/."
   (interactive)
   (let ((root (locate-dominating-file default-directory ".git")))
     (unless root (user-error "Not in a git repository"))
@@ -3141,21 +3144,23 @@ If `DEVICE-NAME' is provided, it will be used instead of prompting the user."
            (default-directory root)
            (buf (get-buffer-create "*norns-rsync*"))
            (cmd (format
-                 "git ls-files -m -o --exclude-standard -z | rsync -av --from0 --files-from=- ./ %s"
+                 "git ls-files -c -o --exclude-standard -z | rsync -av --from0 --files-from=- ./ %s"
                  (shell-quote-argument dest))))
       (with-current-buffer buf
         (erase-buffer)
         (insert (format "$ %s\n\n" cmd)))
       (let ((proc (start-process-shell-command "norns-rsync" buf cmd)))
+        (process-put proc 'norns-rsync-dest dest)
         (set-process-sentinel
          proc
          (lambda (p _e)
            (when (memq (process-status p) '(exit signal))
-             (if (zerop (process-exit-status p))
-                 (message "norns-rsync: %s ✓" dest)
-               (message "norns-rsync: failed (exit %d) — see %s"
-                        (process-exit-status p)
-                        (buffer-name (process-buffer p)))))))))))
+             (let ((d (process-get p 'norns-rsync-dest)))
+               (if (zerop (process-exit-status p))
+                   (message "norns-rsync: %s ✓" d)
+                 (message "norns-rsync: failed (exit %d) — see %s"
+                          (process-exit-status p)
+                          (buffer-name (process-buffer p))))))))))))
 #+end_src
 
 * Hunting

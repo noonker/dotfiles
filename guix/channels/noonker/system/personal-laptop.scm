@@ -282,11 +282,9 @@
 		   (guix-configuration
 		    (inherit config)
 		    (substitute-urls
-		     ;; Disabled for travel — http and leaks the name
-		     ;; of every package you pull to whoever's on the
-		     ;; network path. Restore after the trip:
-		     ;;   (cons "http://guix.xk.is" %default-substitute-urls)
-		     %default-substitute-urls)
+		     ;; https only — the internal gateway has no :80
+		     ;; listener. LAN-only name; off-LAN it's skipped.
+		     (cons "https://guix.xk.is" %default-substitute-urls))
 		    (authorized-keys
 		     (cons (local-file "../../../configs/xk-substitutes.pub")
 			   %default-authorized-guix-keys)))))))

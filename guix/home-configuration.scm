@@ -186,6 +186,7 @@
 					"alsa-utils"
 					"carla"
 					"liblo"          ;oscsend, oscdump
+					"pd"             ;Pure Data
 					"qpwgraph"
 					"supercollider"
 					"winetricks"
