@@ -412,6 +412,35 @@ Emacs can nearly transparently use .gpg encrypted files in emacs. These settings
 (setf epg-pinentry-mode 'loopback) ;; No UI popup. Ask for password in modeline
 #+end_src
 
+** Mac Scroll
+#+begin_src emacs-lisp :tangle ~/.emacs
+(use-package ultra-scroll
+  :init
+  (setq scroll-conservatively 3 ; or whatever value you prefer, since v0.4
+        scroll-margin 0)        ; scroll-margin>0 is now supported, since v0.7
+  :config
+  (ultra-scroll-mode 1))
+#+end_src
+
+** $EDITOR
+#+begin_src emacs-lisp :tangle ~/.emacs
+(defun my-server-save-and-done ()
+  "Save the buffer and hand it back to emacsclient."
+  (interactive)
+  (save-buffer)
+  (server-edit))
+
+(define-minor-mode my-server-edit-mode
+  "Keys for buffers opened via emacsclient."
+  :keymap `((,(kbd "C-c C-c") . my-server-save-and-done)))
+
+;; Turn on C-c C-c in every buffer emacsclient opens
+(add-hook 'server-visit-hook #'my-server-edit-mode)
+;; Bring the Emacs frame to the front and give it focus
+(add-hook 'server-switch-hook
+          (lambda () (select-frame-set-input-focus (selected-frame))))
+#+end_src
+
 * Evil?
 
 Lispy mode makes lisp-mode editing significantly more efficent
@@ -1618,8 +1647,7 @@ Look for things like, but not limited to, syntax errors, logic errors, severe in
   ;; Fork with argo/cilium/virtctl/talos/helm porcelains:
   ;; M-x kubel-argo, kubel-cilium, kubel-virtctl, kubel-talos, kubel-helm
   :straight (:host github :repo "noonker/kubel"))
-(use-package docker)
-(setq docker-command "podman")
+(setq kubel-list-wide t)
 #+end_src
 
 * PDF
@@ -1753,7 +1781,7 @@ Look for things like, but not limited to, syntax errors, logic errors, severe in
 
 (setq org-directory "~/org")
 (setq org-agenda-basedir "~/org/tasks")
-
+(setq org-image-actual-width nil)
 (setq org-startup-align-all-tables t) ;; Aligns tables when a file is opened
 (setq org-clock-out-switch-to-state "TODO")
 (setq org-clock-out-remove-zero-time-clocks nil)
@@ -2184,6 +2212,12 @@ Blogging with hugo
   (insert (completing-read "tag: " '("thoughts" "microblogging" "emacs" "tech" "hell" "accordion" "ctf" "security" "tools" "email" "privacy"))))
 #+end_src
 
+*** Json-to-org-table
+#+begin_src emacs-lisp :tangle ~/.emacs
+(use-package json-to-org-table
+  :straight (:host github :repo "noonker/json-to-org-table"))
+#+end_src
+
 ** Easydraw
 
 #+begin_src emacs-lisp :tangle ~/.emacs
@@ -2316,6 +2350,19 @@ These functions enable options where you can have one buffer of commands to run 
   (other-window 1)
   (balance-windows))
 
+(defun noonker/copy-line-to-other-window (&optional frame)
+  "Copy the current line to point in the other window.
+With prefix arg FRAME, use the selected window of the next frame instead."
+  (interactive "P")
+  (let ((line (buffer-substring (line-beginning-position)
+                                (line-beginning-position 2)))
+        (target (if frame
+                    (frame-selected-window (next-frame))
+                  (next-window))))
+    (with-selected-window target
+      (insert line))))
+
+(global-set-key (kbd "C-c l") #'noonker/copy-line-to-other-window)
 (global-set-key (kbd "C-c y") `cnc-prompt)
 (global-set-key (kbd "C-c C-.") `cnc-from-file)
 #+end_src
