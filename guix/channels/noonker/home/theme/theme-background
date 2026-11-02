@@ -1,14 +1,6 @@
 #!/bin/sh
-# Run the desktop's background shader.  The night sky has tonight's moon, and shaderbg
-# can't tell a shader the date, so the phase is written into a copy of it here.  This
-# runs again at each sunrise and sunset, which is often enough for the moon.
-
+# Run the desktop's background shader, on the theme's own build of shaderbg (see
+# noonker/packages/shaderbg.scm).  Everything a shader needs to know about the sky it now
+# works out from the real clock, so this is only run again when the mode changes.
 state_dir=${XDG_STATE_HOME:-$HOME/.local/state}/theme
-
-# Seconds into the mean lunar month of 2551443s, counted from the new moon of
-# 2000-01-06 18:14 UTC, as a fraction: 0 is new and 0.5 is full.
-age=$(( ($(date +%s) - 947182440) % 2551443 ))
-phase=$(printf '0.%04d' $(( age * 10000 / 2551443 )))
-
-sed "s/@moon-phase@/$phase/" "$state_dir/current/background.frag" > "$state_dir/background.frag"
-exec shaderbg --fps 15 '*' "$state_dir/background.frag"
+exec "$HOME/.guix-home/profile/bin/shaderbg" --fps 15 --bake 20 '*' "$state_dir/current/background.frag"

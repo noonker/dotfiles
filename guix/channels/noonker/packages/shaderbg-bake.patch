@@ -1,0 +1,733 @@
+Make shaderbg good enough for a detailed background on a laptop:
+
+- Render at the output's real resolution, through fractional-scale-v1 and viewporter.
+  It used to render at the logical size and let the compositor scale that up.
+- Add --bake, which draws the slow parts of a shader to textures every so often, so
+  that a frame costs next to nothing however detailed the picture is.  It also adds
+  per-frame vertex setup, and a leading #version in the shader is kept first.
+- Give shaders the real clock as iEpoch, since iTime stops during suspend.
+- Set iFrame with glUniform1f.  It's declared a float, so using it was a fatal GL error.
+- Destroy a layer surface before its wl_surface.  The other way round is a protocol
+  error on wlroots compositors, which ended the program when a display was unplugged.
+
+diff --git a/main.c b/main.c
+index b2ea54b..d3e471b 100644
+--- a/main.c
++++ b/main.c
+@@ -14,6 +14,8 @@
+  * this program. If not, see <https://www.gnu.org/licenses/>.
+  */
+ 
++#include "fractional-scale-v1-client-protocol.h"
++#include "viewporter-client-protocol.h"
+ #include "wlr-layer-shell-unstable-v1-client-protocol.h"
+ 
+ #include <EGL/egl.h>
+@@ -34,13 +36,25 @@
+ #include <wayland-egl.h>
+ 
+ static char usage[] = {
+-		"shaderbg [-h|--fps F|--layer l|--speed S] output-name shader.frag\n"
+-		"The provided fragment shaders should follow the Shadertoy API\n"};
++		"shaderbg [-h|--fps F|--layer l|--speed S|--bake SECONDS] output-name shader.frag\n"
++		"The provided fragment shaders should follow the Shadertoy API\n"
++		"\n"
++		"With --bake, keep the #version line first and write three more things for the\n"
++		"shader to be compiled with.  With BAKE defined, run every SECONDS:\n"
++		"    void bakeImage(out vec4 a, out vec4 b, in vec2 fragCoord)\n"
++		"That draws over several frames, so it can be slow.  mainImage then gets the two\n"
++		"textures as iChannel0 and iChannel1, and the two before them as iChannel2 and\n"
++		"iChannel3, with iBakeMix fading from the old to the new.  With VERTEX defined, run\n"
++		"once per frame rather than per pixel, passing what it finds on as flat varyings:\n"
++		"    void sceneSetup()\n"
++		"iEpoch is the moment being drawn as (whole days, fraction of a day) since J2000\n"
++		"UTC, by the real clock: in mainImage, the moment of the baked image on screen.\n"};
+ 
+ static const struct option options[] = {{"help", no_argument, NULL, 'h'},
+ 		{"speed", required_argument, NULL, 's'},
+ 		{"fps", required_argument, NULL, 'f'},
+-		{"layer", required_argument, NULL, 'l'}, {0, 0, NULL, 0}};
++		{"layer", required_argument, NULL, 'l'},
++		{"bake", required_argument, NULL, 'b'}, {0, 0, NULL, 0}};
+ 
+ PFNGLCREATESHADERPROC glCreateShader;
+ PFNGLCOMPILESHADERPROC glCompileShader;
+@@ -68,6 +82,12 @@ PFNGLUNIFORM4FPROC glUniform4f;
+ PFNGLUNIFORM1IPROC glUniform1i;
+ PFNGLDELETESHADERPROC glDeleteShader;
+ PFNGLENABLEVERTEXATTRIBARRAYPROC glEnableVertexAttribArray;
++PFNGLGENFRAMEBUFFERSPROC glGenFramebuffers;
++PFNGLDELETEFRAMEBUFFERSPROC glDeleteFramebuffers;
++PFNGLBINDFRAMEBUFFERPROC glBindFramebuffer;
++PFNGLFRAMEBUFFERTEXTURE2DPROC glFramebufferTexture2D;
++PFNGLCHECKFRAMEBUFFERSTATUSPROC glCheckFramebufferStatus;
++PFNGLDRAWBUFFERSPROC glDrawBuffers;
+ 
+ #define load_gl_func(type, name) name = (type)eglGetProcAddress(#name)
+ void load_gl_funcs()
+@@ -99,12 +119,36 @@ void load_gl_funcs()
+ 	load_gl_func(PFNGLDELETESHADERPROC, glDeleteShader);
+ 	load_gl_func(PFNGLENABLEVERTEXATTRIBARRAYPROC,
+ 			glEnableVertexAttribArray);
++	load_gl_func(PFNGLGENFRAMEBUFFERSPROC, glGenFramebuffers);
++	load_gl_func(PFNGLDELETEFRAMEBUFFERSPROC, glDeleteFramebuffers);
++	load_gl_func(PFNGLBINDFRAMEBUFFERPROC, glBindFramebuffer);
++	load_gl_func(PFNGLFRAMEBUFFERTEXTURE2DPROC, glFramebufferTexture2D);
++	load_gl_func(PFNGLCHECKFRAMEBUFFERSTATUSPROC, glCheckFramebufferStatus);
++	load_gl_func(PFNGLDRAWBUFFERSPROC, glDrawBuffers);
+ }
+ #undef load_gl_func
+ 
++/* The bake is spread over this many frames, so that a slow shader can't hold up the
++ * compositor's own drawing on the same GPU. */
++#define BAKE_TILES 16
++/* A new bake fades in over this long, or half the interval if that's shorter. */
++#define BAKE_FADE_SECONDS 3.f
++
++struct uniforms {
++	GLint resolution;
++	GLint time;
++	GLint time_delta;
++	GLint frame;
++	GLint mouse;
++	GLint epoch;
++	GLint bake_mix;
++	GLint channel[4];
++};
++
+ struct state {
+ 	float fps;   // how often to update output
+ 	float speed; // ratio of real time to shader time
++	float bake_interval; // seconds between bakes; 0 if the shader doesn't bake
+ 	enum zwlr_layer_shell_v1_layer layer;
+ 	char *output_name;
+ 	char *shader_path;
+@@ -116,18 +160,18 @@ struct state {
+ 	EGLContext egl_context;
+ 	struct wl_compositor *compositor;
+ 	struct zwlr_layer_shell_v1 *layer_shell;
++	struct wp_viewporter *viewporter;
++	struct wp_fractional_scale_manager_v1 *fractional_scale_manager;
+ 
+ 	float current_time;
+ 	float delta_time;
+ 	uint64_t frame_no;
+ 
+ 	GLuint shader_prog;
++	GLuint bake_prog;
+ 	GLuint attr_pos;
+-	GLuint unif_iResolution;
+-	GLuint unif_iTime;
+-	GLuint unif_iTimeDelta;
+-	GLuint unif_iFrame;
+-	GLuint unif_iMouse;
++	struct uniforms unif;
++	struct uniforms bake_unif;
+ 
+ 	GLuint vertex_buffer;
+ 	GLuint vertex_array;
+@@ -151,11 +195,25 @@ struct output {
+ 	EGLSurface egl_surface;
+ 	/* if frame_callback is nonzero, do not render frame yet */
+ 	struct wl_callback *frame_callback;
++	struct wp_viewport *viewport;
++	struct wp_fractional_scale_v1 *fractional_scale;
+ 
+-	int width, height;
++	int logical_width, logical_height;
++	uint32_t scale_120; // the compositor's preferred scale, in 120ths
++	int width, height;  // of the buffer, in real pixels
+ 	bool needs_ack;
+ 	bool needs_resize;
+ 	uint32_t last_serial;
++
++	/* Two pairs of textures: the bake on screen and the one before it or being drawn. */
++	GLuint bake_fbo[2];
++	GLuint bake_tex[2][2];
++	double bake_epoch[2];
++	int bake_width, bake_height;
++	int bake_current;
++	int bake_tile; // of the bake in progress into the other pair, or -1
++	float bake_fade_start;
++	float bake_next;
+ };
+ 
+ static bool check_gl_errors(const char *where)
+@@ -171,21 +229,36 @@ static bool check_gl_errors(const char *where)
+ 
+ static void destroy_output(struct output *output)
+ {
++	struct state *state = output->state;
+ 	if (output->frame_callback) {
+ 		wl_callback_destroy(output->frame_callback);
+ 	}
++	if (output->bake_width) {
++		glDeleteFramebuffers(2, output->bake_fbo);
++		glDeleteTextures(4, &output->bake_tex[0][0]);
++	}
+ 	if (output->egl_surface) {
+-		eglDestroySurface(output->state->egl_display,
+-				output->egl_surface);
++		/* Don't leave it current; the next redraw makes another current. */
++		eglMakeCurrent(state->egl_display, EGL_NO_SURFACE, EGL_NO_SURFACE,
++				state->egl_context);
++		eglDestroySurface(state->egl_display, output->egl_surface);
+ 	}
+-	if (output->surface) {
+-		wl_surface_destroy(output->surface);
++	if (output->egl_window) {
++		wl_egl_window_destroy(output->egl_window);
++	}
++	if (output->fractional_scale) {
++		wp_fractional_scale_v1_destroy(output->fractional_scale);
+ 	}
++	if (output->viewport) {
++		wp_viewport_destroy(output->viewport);
++	}
++	/* The role has to go before the surface, or it's a protocol error that ends the
++	 * program when a display is unplugged. */
+ 	if (output->layer_surface) {
+ 		zwlr_layer_surface_v1_destroy(output->layer_surface);
+ 	}
+-	if (output->egl_window) {
+-		wl_egl_window_destroy(output->egl_window);
++	if (output->surface) {
++		wl_surface_destroy(output->surface);
+ 	}
+ 
+ 	free(output->str_name);
+@@ -214,6 +287,123 @@ static struct wl_callback_listener frame_callback_listener = {
+ 		.done = frame_done,
+ };
+ 
++/* Days since J2000 UTC.  A shader's floats can't hold this, so it gets it in two parts. */
++static double epoch_now(void)
++{
++	struct timespec now;
++	clock_gettime(CLOCK_REALTIME, &now);
++	const int64_t j2000 = 946728000; // 2000-01-01 12:00 UTC
++	return ((double)((int64_t)now.tv_sec - j2000) + 1e-9 * (double)now.tv_nsec) /
++	       86400.;
++}
++
++static void set_uniforms(const struct state *state, const struct uniforms *unif,
++		const struct output *output, double epoch, float mix)
++{
++	glUniform1f(unif->time, state->current_time);
++	glUniform1f(unif->time_delta, state->delta_time);
++	glUniform3f(unif->resolution, (GLfloat)output->width,
++			(GLfloat)output->height, 0.);
++	glUniform1f(unif->frame, (GLfloat)state->frame_no);
++	glUniform4f(unif->mouse, 0., 0., 0., 0.);
++	double days = (double)(int64_t)epoch;
++	glUniform2f(unif->epoch, (GLfloat)days, (GLfloat)(epoch - days));
++	glUniform1f(unif->bake_mix, mix);
++	for (int i = 0; i < 4; i++) {
++		glUniform1i(unif->channel[i], i);
++	}
++}
++
++static void bake_allocate(struct output *output)
++{
++	if (output->bake_width) {
++		glDeleteFramebuffers(2, output->bake_fbo);
++		glDeleteTextures(4, &output->bake_tex[0][0]);
++	}
++	glGenFramebuffers(2, output->bake_fbo);
++	glGenTextures(4, &output->bake_tex[0][0]);
++	static const GLenum attachments[2] = {
++			GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1};
++	for (int pair = 0; pair < 2; pair++) {
++		glBindFramebuffer(GL_FRAMEBUFFER, output->bake_fbo[pair]);
++		for (int i = 0; i < 2; i++) {
++			glBindTexture(GL_TEXTURE_2D, output->bake_tex[pair][i]);
++			glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, output->width,
++					output->height, 0, GL_RGBA,
++					GL_UNSIGNED_BYTE, NULL);
++			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER,
++					GL_LINEAR);
++			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER,
++					GL_LINEAR);
++			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S,
++					GL_MIRRORED_REPEAT);
++			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T,
++					GL_MIRRORED_REPEAT);
++			glFramebufferTexture2D(GL_FRAMEBUFFER, attachments[i],
++					GL_TEXTURE_2D,
++					output->bake_tex[pair][i], 0);
++		}
++		glDrawBuffers(2, attachments);
++		if (glCheckFramebufferStatus(GL_FRAMEBUFFER) !=
++				GL_FRAMEBUFFER_COMPLETE) {
++			fprintf(stderr, "Bake framebuffer is incomplete\n");
++			exit(EXIT_FAILURE);
++		}
++	}
++	output->bake_width = output->width;
++	output->bake_height = output->height;
++}
++
++/* Bake some of a new image, if one is due.  The first, or the first after a resize,
++ * goes in one piece, as there's nothing yet to show in the meantime. */
++static void bake_step(struct output *output)
++{
++	struct state *state = output->state;
++	bool whole = output->bake_width != output->width ||
++		     output->bake_height != output->height;
++	if (whole) {
++		bake_allocate(output);
++		output->bake_current = 1;
++		output->bake_tile = 0;
++	} else if (output->bake_tile < 0) {
++		if (state->current_time < output->bake_next) {
++			return;
++		}
++		output->bake_tile = 0;
++	}
++	int target = 1 - output->bake_current;
++	if (output->bake_tile == 0) {
++		output->bake_epoch[target] = epoch_now();
++	}
++
++	glBindFramebuffer(GL_FRAMEBUFFER, output->bake_fbo[target]);
++	glUseProgram(state->bake_prog);
++	set_uniforms(state, &state->bake_unif, output, output->bake_epoch[target], 1.f);
++	glDisable(GL_BLEND);
++	if (whole) {
++		glDrawArrays(GL_TRIANGLE_FAN, 0, 3);
++		output->bake_tile = BAKE_TILES;
++	} else {
++		int row = output->bake_tile;
++		int y0 = output->height * row / BAKE_TILES;
++		int y1 = output->height * (row + 1) / BAKE_TILES;
++		glEnable(GL_SCISSOR_TEST);
++		glScissor(0, y0, output->width, y1 - y0);
++		glDrawArrays(GL_TRIANGLE_FAN, 0, 3);
++		glDisable(GL_SCISSOR_TEST);
++		output->bake_tile++;
++	}
++
++	if (output->bake_tile == BAKE_TILES) {
++		output->bake_current = target;
++		output->bake_tile = -1;
++		output->bake_fade_start =
++				whole ? state->current_time - 1000.f
++				      : state->current_time;
++		output->bake_next = state->current_time + state->bake_interval;
++	}
++}
++
+ static void redraw(struct output *output)
+ {
+ 	struct state *state = output->state;
+@@ -224,24 +414,46 @@ static void redraw(struct output *output)
+ 	}
+ 
+ 	glViewport(0, 0, output->width, output->height);
+-
+-	glClear(GL_COLOR_BUFFER_BIT);
+-
+ 	glBindVertexArray(state->vertex_array);
+ 	glBindBuffer(GL_ARRAY_BUFFER, state->vertex_buffer);
+-	glUseProgram(state->shader_prog);
+-
+ 	// todo: why do we need to call this here?
+ 	glVertexAttribPointer(
+ 			state->attr_pos, 2, GL_FLOAT, GL_FALSE, 0, (void *)0);
+ 
+-	glUniform1f(state->unif_iTime, state->current_time);
+-	glUniform1f(state->unif_iTimeDelta, state->delta_time);
+-	GLfloat w = output->width, h = output->height;
+-	glUniform3f(state->unif_iResolution, w, h, 0.);
+-	glUniform1i(state->unif_iFrame, state->frame_no);
+-	glUniform4f(state->unif_iMouse, 0., 0., 0., 0.);
++	double epoch = 0.;
++	float mix = 1.f;
++	if (state->bake_interval > 0.f) {
++		bake_step(output);
++		glBindFramebuffer(GL_FRAMEBUFFER, 0);
+ 
++		float fade = state->bake_interval / 2.f;
++		if (fade > BAKE_FADE_SECONDS) {
++			fade = BAKE_FADE_SECONDS;
++		}
++		mix = (state->current_time - output->bake_fade_start) / fade;
++		mix = mix > 1.f ? 1.f : mix;
++
++		int current = output->bake_current;
++		double older = output->bake_epoch[1 - current];
++		epoch = output->bake_epoch[current];
++		if (mix < 1.f) {
++			epoch = older + (epoch - older) * (double)mix;
++		}
++		for (int i = 0; i < 2; i++) {
++			glActiveTexture(GL_TEXTURE0 + i);
++			glBindTexture(GL_TEXTURE_2D,
++					output->bake_tex[current][i]);
++			glActiveTexture(GL_TEXTURE2 + i);
++			glBindTexture(GL_TEXTURE_2D,
++					output->bake_tex[1 - current][i]);
++		}
++	} else {
++		epoch = epoch_now();
++	}
++
++	glClear(GL_COLOR_BUFFER_BIT);
++	glUseProgram(state->shader_prog);
++	set_uniforms(state, &state->unif, output, epoch, mix);
+ 	glDrawArrays(GL_TRIANGLE_FAN, 0, 3);
+ 
+ 	if (!check_gl_errors("drawing")) {
+@@ -249,6 +461,33 @@ static void redraw(struct output *output)
+ 	}
+ }
+ 
++/* The buffer's size follows the compositor's scale, so that one texel is one real pixel;
++ * the viewport then maps it onto the surface's logical size. */
++static void update_buffer_size(struct output *output)
++{
++	int width = (output->logical_width * (int)output->scale_120 + 60) / 120;
++	int height = (output->logical_height * (int)output->scale_120 + 60) / 120;
++	if (width != output->width || height != output->height) {
++		output->width = width;
++		output->height = height;
++		output->needs_resize = true;
++	}
++}
++
++static void fractional_scale_preferred(void *data,
++		struct wp_fractional_scale_v1 *fractional_scale, uint32_t scale)
++{
++	struct output *output = data;
++	output->scale_120 = scale;
++	if (output->logical_width) {
++		update_buffer_size(output);
++	}
++}
++
++static const struct wp_fractional_scale_v1_listener fractional_scale_listener = {
++		.preferred_scale = fractional_scale_preferred,
++};
++
+ static void layer_surface_configure(void *data,
+ 		struct zwlr_layer_surface_v1 *zwlr_layer_surface_v1,
+ 		uint32_t serial, uint32_t width, uint32_t height)
+@@ -256,13 +495,19 @@ static void layer_surface_configure(void *data,
+ 	struct output *output = data;
+ 	struct state *state = output->state;
+ 	if (width > 0) {
+-		output->width = width;
++		output->logical_width = (int)width;
+ 	}
+ 	if (height > 0) {
+-		output->height = height;
++		output->logical_height = (int)height;
++	}
++	update_buffer_size(output);
++	if (output->viewport && output->logical_width && output->logical_height) {
++		wp_viewport_set_destination(output->viewport,
++				output->logical_width, output->logical_height);
+ 	}
+ 
+ 	if (!output->egl_window) {
++		output->needs_resize = false;
+ 		zwlr_layer_surface_v1_ack_configure(
+ 				zwlr_layer_surface_v1, serial);
+ 
+@@ -358,6 +603,17 @@ static void output_done(void *data, struct wl_output *wl_output)
+ 				output->layer_surface, -1);
+ 		zwlr_layer_surface_v1_add_listener(output->layer_surface,
+ 				&layer_surface_listener, output);
++		if (state->viewporter && state->fractional_scale_manager) {
++			output->viewport = wp_viewporter_get_viewport(
++					state->viewporter, output->surface);
++			output->fractional_scale =
++					wp_fractional_scale_manager_v1_get_fractional_scale(
++							state->fractional_scale_manager,
++							output->surface);
++			wp_fractional_scale_v1_add_listener(
++					output->fractional_scale,
++					&fractional_scale_listener, output);
++		}
+ 		wl_surface_commit(output->surface);
+ 	}
+ }
+@@ -400,6 +656,15 @@ static void registry_global(void *data, struct wl_registry *registry,
+ 	} else if (strcmp(interface, zwlr_layer_shell_v1_interface.name) == 0) {
+ 		state->layer_shell = wl_registry_bind(registry, name,
+ 				&zwlr_layer_shell_v1_interface, 1);
++	} else if (strcmp(interface, wp_viewporter_interface.name) == 0) {
++		state->viewporter = wl_registry_bind(
++				registry, name, &wp_viewporter_interface, 1);
++	} else if (strcmp(interface,
++				   wp_fractional_scale_manager_v1_interface.name) ==
++			0) {
++		state->fractional_scale_manager = wl_registry_bind(registry,
++				name, &wp_fractional_scale_manager_v1_interface,
++				1);
+ 	} else if (strcmp(interface, wl_output_interface.name) == 0 &&
+ 			version >= 4) {
+ 		/* we only accept version >= 4 outputs, as those provide their
+@@ -418,6 +683,8 @@ static void registry_global(void *data, struct wl_registry *registry,
+ 		output->output = wl_output;
+ 		output->state = state;
+ 		output->output_name = name;
++		output->scale_120 = 120;
++		output->bake_tile = -1;
+ 
+ 		wl_list_insert(&state->outputs, &output->link);
+ 	}
+@@ -451,19 +718,108 @@ static const char vertex_shader_text[] =
+ 		"  gl_Position = vec4(pos.x, pos.y, 0, 1);\n"
+ 		"}\n";
+ 
++static const char bake_vertex_coda[] =
++		"in vec2 pos;\n"
++		"void main() {\n"
++		"    gl_Position = vec4(pos, 0.0, 1.0);\n"
++		"    sceneSetup();\n"
++		"}\n";
++
++static const char bake_frag_coda[] =
++		"void main() {\n"
++		"    vec4 a = vec4(0.0), b = vec4(0.0);\n"
++		"    bakeImage(a, b, gl_FragCoord.xy);\n"
++		"    gl_FragData[0] = a;\n"
++		"    gl_FragData[1] = b;\n"
++		"}\n";
++
+ /* Only one newline -- these can mess up the line count in the composed shader
+ and make debugging harder */
+ static const char frag_prologue[] = "uniform vec3 iResolution; "
+ 				    "uniform float iTime; "
+ 				    "uniform float iTimeDelta; "
+ 				    "uniform float iFrame; "
+-				    "uniform vec4 iMouse;\n";
++				    "uniform vec4 iMouse; "
++				    "uniform vec2 iEpoch; "
++				    "uniform float iBakeMix; "
++				    "uniform sampler2D iChannel0; "
++				    "uniform sampler2D iChannel1; "
++				    "uniform sampler2D iChannel2; "
++				    "uniform sampler2D iChannel3;\n";
+ 
+ static const char frag_coda[] =
+ 		"void main() {\n"
+ 		"    mainImage(gl_FragColor, gl_FragCoord.xy);\n"
+ 		"}\n";
+ 
++/* The source's parts in their proper order.  A #version must come before all else. */
++static GLuint compile_shader(GLenum kind, const char *version, int version_len,
++		const char *defines, const char *body, int body_len,
++		const char *coda)
++{
++	GLuint shader = glCreateShader(kind);
++	const char *parts[] = {version, defines, frag_prologue, body, coda};
++	int lengths[] = {
++			version_len,
++			(int)strlen(defines),
++			sizeof(frag_prologue) - 1,
++			body_len,
++			(int)strlen(coda),
++	};
++	glShaderSource(shader, 5, parts, lengths);
++	glCompileShader(shader);
++
++	GLint status;
++	glGetShaderiv(shader, GL_COMPILE_STATUS, &status);
++	if (!status) {
++		char log[4096] = {0};
++		GLsizei len;
++		glGetShaderInfoLog(shader, sizeof(log), &len, log);
++		fprintf(stderr, "Failed to compile %s shader (%s): %.*s\n",
++				kind == GL_VERTEX_SHADER ? "vertex" : "fragment",
++				defines, len, log);
++		exit(EXIT_FAILURE);
++	}
++	return shader;
++}
++
++static GLuint link_program(GLuint frag_shader, GLuint vertex_shader, GLuint attr_pos)
++{
++	GLuint program = glCreateProgram();
++	glAttachShader(program, frag_shader);
++	glAttachShader(program, vertex_shader);
++	glBindAttribLocation(program, attr_pos, "pos");
++	glLinkProgram(program);
++
++	GLint status;
++	glGetProgramiv(program, GL_LINK_STATUS, &status);
++	if (!status) {
++		char log[4096] = {0};
++		GLsizei len;
++		glGetProgramInfoLog(program, sizeof(log), &len, log);
++		fprintf(stderr, "Failed to link shader:\n%.*s\n", len, log);
++		exit(EXIT_FAILURE);
++	}
++	glDeleteShader(frag_shader);
++	glDeleteShader(vertex_shader);
++	return program;
++}
++
++static void find_uniforms(GLuint program, struct uniforms *unif)
++{
++	unif->resolution = glGetUniformLocation(program, "iResolution");
++	unif->time = glGetUniformLocation(program, "iTime");
++	unif->time_delta = glGetUniformLocation(program, "iTimeDelta");
++	unif->frame = glGetUniformLocation(program, "iFrame");
++	unif->mouse = glGetUniformLocation(program, "iMouse");
++	unif->epoch = glGetUniformLocation(program, "iEpoch");
++	unif->bake_mix = glGetUniformLocation(program, "iBakeMix");
++	unif->channel[0] = glGetUniformLocation(program, "iChannel0");
++	unif->channel[1] = glGetUniformLocation(program, "iChannel1");
++	unif->channel[2] = glGetUniformLocation(program, "iChannel2");
++	unif->channel[3] = glGetUniformLocation(program, "iChannel3");
++}
++
+ int main(int argc, char **argv)
+ {
+ 	struct state state = {0};
+@@ -492,6 +848,14 @@ int main(int argc, char **argv)
+ 				return EXIT_FAILURE;
+ 			}
+ 		} break;
++		case 'b': {
++			char *endptr = NULL;
++			state.bake_interval = strtof(optarg, &endptr);
++			if (*endptr != '\0' || !(state.bake_interval > 0)) {
++				fprintf(stdout, "Invalid bake interval '%s'\n", optarg);
++				return EXIT_FAILURE;
++			}
++		} break;
+ 		case 's': {
+ 			char *endptr = NULL;
+ 			state.speed = strtof(optarg, &endptr);
+@@ -655,74 +1019,42 @@ int main(int argc, char **argv)
+ 	fread(frag_text, (size_t)frag_len, 1, frag_file);
+ 	fclose(frag_file);
+ 
+-	GLint glstatus;
+-
+-	GLuint frag_shader = glCreateShader(GL_FRAGMENT_SHADER);
+-	const char *frag_parts[] = {
+-			frag_prologue,
+-			frag_text,
+-			frag_coda,
+-	};
+-	int frag_lengths[] = {
+-			sizeof(frag_prologue) - 1,
+-			frag_len,
+-			sizeof(frag_coda) - 1,
+-	};
+-	glShaderSource(frag_shader, 3, frag_parts, frag_lengths);
+-	free(frag_text);
+-	glCompileShader(frag_shader);
+-
+-	glGetShaderiv(frag_shader, GL_COMPILE_STATUS, &glstatus);
+-	if (!glstatus) {
+-		char log[1024] = {0};
+-		GLsizei len;
+-		glGetShaderInfoLog(frag_shader, 1024, &len, log);
+-		fprintf(stderr, "Failed to compile fragment shader: %.*s\n",
+-				len, log);
+-		return EXIT_FAILURE;
+-	}
+-
+-	GLuint vertex_shader = glCreateShader(GL_VERTEX_SHADER);
+-	const char *vtext = vertex_shader_text;
+-
+-	glShaderSource(vertex_shader, 1, &vtext, NULL);
+-	glCompileShader(vertex_shader);
+-
+-	glGetShaderiv(vertex_shader, GL_COMPILE_STATUS, &glstatus);
+-	if (!glstatus) {
+-		char log[1024] = {0};
+-		GLsizei len;
+-		glGetShaderInfoLog(vertex_shader, 1024, &len, log);
+-		fprintf(stderr, "Failed to compile vertex shader: %.*s\n", len,
+-				log);
+-		return EXIT_FAILURE;
++	const char *frag_body = frag_text;
++	int version_len = 0;
++	if (frag_len > 8 && !strncmp(frag_text, "#version", 8)) {
++		const char *end = memchr(frag_text, '\n', (size_t)frag_len);
++		version_len = end ? (int)(end - frag_text) + 1 : frag_len;
++		frag_body = frag_text + version_len;
+ 	}
++	int body_len = frag_len - version_len;
+ 
+-	state.shader_prog = glCreateProgram();
+-	glAttachShader(state.shader_prog, frag_shader);
+-	glAttachShader(state.shader_prog, vertex_shader);
+ 	state.attr_pos = 0;
+-	glBindAttribLocation(state.shader_prog, state.attr_pos, "pos");
+-	glLinkProgram(state.shader_prog);
+-	glGetProgramiv(state.shader_prog, GL_LINK_STATUS, &glstatus);
+-	if (!glstatus) {
+-		char log[1024] = {0};
+-		GLsizei len;
+-		glGetProgramInfoLog(state.shader_prog, 1000, &len, log);
+-		fprintf(stderr, "Failed to link shader:\n%.*s\n", len, log);
+-		exit(1);
++	if (state.bake_interval > 0.f) {
++		GLuint frag = compile_shader(GL_FRAGMENT_SHADER, frag_text,
++				version_len, "", frag_body, body_len, frag_coda);
++		GLuint vertex = compile_shader(GL_VERTEX_SHADER, frag_text,
++				version_len, "#define VERTEX\n", frag_body,
++				body_len, bake_vertex_coda);
++		state.shader_prog = link_program(frag, vertex, state.attr_pos);
++
++		frag = compile_shader(GL_FRAGMENT_SHADER, frag_text, version_len,
++				"#define BAKE\n", frag_body, body_len,
++				bake_frag_coda);
++		vertex = compile_shader(GL_VERTEX_SHADER, frag_text, version_len,
++				"#define VERTEX\n#define BAKE\n", frag_body,
++				body_len, bake_vertex_coda);
++		state.bake_prog = link_program(frag, vertex, state.attr_pos);
++		find_uniforms(state.bake_prog, &state.bake_unif);
++	} else {
++		GLuint frag = compile_shader(GL_FRAGMENT_SHADER, frag_text,
++				version_len, "", frag_body, body_len, frag_coda);
++		GLuint vertex = compile_shader(GL_VERTEX_SHADER, "", 0, "",
++				vertex_shader_text,
++				sizeof(vertex_shader_text) - 1, "");
++		state.shader_prog = link_program(frag, vertex, state.attr_pos);
+ 	}
+-
+-	glDeleteShader(frag_shader);
+-	glDeleteShader(vertex_shader);
+-
+-	state.unif_iResolution =
+-			glGetUniformLocation(state.shader_prog, "iResolution");
+-	state.unif_iTime = glGetUniformLocation(state.shader_prog, "iTime");
+-	state.unif_iTimeDelta =
+-			glGetUniformLocation(state.shader_prog, "iTimeDelta");
+-	state.unif_iFrame = glGetUniformLocation(state.shader_prog, "iFrame");
+-	state.unif_iMouse = glGetUniformLocation(state.shader_prog, "iMouse");
++	find_uniforms(state.shader_prog, &state.unif);
++	free(frag_text);
+ 
+ 	glGenVertexArrays(1, &state.vertex_array);
+ 	glBindVertexArray(state.vertex_array);
+diff --git a/meson.build b/meson.build
+index dcb8037..1cdb789 100644
+--- a/meson.build
++++ b/meson.build
+@@ -20,6 +20,8 @@ wayland_client = dependency('wayland-client', version: '>=1.20')
+ wayland_egl = dependency('wayland-egl')
+ egl = dependency('egl')
+ GL = dependency('GL')
++wayland_protocols = dependency('wayland-protocols')
++wayland_protocols_dir = wayland_protocols.get_variable(pkgconfig: 'pkgdatadir')
+ 
+ 
+ wayland_scanner = find_program('wayland-scanner')
+@@ -42,6 +44,8 @@ client_protos_headers = []
+ client_protocols = [
+ 	['wlr-layer-shell-unstable-v1.xml'],
+ 	['xdg-shell.xml'],
++	[wayland_protocols_dir, 'stable/viewporter/viewporter.xml'],
++	[wayland_protocols_dir, 'staging/fractional-scale/fractional-scale-v1.xml'],
+ ]
+ 
+ foreach p : client_protocols

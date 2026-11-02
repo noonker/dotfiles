@@ -12,6 +12,7 @@
   #:use-module (ice-9 match)
   #:use-module (ice-9 rdelim)
   #:use-module (ice-9 regex)
+  #:use-module (noonker packages shaderbg)
   #:use-module (srfi srfi-1)
   #:export (desktop-theme-service
             desktop-grub-theme))
@@ -20,6 +21,10 @@
 ;;; these by filling in the templates in ./theme/.  `theme-switch' then points
 ;;; ~/.local/state/theme/current at ~/.config/theme/{day,night}, which is what
 ;;; the applications' own (read-only) configs include.
+
+;; Where the sky is seen from, by the background shaders and by darkman.
+(define %latitude "44.5")
+(define %longitude "-88.0")
 
 ;; Tarot de Marseille: sampled from a hand-stencilled woodcut deck.  Its pale
 ;; yellow-green and pink don't work as text, so those roles use darker versions.
@@ -38,6 +43,9 @@
     (sun . "#d4d65d")                   ; stencilled yellow-green, not for text
     (sky . "#5377c0")                   ; stencilled cobalt, not for text
     (rouge . "#d8452a")                 ; stencilled red, not for text
+    (ochre . "#e1bd5c")                 ; the sun's ring and rays, not for text
+    (olive . "#a8953f")                 ; its disc, a little lighter than the card's
+    (moss . "#5e6340")                  ; the wall's green, not for text
     (card-rule . "#0c121a") (card-rule-cut . "rough") ; black, hand-cut
     (black . "#0c121a") (red . "#9d2606") (green . "#3f5a12")
     (yellow . "#635e00") (blue . "#2f538c") (magenta . "#ad3156")
@@ -257,6 +265,16 @@
    (color-normal '((fg . light-gray) (bg . black)))
    (color-highlight '((fg . yellow) (bg . black)))))
 
+(define (background-shader mode palette)
+  "The mode's background shader, with the files it includes and where it's seen from."
+  (plain-file (string-append "theme-" mode "-background.frag")
+              (render `((latitude . ,%latitude)
+                        (longitude . ,%longitude)
+                        (background-common . ,(read-template "background-common.glsl"))
+                        (sky-table . ,(read-template "sky-table.glsl"))
+                        ,@palette)
+                      (read-template (string-append "background-" mode ".frag.in")))))
+
 (define (niri-config mode palette)
   "The shared niri settings, and the mode's window animations with their shaders in."
   (define (shader file)
@@ -279,7 +297,9 @@
   (define (scene kind directory number)
     (list (string-append "theme/" mode "/" directory "/" (card-name number) ".png")
           (card-scene kind mode palette number)))
-  (cons* (list (string-append "theme/" mode "/lock.png")
+  (cons* (list (string-append "theme/" mode "/background.frag")
+               (background-shader mode palette))
+         (list (string-append "theme/" mode "/lock.png")
                (card-scene "lock" mode palette (assoc-ref %lock-cards mode)))
          (list (string-append "theme/" mode "/niri.kdl")
                (plain-file (string-append "theme-" mode "-niri.kdl")
@@ -292,8 +312,7 @@
           (map (lambda (number) (scene "lock" "cards" number)) (iota 22))
           (map (lambda (number) (scene "book" "book" number)) (iota 22))
           (map (match-lambda ((template . target) (generated template target)))
-               (append `((,(string-append "background-" mode ".frag.in") . "background.frag")
-                         (,(string-append "waybar-" mode ".css.in") . "waybar-look.css")
+               (append `((,(string-append "waybar-" mode ".css.in") . "waybar-look.css")
                          (,(string-append "waybar-" mode ".svg.in") . "waybar.svg"))
                        %templates)))))
 
@@ -316,7 +335,8 @@
   ;; Darkman only decides when to switch; theme-switch does the rest, including
   ;; the gsettings change that the GTK portal passes on to applications.
   (plain-file "darkman-config.yaml"
-              "lat: 44.5\nlng: -88.0\nusegeoclue: false\nportal: false\n"))
+              (string-append "lat: " %latitude "\nlng: " %longitude
+                             "\nusegeoclue: false\nportal: false\n")))
 
 (define %theme-activation
   ;; The configs include the pointer, and niri rejects its whole config if an
@@ -519,7 +539,7 @@ gtk.css, because only a theme is reloaded when it changes: the polkit agent runs
                                   (mode-files "night" %night))))
    (simple-service 'desktop-theme-fonts
                    home-profile-service-type
-                   (list font-noto-sans-symbols font-cardo font-junicode))
+                   (list font-noto-sans-symbols font-cardo font-junicode shaderbg-baked))
    (simple-service 'desktop-theme-scripts
                    home-files-service-type
                    (list (list "bin/theme-switch" %theme-switch)

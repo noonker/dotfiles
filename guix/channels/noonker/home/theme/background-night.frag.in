@@ -1,118 +1,652 @@
-// Arcana: a slowly turning wheel of fortune among the stars.
+#version 130
+// Arcana: La Roue de Fortune, gilded on the back of the deck, with the real sky for a wheel.
+//
+// It's a star chart of the kind Dürer cut in 1515: centered on the pole of the ecliptic,
+// with the zodiac for a rim.  The stars are the catalog's, the chart is turned to the
+// sidereal time over Green Bay so that it goes round once a day, the planets ride
+// Ptolemy's spheres at their true longitudes, and the moon at the hub has tonight's phase
+// and is tilted as it is out of the window.
+//
+// shaderbg bakes all of that (BAKE) every so often, however long that takes.  What's
+// drawn on every frame is cheap: the light catching the gold, the stars' twinkle, the
+// rays turning round the hub, and now and then a meteor.
 #define PI 3.14159265
+#define TAU 6.28318531
+
+#ifdef VERTEX
+#define SHARED flat out
+#else
+#define SHARED flat in
+#endif
 
 const vec3 VOID = vec3(%bg.vec3%);
 const vec3 NEBULA = vec3(%bg-high.vec3%);
 const vec3 VIOLET = vec3(%accent2.vec3%);
 const vec3 GOLD = vec3(%accent.vec3%);
 const vec3 STARLIGHT = vec3(%fg.vec3%);
-// 0 is new and 0.5 is full; theme-background fills it in.
-const float MOON_PHASE = @moon-phase@;
 
-float hash(vec2 p) {
-    p = fract(p * vec2(123.34, 456.21));
-    p += dot(p, p + 45.32);
-    return fract(p.x * p.y);
+const vec2 CENTER = vec2(0.0, 0.011);
+const float R_MOON = 0.083;
+const float R_HUB = 0.092;
+const float R_RAYS = 0.183;
+const float R_SHORT_RAYS = 0.132;
+const float R_TRACK = 0.207;
+const float TRACK_STEP = 0.0157;
+const float R_SCALE = 0.352;
+const float R_BAND = 0.366;
+const float R_ECLIPTIC = 0.392;
+const float R_RIM = 0.418;
+const float FRAME_TOP = 0.460;          // just under the bar
+const float CAPTION_TOP = -0.438;
+const float FRAME_FOOT = -0.486;
+const float FRAME_MARGIN = 0.014;
+
+SHARED float TURN;              // the chart's rotation on the screen
+SHARED vec3 ZENITH;             // straight up from here, as a point on the chart's sphere
+SHARED float LONGITUDE[10];     // moon, then out through the spheres to Pluto
+SHARED vec2 LIMB;               // toward the moon's lit limb, on the screen
+SHARED float PHASE;             // cosine of the phase angle: 1 when full, -1 when new
+SHARED float AXIS;              // how far the moon's north is turned from straight up
+SHARED vec2 LIGHT;              // the moving light that the gold catches
+SHARED vec4 METEOR;             // its head and direction
+SHARED float METEOR_GLOW;
+
+#ifdef VERTEX
+
+// Keplerian elements and their rates per century for 1800-2050, from E. M. Standish, JPL:
+// semi-major axis, eccentricity, inclination, mean longitude, longitude of perihelion, node.
+const float ORBITS[108] = float[108](
+    0.38709927, 0.20563593, 7.00497902, 252.25032350, 77.45779628, 48.33076593,
+    0.00000037, 0.00001906, -0.00594749, 149472.67411175, 0.16047689, -0.12534081,
+    0.72333566, 0.00677672, 3.39467605, 181.97909950, 131.60246718, 76.67984255,
+    0.00000390, -0.00004107, -0.00078890, 58517.81538729, 0.00268329, -0.27769418,
+    1.00000261, 0.01671123, -0.00001531, 100.46457166, 102.93768193, 0.0,
+    0.00000562, -0.00004392, -0.01294668, 35999.37244981, 0.32327364, 0.0,
+    1.52371034, 0.09339410, 1.84969142, -4.55343205, -23.94362959, 49.55953891,
+    0.00001847, 0.00007882, -0.00813131, 19140.30268499, 0.44441088, -0.29257343,
+    5.20288700, 0.04838624, 1.30439695, 34.39644051, 14.72847983, 100.47390909,
+    -0.00011607, -0.00013253, -0.00183714, 3034.74612775, 0.21252668, 0.20469106,
+    9.53667594, 0.05386179, 2.48599187, 49.95424423, 92.59887831, 113.66242448,
+    -0.00125060, -0.00050991, 0.00193609, 1222.49362201, -0.41897216, -0.28867794,
+    19.18916464, 0.04725744, 0.77263783, 313.23810451, 170.95427630, 74.01692503,
+    -0.00196176, -0.00004397, -0.00242939, 428.48202785, 0.40805281, 0.04240589,
+    30.06992276, 0.00859048, 1.77004347, -55.12002969, 44.96476227, 131.78422574,
+    0.00026291, 0.00005105, 0.00035372, 218.45945325, -0.32241464, -0.00508664,
+    39.48211675, 0.24882730, 17.14001206, 238.92903833, 224.06891629, 110.30393684,
+    -0.00031596, 0.00005170, 0.00004818, 145.20780515, -0.04062942, -0.01183482);
+
+vec3 heliocentric(int i, float T) {
+    float a = ORBITS[i * 12] + ORBITS[i * 12 + 6] * T;
+    float e = ORBITS[i * 12 + 1] + ORBITS[i * 12 + 7] * T;
+    float inclination = radians(ORBITS[i * 12 + 2] + ORBITS[i * 12 + 8] * T);
+    float meanLongitude = ORBITS[i * 12 + 3] + ORBITS[i * 12 + 9] * T;
+    float perihelion = ORBITS[i * 12 + 4] + ORBITS[i * 12 + 10] * T;
+    float node = ORBITS[i * 12 + 5] + ORBITS[i * 12 + 11] * T;
+    float anomaly = radians(mod(meanLongitude - perihelion + 180.0, 360.0) - 180.0);
+    float eccentric = anomaly;
+    for (int n = 0; n < 6; n++) eccentric = anomaly + e * sin(eccentric);
+    float x = a * (cos(eccentric) - e), y = a * sqrt(1.0 - e * e) * sin(eccentric);
+    float w = radians(perihelion - node), o = radians(node);
+    float cw = cos(w), sw = sin(w), co = cos(o), so = sin(o), ci = cos(inclination), si = sin(inclination);
+    return vec3((cw * co - sw * so * ci) * x + (-sw * co - cw * so * ci) * y,
+                (cw * so + sw * co * ci) * x + (-sw * so + cw * co * ci) * y,
+                (sw * si) * x + (cw * si) * y);
 }
 
-float noise(vec2 p) {
-    vec2 i = floor(p), f = fract(p);
-    f = f * f * (3.0 - 2.0 * f);
-    return mix(mix(hash(i), hash(i + vec2(1.0, 0.0)), f.x),
-               mix(hash(i + vec2(0.0, 1.0)), hash(i + vec2(1.0, 1.0)), f.x), f.y);
+float sd(float angle) {
+    return sin(radians(angle));
 }
 
-float fbm(vec2 p) {
-    float value = 0.0, amplitude = 0.5;
-    for (int i = 0; i < 4; i++) {
-        value += amplitude * noise(p);
-        p = p * 2.03 + vec2(17.0, 9.0);
-        amplitude *= 0.5;
+void sceneSetup() {
+    float T = (iEpoch.x + iEpoch.y) / 36525.0;
+    // The elements are for the J2000 equinox, and the star table is too.
+    float precession = radians(1.397 * T);
+
+    vec3 earth = heliocentric(2, T);
+    vec3 sun = -normalize(earth);
+    // The orbits are in order from the sun, and so are the spheres from the moon, except
+    // that where the table has the earth the spheres have the sun.
+    for (int i = 0; i < 9; i++) {
+        vec3 seen = i == 2 ? sun : heliocentric(i, T) - earth;
+        LONGITUDE[i + 1] = atan(seen.y, seen.x);
     }
-    return value;
+
+    // The moon, from the Astronomical Almanac's low-precision series.
+    float moonLongitude = radians(218.32 + 481267.881 * T
+        + 6.29 * sd(135.0 + 477198.87 * T) - 1.27 * sd(259.3 - 413335.36 * T)
+        + 0.66 * sd(235.7 + 890534.22 * T) + 0.21 * sd(269.9 + 954397.74 * T)
+        - 0.19 * sd(357.5 + 35999.05 * T) - 0.11 * sd(186.5 + 966404.03 * T)) - precession;
+    float moonLatitude = radians(5.13 * sd(93.3 + 483202.02 * T) + 0.28 * sd(228.2 + 960400.89 * T)
+        - 0.28 * sd(318.3 + 6003.15 * T) - 0.17 * sd(217.6 - 407332.21 * T));
+    LONGITUDE[0] = moonLongitude;
+    vec3 moon = vec3(cos(moonLatitude) * cos(moonLongitude), cos(moonLatitude) * sin(moonLongitude), sin(moonLatitude));
+
+    // Straight up from here.  A float can't hold 360.98 * d, so whole turns are dropped first.
+    float obliquity = radians(23.4393);
+    float lat = radians(%latitude%);
+    float sidereal = radians(mod(280.46061837 + 0.98564736629 * iEpoch.x, 360.0)
+                             + 360.98564736629 * iEpoch.y + %longitude%);
+    vec3 up = vec3(cos(lat) * cos(sidereal), cos(lat) * sin(sidereal), sin(lat));
+    up = vec3(up.x, up.y * cos(obliquity) + up.z * sin(obliquity), -up.y * sin(obliquity) + up.z * cos(obliquity));
+    float zenithLongitude = atan(up.y, up.x) - precession;
+    float h = length(up.xy);
+    ZENITH = vec3(h * cos(zenithLongitude), h * sin(zenithLongitude), up.z);
+    // On the chart longitude runs clockwise; put the zenith's at the top.
+    TURN = 0.5 * PI + zenithLongitude;
+
+    // How the moon looks to someone at this latitude, looking at it.
+    vec3 vertical = normalize(ZENITH - dot(ZENITH, moon) * moon);
+    vec3 right = cross(moon, vertical);
+    vec3 toSun = normalize(sun - dot(sun, moon) * moon);
+    LIMB = normalize(vec2(dot(toSun, right), dot(toSun, vertical)));
+    PHASE = -dot(moon, sun);
+    // The moon's axis is within two degrees of the ecliptic's.
+    vec3 north = normalize(vec3(0.0, 0.0, 1.0) - moon.z * moon);
+    AXIS = atan(dot(north, right), dot(north, vertical));
+
+    float swing = iTime * 0.043;
+    LIGHT = vec2(cos(swing), sin(swing));
+
+    // About one meteor every five minutes.
+    const float PERIOD = 97.0;
+    float slot = floor(iTime / PERIOD);
+    float seed = fract(sin(slot * 12.9898 + 4.1) * 43758.5453);
+    float at = iTime - slot * PERIOD - 8.0 - 70.0 * seed;
+    METEOR_GLOW = 0.0;
+    METEOR = vec4(0.0);
+    if (fract(seed * 7.31) < 0.32 && at > 0.0 && at < 1.5) {
+        float aspect = iResolution.x / iResolution.y;
+        float course = (fract(seed * 13.7) < 0.5 ? -0.5 : 0.5) * PI - 0.5 * PI + 0.5 * (fract(seed * 29.3) - 0.5);
+        vec2 dir = vec2(cos(course), sin(course));
+        vec2 start = vec2((fract(seed * 53.1) - 0.5) * aspect * 0.8, 0.1 + 0.3 * fract(seed * 91.7));
+        METEOR = vec4(start + dir * at * 0.26, dir);
+        METEOR_GLOW = sin(PI * at / 1.5);
+    }
 }
 
-// One grid of stars; density is the fraction of cells holding a star.
-float stars(vec2 uv, float scale, float density) {
-    vec2 grid = uv * scale;
-    vec2 cell = floor(grid);
-    float seed = hash(cell);
-    if (seed > density) return 0.0;
-    vec2 offset = vec2(hash(cell + 3.1), hash(cell + 7.7)) - 0.5;
-    float d = length(fract(grid) - 0.5 - offset * 0.7);
-    float twinkle = 0.55 + 0.45 * sin(iTime * (0.4 + seed * 12.0) + seed * 200.0);
-    return smoothstep(0.09, 0.0, d) * twinkle;
+#else
+
+%background-common%
+
+// Interleaved gradient noise, for dither that doesn't clump.
+float dither(vec2 p) {
+    return fract(52.9829189 * fract(dot(p, vec2(0.06711056, 0.00583715))));
 }
 
-float line(float d, float width, float aa) {
-    return smoothstep(width + aa, width, abs(d));
+#ifdef BAKE
+
+%sky-table%
+
+// Everything below paints on these: the color, and for the frame-by-frame pass what's
+// gilded (the direction it faces, how much it shines) and which stars twinkle.
+vec3 paint = vec3(0.0);
+vec4 foil = vec4(0.5, 0.5, 0.0, 0.0);
+
+vec3 goldTone(float tone) {
+    return tone < 0.5 ? mix(GOLD * 0.42, GOLD, tone * 2.0)
+                      : mix(GOLD, mix(GOLD, vec3(1.0, 0.97, 0.86), 0.72), tone * 2.0 - 1.0);
 }
 
-float sector(float a, float count) {
-    float size = 2.0 * PI / count;
-    return abs(mod(a + size / 2.0, size) - size / 2.0);
+void gild(float cover, float tone, vec2 facing, float shine) {
+    paint = mix(paint, goldTone(tone), cover);
+    foil.xyz = mix(foil.xyz, vec3(0.5 + 0.5 * facing, shine), cover);
+}
+
+// A strand of gold wire: bright down the middle.
+void wire(float d, float width, float tone, vec2 facing, float shine, float aa) {
+    float a = abs(d);
+    gild(fill(a - width, aa), tone * (0.68 + 0.32 * smoothstep(width + aa, 0.0, a)), facing, shine);
+}
+
+#define K(ax, ay, bx, by, cx, cy, w0, w1) d = min(d, cut(p, vec2(ax, ay), vec2(bx, by), vec2(cx, cy), w0, w1));
+#define B(ax, ay, bx, by, w0, w1) d = min(d, bar(p, vec2(ax, ay), vec2(bx, by), w0, w1));
+#define O(cx, cy, r, w) d = min(d, abs(length(p - vec2(cx, cy)) - r) - w);
+
+const float HAIR = 0.02, SWELL = 0.05;
+
+// The twelve signs, in a unit box with its origin at the center.
+float zodiacSign(int which, vec2 p) {
+    float d = 1e3;
+    if (which == 0) {           // Aries
+        K( 0.00, -0.46, -0.07,  0.06, -0.22,  0.36, HAIR, SWELL) K(-0.22,  0.36, -0.42,  0.44, -0.42,  0.20, HAIR, SWELL * 0.7)
+        K( 0.00, -0.46,  0.07,  0.06,  0.22,  0.36, HAIR, SWELL) K( 0.22,  0.36,  0.42,  0.44,  0.42,  0.20, HAIR, SWELL * 0.7)
+    } else if (which == 1) {    // Taurus
+        O(0.0, -0.17, 0.26, 0.034)
+        K(-0.40,  0.46,  0.00,  0.11,  0.40,  0.46, HAIR, SWELL)
+    } else if (which == 2) {    // Gemini
+        K(-0.40,  0.42,  0.00,  0.30,  0.40,  0.42, HAIR, SWELL) K(-0.40, -0.42,  0.00, -0.30,  0.40, -0.42, HAIR, SWELL)
+        B(-0.17,  0.34, -0.17, -0.34, SWELL * 0.85, SWELL * 0.85) B( 0.17,  0.34,  0.17, -0.34, SWELL * 0.85, SWELL * 0.85)
+    } else if (which == 3) {    // Cancer
+        O(-0.25,  0.13, 0.095, 0.032) K(-0.33,  0.20,  0.02,  0.42,  0.40,  0.22, HAIR, SWELL)
+        O( 0.25, -0.13, 0.095, 0.032) K( 0.33, -0.20, -0.02, -0.42, -0.40, -0.22, HAIR, SWELL)
+    } else if (which == 4) {    // Leo
+        O(-0.25, -0.08, 0.115, 0.032)
+        K(-0.18,  0.01, -0.13,  0.40,  0.13,  0.38, HAIR, SWELL) K( 0.13,  0.38,  0.30,  0.14,  0.09, -0.14, SWELL * 0.6, SWELL)
+        K( 0.09, -0.14,  0.03, -0.38,  0.34, -0.34, SWELL * 0.6, HAIR)
+    } else if (which == 5 || which == 7) {  // Virgo and Scorpio begin alike
+        K(-0.44,  0.34, -0.38,  0.38, -0.30,  0.24, HAIR, SWELL * 0.6)
+        B(-0.30,  0.26, -0.30, -0.38, SWELL * 0.8, SWELL * 0.6)
+        K(-0.30,  0.20, -0.18,  0.40, -0.06,  0.20, HAIR, SWELL * 0.7)
+        B(-0.06,  0.22, -0.06, -0.38, SWELL * 0.8, SWELL * 0.6)
+        K(-0.06,  0.20,  0.06,  0.40,  0.18,  0.20, HAIR, SWELL * 0.7)
+        if (which == 5) {
+            K( 0.18,  0.22,  0.20, -0.08,  0.13, -0.40, SWELL * 0.8, SWELL * 0.6)
+            K( 0.18,  0.04,  0.46,  0.14,  0.30, -0.16, HAIR, SWELL * 0.7)
+            K( 0.30, -0.16,  0.16, -0.32,  0.00, -0.44, SWELL * 0.6, HAIR)
+        } else {
+            K( 0.18,  0.22,  0.17, -0.18,  0.40, -0.30, SWELL * 0.8, SWELL * 0.5)
+            B( 0.42, -0.31,  0.24, -0.34, HAIR, HAIR * 1.3) B( 0.42, -0.31,  0.36, -0.14, HAIR, HAIR * 1.3)
+        }
+    } else if (which == 6) {    // Libra
+        B(-0.44, -0.34,  0.44, -0.34, SWELL * 0.7, SWELL * 0.7)
+        B(-0.44, -0.10, -0.15, -0.10, SWELL * 0.7, SWELL * 0.5) B( 0.15, -0.10,  0.44, -0.10, SWELL * 0.5, SWELL * 0.7)
+        K(-0.15, -0.10, -0.25,  0.28,  0.00,  0.38, HAIR, SWELL) K( 0.00,  0.38,  0.25,  0.28,  0.15, -0.10, HAIR, SWELL)
+    } else if (which == 8) {    // Sagittarius
+        B(-0.40, -0.40,  0.38,  0.38, SWELL * 0.8, SWELL * 0.6)
+        B( 0.40,  0.40,  0.04,  0.40, HAIR * 1.4, HAIR) B( 0.40,  0.40,  0.40,  0.04, HAIR * 1.4, HAIR)
+        B(-0.26,  0.04,  0.08, -0.30, HAIR * 1.3, HAIR * 1.3)
+    } else if (which == 9) {    // Capricorn
+        K(-0.44,  0.34, -0.32,  0.40, -0.25,  0.18, HAIR, SWELL * 0.6)
+        B(-0.25,  0.20, -0.23, -0.20, SWELL * 0.75, SWELL * 0.5)
+        K(-0.25,  0.12, -0.06,  0.46,  0.07,  0.12, HAIR, SWELL)
+        K( 0.07,  0.12,  0.12, -0.20, -0.03, -0.44, SWELL * 0.8, HAIR)
+        O(0.21, -0.15, 0.115, 0.032)
+    } else if (which == 10) {   // Aquarius
+        for (int row = 0; row < 2; row++) {
+            float y = row == 0 ? 0.16 : -0.14;
+            B(-0.44, y - 0.09, -0.22, y + 0.09, HAIR, SWELL * 0.8) B(-0.22, y + 0.09,  0.00, y - 0.09, SWELL * 0.8, HAIR)
+            B( 0.00, y - 0.09,  0.22, y + 0.09, HAIR, SWELL * 0.8) B( 0.22, y + 0.09,  0.44, y - 0.09, SWELL * 0.8, HAIR)
+        }
+    } else {                    // Pisces
+        K(-0.31,  0.44, -0.11,  0.00, -0.31, -0.44, HAIR, SWELL) K( 0.31,  0.44,  0.11,  0.00,  0.31, -0.44, HAIR, SWELL)
+        B(-0.36,  0.00,  0.36,  0.00, HAIR * 1.3, HAIR * 1.3)
+    }
+    return d;
+}
+
+const float PEN = 0.044, FINE = 0.03;
+
+// The moon and the planets, in the order of the spheres.
+float planet(int which, vec2 p) {
+    float d = 1e3;
+    if (which == 0) {           // Moon
+        d = max(length(p) - 0.40, -(length(p - vec2(0.17, 0.0)) - 0.33));
+    } else if (which == 1) {    // Mercury
+        O(0.0, 0.06, 0.18, FINE) K(-0.23,  0.44,  0.00,  0.25,  0.23,  0.44, FINE * 0.7, PEN)
+        B(0.0, -0.13, 0.0, -0.46, PEN, PEN) B(-0.14, -0.31, 0.14, -0.31, FINE, FINE)
+    } else if (which == 2) {    // Venus
+        O(0.0, 0.14, 0.24, FINE) B(0.0, -0.11, 0.0, -0.46, PEN, PEN) B(-0.16, -0.29, 0.16, -0.29, FINE, FINE)
+    } else if (which == 3) {    // Sun
+        O(0.0, 0.0, 0.36, PEN) d = min(d, length(p) - 0.075);
+    } else if (which == 4) {    // Mars
+        O(-0.09, -0.09, 0.24, FINE) B(0.08, 0.08, 0.36, 0.36, PEN, PEN)
+        B(0.38, 0.38, 0.10, 0.38, FINE, FINE) B(0.38, 0.38, 0.38, 0.10, FINE, FINE)
+    } else if (which == 5) {    // Jupiter
+        K(-0.32,  0.28, -0.04,  0.44,  0.02,  0.16, FINE, PEN) K( 0.02,  0.16, -0.04, -0.02, -0.32, -0.13, PEN, FINE)
+        B(-0.34, -0.13, 0.38, -0.13, FINE, FINE) B(0.18, 0.42, 0.18, -0.44, PEN, PEN)
+    } else if (which == 6) {    // Saturn
+        B(-0.14, 0.44, -0.14, -0.10, PEN, PEN) B(-0.30, 0.28, 0.06, 0.28, FINE, FINE)
+        K(-0.14,  0.06,  0.10,  0.22,  0.22, -0.02, FINE, PEN) K( 0.22, -0.02,  0.14, -0.20,  0.06, -0.30, PEN, FINE)
+        K( 0.06, -0.30,  0.04, -0.44,  0.18, -0.42, FINE, FINE)
+    } else if (which == 7) {    // Uranus
+        B(-0.28, 0.42, -0.28, 0.00, PEN, PEN) B(0.28, 0.42, 0.28, 0.00, PEN, PEN) B(-0.28, 0.20, 0.28, 0.20, FINE, FINE)
+        B(0.0, 0.42, 0.0, -0.22, FINE, FINE) O(0.0, -0.33, 0.10, FINE)
+    } else if (which == 8) {    // Neptune
+        K(-0.33,  0.42, -0.31,  0.03,  0.00, -0.05, FINE, PEN) K( 0.33,  0.42,  0.31,  0.03,  0.00, -0.05, FINE, PEN)
+        B(0.0, 0.46, 0.0, -0.46, PEN, PEN) B(-0.18, -0.27, 0.18, -0.27, FINE, FINE)
+    } else {                    // Pluto: P and L together
+        B(-0.20, 0.44, -0.20, -0.44, PEN, PEN) K(-0.20,  0.44,  0.25,  0.22, -0.20,  0.00, FINE, PEN)
+        B(-0.20, -0.44, 0.26, -0.44, FINE, FINE)
+    }
+    return d;
+}
+
+// · LA · ROVE · DE · FORTVNE ·, as the card spells it.
+float title(vec2 p) {
+    float d = 1e3;
+    p.x += 6.72;
+#define G(letter, advance) d = min(d, letter(p)); p.x -= advance;
+#define DOT(x) d = min(d, length(p - vec2(x, 0.5)) - 0.085);
+    DOT(-0.56)
+    G(letterL, 0.80) G(letterA, 0.92)
+    DOT(-0.10) p.x -= 0.30;
+    G(letterR, 0.82) G(letterO, 0.84) G(letterV, 0.86) G(letterE, 0.84)
+    DOT(-0.10) p.x -= 0.30;
+    G(letterD, 0.84) G(letterE, 0.84)
+    DOT(-0.10) p.x -= 0.30;
+    G(letterF, 0.78) G(letterO, 0.84) G(letterR, 0.82) G(letterT, 0.84) G(letterV, 0.86) G(letterN, 0.86) G(letterE, 0.66)
+    DOT(0.10)
+    return d;
+}
+
+// Stars of the Étoile card: a crisp polygon with eight points, alternately long and short.
+float starPolygon(vec2 v, float outer, float inner) {
+    float a = atan(v.y, v.x);
+    const float SIZE = PI / 4.0;
+    float id = floor(a / SIZE + 0.5);
+    float phi = abs(a - id * SIZE) / (0.5 * SIZE);
+    float tip = mod(id, 2.0) < 0.5 ? outer : outer * 0.55;
+    return (length(v) - mix(tip, inner, pow(phi, 0.8))) * 0.75;
+}
+
+// The Milky Way, from the galactic pole and center as seen on the chart's sphere.
+float milkyWay(vec3 v, vec2 q) {
+    const vec3 POLE = vec3(-0.8677, -0.0003, 0.4971), GALACTIC_CENTER = vec3(-0.0549, -0.9938, -0.0965);
+    float latitude = dot(v, POLE);
+    float inner = 0.5 + 0.5 * dot(v, GALACTIC_CENTER);
+    float width = mix(0.016, 0.05, inner);
+    float band = exp(-latitude * latitude / width);
+    // Clouds of it, broken by the dust down its middle toward the center.
+    float clouds = fbm(q * 3.1 + 7.0);
+    float dust = smoothstep(0.75, 0.0, abs(latitude) / sqrt(width)) * smoothstep(0.42, 0.68, fbm(q * 5.3 + 2.0)) * inner;
+    return band * (0.26 + 0.74 * inner) * (0.25 + 1.5 * clouds) * (1.0 - 0.6 * dust);
+}
+
+// Maria, north up, as ellipses (x, y, x radius, y radius) on the moon's face.
+const vec4 MARIA[11] = vec4[11](
+    vec4(-0.23,  0.54, 0.28, 0.23),     // Imbrium
+    vec4( 0.26,  0.47, 0.18, 0.16),     // Serenitatis
+    vec4( 0.50,  0.15, 0.21, 0.17),     // Tranquillitatis
+    vec4( 0.83,  0.29, 0.07, 0.11),     // Crisium
+    vec4( 0.76, -0.12, 0.12, 0.19),     // Fecunditatis
+    vec4( 0.55, -0.27, 0.09, 0.09),     // Nectaris
+    vec4(-0.27, -0.33, 0.20, 0.16),     // Nubium
+    vec4(-0.58, -0.41, 0.10, 0.11),     // Humorum
+    vec4(-0.74,  0.25, 0.19, 0.42),     // Procellarum
+    vec4(-0.34,  0.02, 0.24, 0.14),     // Insularum
+    vec4( 0.02,  0.81, 0.42, 0.045));   // Frigoris
+
+// Brightness on the moon's face, at m on the unit disc, north up.
+float moonSurface(vec2 m) {
+    vec2 w = m + (vec2(fbm(m * 5.0 + 3.0), fbm(m * 5.0 + 11.0)) - 0.5) * 0.14;
+    float maria = 0.0;
+    for (int i = 0; i < 11; i++) {
+        maria = max(maria, smoothstep(1.16, 0.86, length((w - MARIA[i].xy) / MARIA[i].zw)));
+    }
+    float highlands = 0.86 + 0.28 * (fbm(m * 13.0 + 5.0) - 0.5);
+    float v = mix(highlands, 0.34 + 0.12 * fbm(m * 9.0), maria);
+    // Tycho, with its rays, and the other bright young craters.
+    vec2 t = m - vec2(-0.14, -0.68);
+    float reach = length(t);
+    float rays = pow(max(fbm(vec2(atan(t.y, t.x) * 7.0, 3.0)) * 1.8 - 0.55, 0.0), 2.0);
+    v += 0.5 * rays * smoothstep(1.2, 0.0, reach) + 0.5 * smoothstep(0.075, 0.03, reach);
+    v += 0.45 * smoothstep(0.06, 0.02, length(m - vec2(-0.34, 0.17)));   // Copernicus
+    v += 0.35 * smoothstep(0.04, 0.012, length(m - vec2(-0.61, 0.14)));  // Kepler
+    v += 0.5 * smoothstep(0.035, 0.01, length(m - vec2(-0.67, 0.41)));   // Aristarchus
+    return v;
+}
+
+void bakeImage(out vec4 sky, out vec4 leaf, in vec2 fragCoord) {
+    float aspect = iResolution.x / iResolution.y;
+    float side = 0.5 * aspect - FRAME_MARGIN;
+    vec2 uv = (fragCoord - 0.5 * iResolution.xy) / iResolution.y;
+    vec2 rel = uv - CENTER;
+    float r = length(rel);
+    vec2 radial = rel / max(r, 1e-4);
+    float aa = 0.8 / iResolution.y;
+
+    // From the screen to the chart, and to the sphere it's a projection of.
+    float c = cos(TURN), s = sin(TURN);
+    vec2 q = vec2(c * rel.x + s * rel.y, -s * rel.x + c * rel.y) / R_ECLIPTIC;
+    float rho2 = dot(q, q);
+    vec3 v = vec3(2.0 * q.x, -2.0 * q.y, 1.0 - rho2) / (1.0 + rho2);
+    float altitude = dot(v, ZENITH);
+    float risen = smoothstep(-0.02, 0.02, altitude);
+
+    // The sky, darker below the horizon.
+    float depth = exp(-r * r * 3.1);
+    paint = mix(VOID * 0.8, mix(VOID, NEBULA, 0.42), depth);
+    paint *= 0.72 + 0.28 * risen;
+    float way = milkyWay(v, q);
+    paint += mix(VIOLET, STARLIGHT, 0.25) * 0.135 * way * (0.45 + 0.55 * risen);
+
+    // Faint stars past the catalog's limit, thickest along the Milky Way.
+    {
+        const float CELL = 0.021;
+        vec2 cell = floor(q / CELL);
+        float seed = hash(cell);
+        if (seed < min(0.1 + 1.3 * way, 0.48)) {
+            vec2 at = (cell + 0.12 + 0.76 * vec2(hash(cell + 3.0), hash(cell + 11.0))) * CELL;
+            float d = length(q - at) * R_ECLIPTIC;
+            float dim = 0.1 + 0.26 * hash(cell + 7.0);
+            paint = mix(paint, STARLIGHT, smoothstep(0.0011, 0.00025, d) * dim * (0.45 + 0.55 * risen));
+        }
+    }
+
+    // Constellations in fine gold, stopping short of their stars.
+    float nearest = 1e6;
+    for (int i = 0; i < LINE_COUNT; i++) {
+        vec2 a = LINES[i].xy, ba = LINES[i].zw - a, pa = q - a;
+        vec2 w = pa - ba * clamp(dot(pa, ba) / dot(ba, ba), 0.0, 1.0);
+        nearest = min(nearest, dot(w, w));
+    }
+    float strand = fill(sqrt(nearest) * R_ECLIPTIC - 0.00036, aa);
+    paint = mix(paint, mix(GOLD, VIOLET, 0.3), strand * mix(0.16, 0.34, risen));
+
+    // The stars themselves.
+    float twinkle = 0.0;
+    for (int i = 0; i < STAR_COUNT; i++) {
+        vec2 away = (q - STARS[i].xy) * R_ECLIPTIC;
+        float magnitude = STARS[i].z;
+        float d2 = dot(away, away);
+        if (d2 > (magnitude < 1.4 ? 0.0004 : 0.00003)) continue;
+        float warmth = smoothstep(0.2, 1.3, STARS[i].w);
+        vec3 tint = mix(mix(STARLIGHT, vec3(1.0), 0.4), mix(GOLD, vec3(1.0), 0.25), warmth);
+        float size = mix(0.0023, 0.00085, smoothstep(-1.0, 4.4, magnitude));
+        float weight = mix(1.0, 0.5, smoothstep(0.5, 4.4, magnitude)) * mix(0.42, 1.0, risen);
+        float core = exp(-d2 / (size * size));
+        paint = mix(paint, tint, clamp(core * 1.7 * weight, 0.0, 1.0));
+        if (magnitude < 1.4) {
+            float outer = mix(0.0165, 0.0072, smoothstep(-1.5, 1.4, magnitude));
+            float polygon = starPolygon(away, outer, outer * 0.16);
+            float amount = fill(polygon, aa) * mix(0.5, 1.0, risen);
+            paint = mix(paint, mix(goldTone(0.72 + 0.28 * smoothstep(0.0012, 0.0, length(away))), tint, 0.25), amount);
+            foil.xyz = mix(foil.xyz, vec3(0.5 + 0.5 * normalize(away + 1e-5), 0.8), amount);
+            foil.a = max(foil.a, amount * (0.12 + 0.88 * hash(vec2(float(i), 2.0))));
+        } else if (d2 < size * size * 4.0) {
+            foil.a = max(foil.a, 0.12 + 0.88 * hash(vec2(float(i), 2.0)));
+        }
+    }
+
+    // The horizon: what's inside this circle is up, right now.
+    float slope = max(fwidth(altitude), 1e-5);
+    float horizon = abs(altitude) / slope / iResolution.y;
+    paint = mix(paint, GOLD, fill(horizon - 0.0005, aa) * 0.3);
+
+    // Tonight's moon gives a little light to the hub.
+    float lit = 0.5 + 0.5 * PHASE;
+    paint += mix(GOLD, STARLIGHT, 0.4) * 0.13 * lit * exp(-max(r - R_MOON, 0.0) * 13.0);
+
+    // The spheres, inner to outer, each with its planet at its true longitude.
+    if (r < R_SCALE + 0.002 && r > R_TRACK - 0.01) {
+        for (int i = 0; i < 10; i++) {
+            float radius = R_TRACK + float(i) * TRACK_STEP;
+            float angle = TURN - LONGITUDE[i];
+            vec2 at = rel - radius * vec2(cos(angle), sin(angle));
+            float reach = length(at);
+            float line = max(abs(r - radius) - 0.00032, 0.0145 - reach);
+            paint = mix(paint, GOLD, fill(line, aa) * (i == 3 ? 0.42 : 0.2) * mix(0.72, 1.0, risen));
+            if (reach < 0.016) {
+                const float SIZE = 0.0235;
+                gild(fill(planet(i, at / SIZE) * SIZE, aa), i == 0 || i == 3 ? 1.0 : 0.92, radial, 1.0);
+            }
+        }
+    }
+
+    // The degree scale.
+    float longitude = mod(TURN - atan(rel.y, rel.x), TAU);
+    float along = longitude * 180.0 / PI;
+    if (r > R_SCALE - 0.002 && r < R_BAND + 0.002) {
+        float one = abs(fract(along + 0.5) - 0.5) * PI / 180.0 * r;
+        float five = abs(fract(along / 5.0 + 0.5) - 0.5) * 5.0 * PI / 180.0 * r;
+        float reach = R_BAND - r;
+        float tick = max(one - 0.00034, reach - 0.0065);
+        tick = min(tick, max(five - 0.0005, reach - 0.0135));
+        gild(fill(max(tick, -reach), aa) * step(0.0, reach), 0.62, radial, 0.5);
+    }
+
+    // The zodiac: a darker band, with each sign in its own panel.
+    if (r > R_BAND - 0.003 && r < R_RIM + 0.012) {
+        float band = fill(abs(r - 0.5 * (R_BAND + R_RIM)) - 0.5 * (R_RIM - R_BAND), aa);
+        paint = mix(paint, mix(VOID * 0.75, NEBULA, 0.1), band * 0.8);
+        float which = floor(along / 30.0);
+        float sector = abs(fract(along / 30.0 + 0.5) - 0.5) * 30.0 * PI / 180.0 * r;
+        if (r > R_BAND && r < R_RIM) {
+            wire(sector, 0.0009, 0.7, radial, 0.8, aa);
+            float across = (along - (which + 0.5) * 30.0) * PI / 180.0 * r;
+            const float SIZE = 0.0345;
+            vec2 local = vec2(across, r - 0.5 * (R_BAND + R_RIM)) / SIZE;
+            if (abs(local.x) < 0.7 && abs(local.y) < 0.7) {
+                float glyph = zodiacSign(int(which), local) * SIZE;
+                gild(fill(glyph, aa), 0.8 - 0.1 * local.y, radial, 1.0);
+            }
+        }
+        wire(r - R_BAND, 0.0011, 0.84, radial, 1.0, aa);
+        wire(r - R_RIM, 0.0017, 0.98, radial, 1.0, aa);
+        wire(r - R_RIM - 0.0062, 0.0006, 0.7, radial, 0.8, aa);
+    }
+
+    // Double ring round the hub, and the moon.
+    if (r < R_HUB + 0.006) {
+        wire(r - R_HUB, 0.0011, 0.92, radial, 1.0, aa);
+        wire(r - R_MOON - 0.0035, 0.0005, 0.74, radial, 0.8, aa);
+        if (r < R_MOON + aa) {
+            vec2 m = rel / R_MOON;
+            float z = sqrt(max(1.0 - dot(m, m), 0.0));
+            vec3 normal = vec3(m, z);
+            vec3 sun = vec3(sqrt(max(1.0 - PHASE * PHASE, 0.0)) * LIMB, PHASE);
+            float light = dot(normal, sun);
+            float day = smoothstep(-0.03, 0.09, light);
+            // The face turned to its north; the engraver's lines follow its latitude.
+            float ca = cos(AXIS), sa = sin(AXIS);
+            vec2 face = vec2(ca * m.x - sa * m.y, sa * m.x + ca * m.y);
+            float surface = moonSurface(face);
+            float tone = clamp(surface * (0.6 + 0.4 * pow(max(light, 0.0), 0.5)), 0.0, 1.1);
+            vec3 lit = mix(GOLD * 0.62, mix(vec3(1.0, 0.95, 0.8), STARLIGHT, 0.25), smoothstep(0.2, 0.95, tone));
+            vec3 earthshine = (VOID * 0.7 + NEBULA * 0.3) * (0.72 + 0.34 * surface);
+            vec3 ground = mix(earthshine, lit, day);
+            // The engraver's fine lines follow its latitude, and bite deeper in the dark.
+            float line = asin(clamp(face.y, -1.0, 1.0)) / PI * 58.0;
+            float hatch = abs(fract(line) - 0.5) * 2.0;
+            float engraved = smoothstep(0.34, 0.34 + 0.7 * fwidth(line) + 0.08, hatch);
+            ground *= 1.0 - (0.34 - 0.24 * tone * day) * (1.0 - engraved);
+            paint = mix(paint, ground, fill(r - R_MOON, aa));
+        }
+    }
+
+    // The frame, ruled clean, with the card's name in its foot.
+    vec2 box = vec2(side - abs(uv.x), uv.y > 0.0 ? FRAME_TOP - uv.y : uv.y - FRAME_FOOT);
+    float outside = fill(min(box.x, box.y), aa);
+    paint = mix(paint, VOID * 0.72, outside);
+    vec2 lineFacing = box.x < box.y ? vec2(1.0, 0.0) : vec2(0.0, 1.0);
+    float frameEdge = min(box.x, box.y);
+    wire(frameEdge, 0.0014, 0.95, lineFacing, 0.9, aa);
+    if (frameEdge > 0.0) wire(frameEdge - 0.0072, 0.00042, 0.72, lineFacing, 0.7, aa);
+    if (uv.y < CAPTION_TOP + 0.002 && box.x > 0.0 && box.y > 0.0) {
+        wire(uv.y - CAPTION_TOP, 0.0011, 0.92, vec2(0.0, 1.0), 0.9, aa);
+        paint = mix(paint, VOID * 0.78, fill(uv.y - CAPTION_TOP, aa) * 0.9 * step(0.0072, box.x) * step(0.0072, box.y));
+        const float HEIGHT = 0.0255;
+        vec2 p = (uv - vec2(0.0, 0.5 * (CAPTION_TOP + FRAME_FOOT) - 0.5 * HEIGHT)) / HEIGHT;
+        if (abs(p.x) < 8.5 && p.y > -0.5 && p.y < 1.5) {
+            gild(fill(title(p) * HEIGHT, aa), 0.82, vec2(0.0, 1.0), 1.0);
+        }
+    }
+
+    // In each corner of the sky, a star inside two arcs.
+    vec2 corner = vec2(side - abs(uv.x), uv.y > 0.0 ? FRAME_TOP - uv.y : uv.y - CAPTION_TOP);
+    if (corner.x > 0.0 && corner.y > 0.0 && max(corner.x, corner.y) < 0.09) {
+        vec2 at = corner - vec2(0.0072);
+        float arc = length(at);
+        wire(arc - 0.0535, 0.0006, 0.78, normalize(at + 1e-4), 0.8, aa);
+        wire(arc - 0.0585, 0.0003, 0.6, normalize(at + 1e-4), 0.6, aa);
+        if (arc < 0.0535) paint = mix(paint, VOID * 0.72, 0.6);
+        float star = starPolygon(at - vec2(0.0215), 0.0172, 0.0026);
+        gild(fill(star, aa), 0.9, normalize(at - vec2(0.0215) + 1e-4), 1.0);
+    }
+
+    // Dark gradients band on an 8-bit screen; this hides it.
+    paint += (dither(fragCoord) + dither(fragCoord + vec2(5.3, 7.7)) - 1.0) / 255.0;
+    sky = vec4(paint, 1.0);
+    leaf = foil;
+}
+
+#else
+
+// The eight rays round the hub, as a rose of two facets each, solid gold on the light side
+// and engraved on the dark; they turn slowly the other way from the sky.
+vec3 paintRays(vec3 color, vec2 rel, float r, float aa) {
+    float angle = atan(rel.y, rel.x) - iTime * 0.0042;
+    const float SIZE = PI / 4.0;
+    // Short ones between the long ones, underneath.
+    {
+        float a = angle + 0.5 * SIZE;
+        float id = floor(a / SIZE + 0.5);
+        float x = (a - id * SIZE) * r;
+        float u = (r - R_HUB) / (R_SHORT_RAYS - R_HUB);
+        float half_ = 0.0062 * (1.0 - u);
+        if (u < 1.0) color = mix(color, GOLD * (x > 0.0 ? 0.7 : 0.3), fill(abs(x) - half_, aa));
+    }
+    {
+        float id = floor(angle / SIZE + 0.5);
+        float x = (angle - id * SIZE) * r;
+        float u = (r - R_HUB) / (R_RAYS - R_HUB);
+        float half_ = 0.0158 * (1.0 - u);
+        float cover = u < 1.0 ? fill(abs(x) - half_, aa) : 0.0;
+        if (cover > 0.0) {
+            float side = x > 0.0 ? 1.0 : -1.0;
+            float facing = id * SIZE + iTime * 0.0042 + side * 0.25 * PI;
+            float glint = abs(dot(vec2(cos(facing), sin(facing)), LIGHT));
+            float engraved = abs(fract(r / 0.0032) - 0.5) * 2.0;
+            vec3 metal = side > 0.0 ? GOLD * 0.96
+                                    : mix(VOID + NEBULA * 0.25, GOLD * 0.86, smoothstep(0.3, 0.62, engraved));
+            metal += mix(GOLD, vec3(1.0), 0.45) * (pow(glint, 24.0) * 0.42 + pow(glint, 4.0) * 0.06);
+            color = mix(color, metal, cover);
+            // A gold line round the edge and down the spine.
+            float outline = abs(abs(x) - half_) - 0.00044;
+            color = mix(color, GOLD * 1.05, fill(min(outline, abs(x) - 0.00036), aa) * cover);
+        }
+    }
+    return color;
 }
 
 void mainImage(out vec4 fragColor, in vec2 fragCoord) {
+    ivec2 px = ivec2(fragCoord);
+    vec4 sky = texelFetch(iChannel0, px, 0), leaf = texelFetch(iChannel1, px, 0);
+    float twinklePhase = leaf.a;
+    if (iBakeMix < 1.0) {
+        sky = mix(texelFetch(iChannel2, px, 0), sky, iBakeMix);
+        leaf = mix(texelFetch(iChannel3, px, 0), leaf, iBakeMix);
+    }
+    vec3 color = sky.rgb;
+
+    // The gold catches the light as it goes round, as a tilted card does.
+    if (leaf.b > 0.004) {
+        float glint = abs(dot(leaf.rg * 2.0 - 1.0, LIGHT));
+        color += mix(GOLD, vec3(1.0), 0.38) * leaf.b * (pow(glint, 30.0) * 0.4 + pow(glint, 5.0) * 0.07);
+    }
+    if (twinklePhase > 0.004) {
+        color *= 1.0 + 0.3 * sin(iTime * (0.5 + 1.7 * twinklePhase) + 40.0 * twinklePhase);
+    }
+
     vec2 uv = (fragCoord - 0.5 * iResolution.xy) / iResolution.y;
-    float aa = 1.5 / iResolution.y;
-
-    // Nebula: two slow clouds, deep purple with a violet heart.
-    float drift = iTime * 0.006;
-    float cloud = fbm(uv * 2.2 + vec2(drift, -drift));
-    float heart = fbm(uv * 4.5 - vec2(drift * 1.5, 0.0) + cloud);
-    vec3 color = mix(VOID, NEBULA, smoothstep(0.3, 0.8, cloud));
-    color += VIOLET * 0.16 * smoothstep(0.5, 0.85, heart * cloud * 1.9);
-
-    color += STARLIGHT * stars(uv, 90.0, 0.25) * 0.55;
-    color += STARLIGHT * stars(uv + 3.7, 45.0, 0.15) * 0.8;
-    color += mix(GOLD, STARLIGHT, 0.5) * stars(uv - 1.9, 18.0, 0.12);
-
-    // The wheel.
-    float t = iTime * 0.015;
-    float r = length(uv);
-    float a = atan(uv.y, uv.x);
-    float glow = 0.75 + 0.25 * sin(iTime * 0.3);
-
-    float rings = line(r - 0.36, 0.0014, aa) + line(r - 0.345, 0.0006, aa)
-                + line(r - 0.24, 0.0009, aa) + line(r - 0.09, 0.0009, aa);
-    float ticks = step(0.26, r) * step(r, 0.345)
-                * line(sector(a + t, 72.0) * r, 0.0005, aa);
-    float major = step(0.24, r) * step(r, 0.345)
-                * line(sector(a + t, 12.0) * r, 0.0009, aa);
-    float gold = clamp(rings + ticks * 0.5 + major, 0.0, 1.0);
-
-    // Eight-pointed star turning the other way.
-    float ray = 0.05 + 0.18 * pow(1.0 - sector(a - t * 2.0, 8.0) / (PI / 8.0), 3.0);
-    gold = max(gold, smoothstep(ray + aa, ray, r) * step(0.09, r) * 0.8);
-
-    color = mix(color, GOLD, gold * glow * 0.75);
-    color += GOLD * smoothstep(0.5, 0.0, r) * 0.04 * glow;
-
-    // Crescent moons riding the outer band.
-    for (int i = 0; i < 4; i++) {
-        float angle = t + float(i) * PI / 2.0 + PI / 4.0;
-        vec2 moon = uv - 0.42 * vec2(cos(angle), sin(angle));
-        vec2 outward = normalize(uv - moon + 0.0001);
-        float crescent = smoothstep(0.024 + aa, 0.024, length(moon))
-                       * smoothstep(0.019, 0.019 + aa, length(moon + outward * 0.009));
-        color = mix(color, STARLIGHT, crescent * 0.9);
+    vec2 rel = uv - CENTER;
+    float r = length(rel);
+    if (r > R_HUB + 0.0012 && r < R_RAYS) {
+        color = paintRays(color, rel, r, 0.8 / iResolution.y);
     }
 
-    // Tonight's moon at the hub, as seen from the north: lit from the right as it waxes.
-    float moon_r = 0.07;
-    if (r < moon_r + aa) {
-        float limb = sqrt(max(moon_r * moon_r - uv.y * uv.y, 0.0));
-        float edge = cos(2.0 * PI * MOON_PHASE) * limb;
-        float lit = MOON_PHASE < 0.5 ? smoothstep(edge - aa, edge + aa, uv.x)
-                                     : smoothstep(edge - aa, edge + aa, -uv.x);
-        float maria = smoothstep(0.42, 0.62, fbm(uv * 34.0 + 5.0));
-        vec3 face = mix(mix(GOLD, STARLIGHT, 0.55), GOLD * 0.72, maria * 0.6);
-        vec3 moonlit = mix(VOID + NEBULA * 0.22, face, lit);
-        color = mix(color, moonlit, smoothstep(moon_r + aa, moon_r - aa, r));
+    if (METEOR_GLOW > 0.0) {
+        vec2 fromHead = uv - METEOR.xy;
+        float along = -dot(fromHead, METEOR.zw);
+        if (along > -0.002 && along < 0.13) {
+            float across = abs(dot(fromHead, vec2(-METEOR.w, METEOR.z)));
+            float taper = 1.0 - along / 0.13;
+            color += mix(GOLD, vec3(1.0), 0.6) * METEOR_GLOW * taper * taper
+                   * smoothstep(0.0011 * taper + 0.0005, 0.0, across);
+        }
     }
-
-    // Keep the corners dark so the wheel holds the eye.
-    color *= 1.0 - 0.45 * smoothstep(0.35, 1.0, r);
     fragColor = vec4(color, 1.0);
 }
+
+#endif
+#endif

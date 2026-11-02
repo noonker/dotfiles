@@ -42,11 +42,17 @@ pkill -USR2 -x '\.?waybar(-real)?'
 pkill -USR1 -f '/\.deck-notify-real'
 niri msg action load-config-file
 
-# Restarting the shader flickers, so don't do it unless the theme really changed
-# (darkman also calls this at login, when it usually hasn't).
+# The old shader stays up until the new one has had time to draw, so that there's never
+# nothing there (it can take half a second to compile the first time).  Darkman also calls
+# this at login, when the theme usually hasn't changed and it can just be left running.
+# It's started from here, not with "niri msg action spawn", since niri ignores those while
+# the screen is locked, which it may well be at sunrise and sunset.
 if [ "$mode" != "$previous" ] || ! pgrep -x shaderbg >/dev/null; then
-    pkill -x shaderbg
-    niri msg action spawn -- "$HOME/bin/theme-background"
+    old=$(pgrep -x shaderbg)
+    setsid -f "$HOME/bin/theme-background" >/dev/null 2>&1
+    if [ -n "$old" ]; then
+        (sleep 0.5; kill $old) >/dev/null 2>&1 &
+    fi
 fi
 
 # The change of light has a sound, unless ~/.local/state/theme/quiet exists.
