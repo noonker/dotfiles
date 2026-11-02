@@ -5,7 +5,7 @@
 # reflects reality even if swayidle dies on its own.
 #   start  - launch swayidle (niri calls this at startup)
 #   toggle - stop swayidle if running, else start it; refresh waybar
-#   status - waybar custom module: print a lock while inhibited
+#   status - waybar custom module: print something while inhibited, which shows its icon
 
 start() {
     setsid -f swayidle -w \
@@ -22,5 +22,5 @@ toggle)
     if pgrep -x swayidle >/dev/null; then pkill -x swayidle; else start; fi
     pkill -RTMIN+9 waybar ;;
 status)
-    pgrep -x swayidle >/dev/null || echo '󰌾' ;;
+    pgrep -x swayidle >/dev/null || echo on ;;
 esac

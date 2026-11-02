@@ -4,3 +4,5 @@ accent=%accent2%
 critical=%red%
 text=%fg%
 pattern=%pattern%
+rule=%card-rule%
+rule_cut=%card-rule-cut%

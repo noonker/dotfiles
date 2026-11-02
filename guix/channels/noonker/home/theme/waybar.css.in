@@ -1,16 +1,64 @@
-@define-color background %bg%;
-@define-color background-light %bg-alt%;
-@define-color foreground %fg%;
-@define-color black %black%;
-@define-color red %red%;
-@define-color green %green%;
-@define-color yellow %yellow%;
-@define-color blue %blue%;
-@define-color magenta %magenta%;
-@define-color cyan %cyan%;
-@define-color white %fg%;
-@define-color orange %orange%;
-
+/* Rules shared by both looks: waybar-{day,night}.css.in come after this. */
 * {
-    font-family: "%ui-font%";
+    font-family: "%ui-font%", "Symbols Nerd Font Mono", "DejaVu Sans", "Noto Emoji";
+    font-size: 12px;
+    border: none;
+    border-radius: 0;
+    min-height: 0;
+}
+
+window#waybar {
+    background-color: transparent;
+    color: %fg%;
+}
+
+tooltip {
+    background-color: %bg%;
+    border: 1px solid %accent%;
+}
+
+tooltip label {
+    color: %fg%;
+}
+
+#window, #mode, #mpd, #custom-weather, #custom-playerctl, #clock, #cpu, #memory,
+#temperature, #battery, #network, #pulseaudio, #backlight, #custom-idle-lock, #disk,
+#custom-disk-io, #custom-uptime, #custom-updates, #custom-quote, #idle_inhibitor, #tray {
+    padding: 0 8px;
+    color: %fg%;
+}
+
+#workspaces button {
+    padding: 0 7px;
+    color: %fg%;
+    background: none;
+    box-shadow: none;
+}
+
+/* Lock sits flush against #backlight so the pair reads as one widget */
+#backlight {
+    padding-right: 3px;
+}
+
+#custom-idle-lock {
+    padding-left: 0;
+}
+
+/* Things that need attention look the same however the bar is dressed. */
+#temperature.critical, #battery.critical:not(.charging), #network.disconnected,
+#pulseaudio.muted {
+    color: %red%;
+    font-weight: bold;
+}
+
+#battery.warning:not(.charging) {
+    color: %orange%;
+}
+
+#tray > .passive {
+    -gtk-icon-effect: dim;
+}
+
+#tray > .needs-attention {
+    -gtk-icon-effect: highlight;
 }

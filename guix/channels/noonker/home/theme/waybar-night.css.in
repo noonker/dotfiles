@@ -1,0 +1,51 @@
+/* A star chart: thin glass over the shader's sky, constellations in the stock (the SVG),
+   and a gold horizon line that fades out at both ends.  Nothing has a box round it. */
+window#waybar > box {
+    background-color: alpha(%bg%, 0.82);
+    background-image: url("file:///home/person/.local/state/theme/current/waybar.svg");
+    background-size: 320px 28px;
+    background-repeat: repeat-x;
+    border-style: solid;
+    border-width: 0 0 1px 0;
+    border-image: linear-gradient(to right, transparent, %accent% 12%, %accent2% 50%, %accent% 88%, transparent) 1;
+}
+
+#window.empty {
+    padding: 0;
+}
+
+#window, #custom-quote {
+    color: %fg-dim%;
+}
+
+#clock, #pulseaudio, #backlight, #custom-idle-lock, #network, #cpu, #memory, #temperature,
+#battery, #disk, #custom-disk-io, #custom-uptime, #custom-updates, #custom-weather {
+    transition: text-shadow 200ms ease;
+}
+
+#clock:hover, #pulseaudio:hover, #backlight:hover, #network:hover, #cpu:hover, #memory:hover,
+#temperature:hover, #battery:hover, #disk:hover, #custom-disk-io:hover, #custom-uptime:hover,
+#custom-updates:hover, #custom-weather:hover {
+    text-shadow: 0 0 6px %accent%;
+}
+
+/* The planets in order from the sun; the one you're on is lit, with a halo. */
+#workspaces button {
+    color: %fg-dim%;
+}
+
+#workspaces button:hover {
+    color: %fg%;
+    text-shadow: 0 0 6px %accent2%;
+}
+
+#workspaces button.active, #workspaces button.focused {
+    color: %accent%;
+    text-shadow: 0 0 5px %accent%, 0 0 10px %accent%;
+    background-image: radial-gradient(circle, alpha(%accent%, 0.28), transparent 72%);
+}
+
+#workspaces button.urgent {
+    color: %red%;
+    text-shadow: 0 0 6px %red%;
+}

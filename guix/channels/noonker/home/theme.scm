@@ -1,7 +1,10 @@
 (define-module (noonker home theme)
   #:use-module (gnu home services)
+  #:use-module (gnu packages fonts)
   #:use-module (gnu services)
+  #:use-module (guix build-system trivial)
   #:use-module (guix gexp)
+  #:use-module (guix packages)
   #:use-module (ice-9 match)
   #:use-module (ice-9 rdelim)
   #:use-module (ice-9 regex)
@@ -15,7 +18,7 @@
 
 ;; Tarot de Marseille: sampled from a hand-stencilled woodcut deck.  Its pale
 ;; yellow-green and pink don't work as text, so those roles use darker versions.
-(define %day
+(define %day-palette
   '((pattern . "hatch")
     (font . "Comic Code") (font-bold . "Comic Code Bold")
     (font-italic . "Comic Code Italic")
@@ -27,6 +30,8 @@
     (accent2 . "#ad3156")               ; the crosshatched card back
     (sun . "#d4d65d")                   ; stencilled yellow-green, not for text
     (sky . "#5377c0")                   ; stencilled cobalt, not for text
+    (rouge . "#d8452a")                 ; stencilled red, not for text
+    (card-rule . "#0c121a") (card-rule-cut . "rough") ; black, hand-cut
     (black . "#0c121a") (red . "#9d2606") (green . "#3f5a12")
     (yellow . "#635e00") (blue . "#2f538c") (magenta . "#ad3156")
     (cyan . "#1f6470") (orange . "#a4480c") (white . "#bcb8b4")
@@ -36,7 +41,7 @@
     (bright-cyan . "#256e7b") (bright-white . "#fcfdf9")))
 
 ;; Arcana: the night sky on the back of a tarot deck.
-(define %night
+(define %night-palette
   '((pattern . "stars")
     ;; The "A" cut is the only strictly fixed-pitch one, but it has no bold.  The
     ;; plain family's y and z are narrower, so it's only used where the grid
@@ -49,6 +54,7 @@
     (fg . "#e6dff8") (fg-dim . "#9c8fc6")
     (accent . "#e8c46a")                ; gold leaf
     (accent2 . "#b388ff")               ; violet
+    (card-rule . "#e8c46a") (card-rule-cut . "fine") ; gold leaf, ruled clean
     (black . "#241845") (red . "#f0708f") (green . "#86d6a6")
     (yellow . "#e8c46a") (blue . "#86a5f7") (magenta . "#c08cf5")
     (cyan . "#79dcea") (orange . "#f2a36b") (white . "#cfc6e8")
@@ -57,9 +63,100 @@
     (bright-blue . "#a8c0ff") (bright-magenta . "#d8b0ff")
     (bright-cyan . "#a0efff") (bright-white . "#fbf8ff")))
 
+;;; Bar icons.  These are Pango markup, so a mode can dress its glyphs.
+
+(define %icon-line-height "0.2")
+
+(define (color-of palette key)
+  (assq-ref palette key))
+
+(define (icon-list . icons)
+  "The inside of a JSON array, for a format-icons entry."
+  (string-join (map (lambda (icon) (string-append "\"" icon "\"")) icons) ", "))
+
+;; Alchemy, in black ink; waybar-day.css.in paints the stencil color behind it.
+;;
+;; A label's line takes its height and baseline from every font on it, and each module
+;; is centered on its own, so an icon from a font with other metrics moves that module's
+;; text (Noto Sans Symbols has a line height of 2em).  A small line_height stops the
+;; icons having any say, which keeps all the text level.  RISE then centers the glyph.
+(define* (ink glyph #:optional (rise "-2048"))
+  (string-append "<span line_height='" %icon-line-height "' rise='" rise "'><big>"
+                 glyph "</big></span> "))
+
+(define %day-icons
+  `(;; The numerals at the head of a card.
+    (icon-ws-1 . "I") (icon-ws-2 . "II") (icon-ws-3 . "III") (icon-ws-4 . "IV")
+    (icon-ws-5 . "V") (icon-ws-6 . "VI") (icon-ws-7 . "VII") (icon-ws-8 . "VIII")
+    (icon-ws-9 . "IX") (icon-ws-10 . "X")
+    (icon-clock . ,(ink "🝮"))        ; hour
+    (icon-date . ,(ink "🝱"))         ; month
+    (icon-uptime . ,(ink "🝰"))       ; day-night
+    (icon-cpu . ,(ink "🜂"))        ; fire
+    (icon-memory . ,(ink "🜔"))       ; salt, which preserves
+    (icon-temperature . ,(ink "🜍")) ; sulfur, brimstone
+    (icon-disk . ,(ink "🜃"))     ; earth, where things are buried
+    (icon-disk-io . ,(ink "🜄"))      ; water, which flows
+    (icon-wifi . ,(ink "🜁"))         ; air
+    (icon-ethernet . ,(ink "♀"))    ; Venus, copper
+    (icon-offline . ,(ink "🝎"))  ; caput mortuum, the dead head
+    (icon-audio . ,(ink "🔔" "0"))        ; the bell, of bell, book and candle
+    (icon-muted . ,(ink "🔕" "0"))
+    (icon-bluetooth . ,(ink "🝐"))    ; caduceus, the messenger's staff
+    (icon-brightness . ,(icon-list (ink "☉"))) ; the sun, gold
+    (icon-battery . ,(icon-list (ink "🝆"))) ; oil, for the lamp
+    (icon-charging . ,(ink "☇ "))    ; thunderbolt
+    (icon-updates . ,(ink "🝞"))      ; sublimation
+    (icon-quote . ,(ink "⛤"))     ; the pentagram tells your fortune
+    (icon-player . ,(ink "⚚"))        ; Hermes' staff
+    (icon-lock . ,(ink "👁" "0"))     ; the eye that doesn't close
+    (icon-unlock . ,(ink "⛤"))))
+
+;; Astronomy.  Glyphs in gold leaf, from the Nerd Font's sky.
+(define (gold glyph)
+  (string-append "<span color='" (color-of %night-palette 'accent)
+                 "' line_height='" %icon-line-height "'><big>" glyph "</big></span>"))
+
+(define %night-icons
+  `(;; The solar system, in order from the sun.
+    (icon-ws-1 . "<big>☉</big>") (icon-ws-2 . "<big>☿</big>") (icon-ws-3 . "<big>♀</big>")
+    (icon-ws-4 . "<big>♁</big>") (icon-ws-5 . "<big>♂</big>") (icon-ws-6 . "<big>♃</big>")
+    (icon-ws-7 . "<big>♄</big>") (icon-ws-8 . "<big>♅</big>") (icon-ws-9 . "<big>♆</big>")
+    (icon-ws-10 . "<big>♇</big>")
+    ;; Only things you could find in the sky: no instruments, and nothing we launched.
+    (icon-clock . ,(gold "\U0f0594"))          ; crescent and stars
+    (icon-date . ,(gold "\U0f0f61"))           ; a month is a moon
+    (icon-uptime . ,(gold "\U0f0018"))         ; orbit
+    (icon-cpu . ,(gold "\U0f0599"))            ; the sun
+    (icon-memory . ,(gold "\U0f0674"))         ; a cluster of stars
+    (icon-temperature . ,(gold "\U0f0d72"))    ; solar flare
+    (icon-disk . ,(gold "\U0f01e7"))           ; the earth
+    (icon-disk-io . ,(gold "\U0f0629"))        ; meteor
+    (icon-wifi . ,(gold "\U0f1741"))           ; shooting star
+    (icon-ethernet . ,(gold "☌"))              ; conjunction: two bodies joined
+    (icon-offline . ,(gold "\U0f01e8"))        ; the earth, dark
+    (icon-audio . ,(gold "\U0f15db"))          ; the music of the spheres
+    (icon-muted . ,(gold "\U0f0f64"))          ; new moon
+    (icon-bluetooth . ,(gold "☽"))             ; the moon: the near neighbour
+    ;; Three stars brightening.
+    (icon-brightness . ,(icon-list (gold "\U0f04d2") (gold "\U0f04d0") (gold "\U0f0ae2")))
+    ;; The moon fills as the battery does.
+    (icon-battery . ,(icon-list (gold "\U0f0f64") (gold "\U0f0f67") (gold "\U0f0f61")
+                                (gold "\U0f0f68") (gold "\U0f0f62")))
+    (icon-charging . ,(gold "\U0f1545"))       ; sparkling
+    (icon-updates . ,(gold "☄"))               ; a comet: it comes back
+    (icon-quote . ,(gold "\U0f04cf"))          ; read it in the stars
+    (icon-player . ,(gold "♆"))                ; Neptune
+    (icon-lock . ,(gold "\U0f0f62"))           ; full moon: nobody sleeps
+    (icon-unlock . ,(gold "\U0f0f64"))))
+
+(define %day (append %day-icons %day-palette))
+(define %night (append %night-icons %night-palette))
+
 ;; Template name -> generated file name.
 (define %templates
   '(("kitty.conf.in" . "kitty.conf")
+    ("waybar.jsonc.in" . "waybar.jsonc")
     ("waybar.css.in" . "waybar.css")
     ("rofi.rasi.in" . "rofi.rasi")
     ("niri.kdl.in" . "niri.kdl")
@@ -71,7 +168,7 @@
       (error "theme file not found:" name)))
 
 (define (read-template name)
-  (call-with-input-file (theme-file name) read-string))
+  (call-with-input-file (theme-file name) read-string #:encoding "UTF-8"))
 
 (define (hex->vec3 hex)
   "Turn \"#rrggbb\" into the GLSL arguments \"r, g, b\"."
@@ -98,9 +195,11 @@
     (list (string-append "theme/" mode "/" target)
           (plain-file (string-append "theme-" mode "-" target)
                       (render palette (read-template template)))))
-  (cons (generated (string-append "background-" mode ".frag.in") "background.frag")
-        (map (match-lambda ((template . target) (generated template target)))
-             %templates)))
+  (map (match-lambda ((template . target) (generated template target)))
+       (append `((,(string-append "background-" mode ".frag.in") . "background.frag")
+                 (,(string-append "waybar-" mode ".css.in") . "waybar-look.css")
+                 (,(string-append "waybar-" mode ".svg.in") . "waybar.svg"))
+               %templates)))
 
 (define %theme-switch
   (local-file "theme/theme-switch" "theme-switch" #:recursive? #t))
@@ -145,6 +244,27 @@
   (plain-file "user.js"
               "user_pref(\"toolkit.legacyUserProfileCustomizations.stylesheets\", true);\n"))
 
+;; The alchemical symbols on the day bar.  This is the only family they need, and
+;; font-google-noto is 290 MB of them, which would also change every font fallback.
+(define font-noto-sans-symbols
+  (package
+    (name "font-noto-sans-symbols")
+    (version (package-version font-google-noto))
+    (source #f)
+    (build-system trivial-build-system)
+    (arguments
+     (list #:modules '((guix build utils))
+           #:builder
+           #~(begin
+               (use-modules (guix build utils))
+               (install-file #$(file-append font-google-noto
+                                            "/share/fonts/opentype/NotoSansSymbols-Regular.otf")
+                             (string-append #$output "/share/fonts/opentype")))))
+    (home-page (package-home-page font-google-noto))
+    (synopsis "Noto Sans Symbols font")
+    (description "The Noto Sans Symbols family alone, from font-google-noto.")
+    (license (package-license font-google-noto))))
+
 ;; A list, since these extend several services.
 (define desktop-theme-service
   (list
@@ -153,6 +273,9 @@
                    (cons (list "darkman/config.yaml" %darkman-config)
                          (append (mode-files "day" %day)
                                  (mode-files "night" %night))))
+   (simple-service 'desktop-theme-fonts
+                   home-profile-service-type
+                   (list font-noto-sans-symbols))
    (simple-service 'desktop-theme-scripts
                    home-files-service-type
                    (list (list "bin/theme-switch" %theme-switch)

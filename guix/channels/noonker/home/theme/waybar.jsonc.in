@@ -1,0 +1,203 @@
+// Generated once per palette from theme.scm.  The icon keys are defined there.
+{
+    "layer": "top",
+    "position": "top",
+    "height": 28,
+    "spacing": 1,
+    "margin": 0,
+    "modules-left": ["niri/workspaces", "niri/window", "custom/weather", "custom/quote"],
+        "modules-center": [],                                                                           //battery   //disk     // uptime      //updates        // systray
+    "modules-right": ["clock","pulseaudio", "group/brightness", "network", "cpu", "memory", "temperature", "battery", "disk", "custom/disk-io", "custom/uptime", "custom/updates", "tray"],
+
+
+    "niri/workspaces": {
+        "format": "{icon}",
+        "format-icons": {
+            "1": "%icon-ws-1%",
+            "2": "%icon-ws-2%",
+            "3": "%icon-ws-3%",
+            "4": "%icon-ws-4%",
+            "5": "%icon-ws-5%",
+            "6": "%icon-ws-6%",
+            "7": "%icon-ws-7%",
+            "8": "%icon-ws-8%",
+            "9": "%icon-ws-9%",
+            "10": "%icon-ws-10%"
+        }
+    },
+
+    "niri/window": {
+        "format": "{}",
+        "separate-outputs": true
+    },
+
+    "custom/playerctl": {
+        "format": "%icon-player% {}",
+        "return-type": "json",
+        "max-length": 40,
+        "exec": "playerctl -a metadata --format '{\"text\": \"{{artist}} - {{markup_escape(title)}}\", \"tooltip\": \"{{playerName}} : {{artist}} - {{markup_escape(title)}}\", \"alt\": \"{{status}}\", \"class\": \"{{status}}\"}' -F",
+        "on-click": "playerctl play-pause",
+        "on-click-right": "playerctl next",
+    },
+
+    "custom/weather": {
+        "exec": "curl 'https://wttr.in/?format=1'",
+        "interval": 3600,
+        "format": "{}",
+        "tooltip": true
+    },
+
+    "custom/quote": {
+        "format": "%icon-quote% {}",
+        "interval": 3600,
+        "exec": "fortune -s",
+        "on-click": "fortune | yad --text-info --width=400 --height=200 --title='Fortune'",
+        "tooltip": true
+    },
+
+    "custom/updates": {
+        "format": "%icon-updates% {}",
+        "exec": "checkupdates | wc -l",
+        "interval": 3600,
+        "on-click": "kitty -e sudo pacman -Syu",
+        "signal": 8
+    },
+
+    "custom/uptime": {
+        "format": "%icon-uptime% {}",
+        "exec": "uptime -p | sed 's/up //; s/ days/d/; s/ hours/h/; s/ minutes/m/'",
+        "interval": 60
+    },
+
+    "idle_inhibitor": {
+        "format": "{icon}",
+        "format-icons": {
+            "activated": "%icon-lock%",
+            "deactivated": "%icon-unlock%"
+        },
+        "tooltip": true
+    },
+
+    "clock": {
+        "format": "%icon-clock% {:%H:%M}",
+        "format-alt": "%icon-date% {:%F}",
+        "tooltip-format": "<big>{:%Y %B}</big>\n<tt><small>{calendar}</small></tt>",
+        "calendar": {
+            "mode"          : "month",
+            "mode-mon-col"  : 3,
+            "weeks-pos"     : "right",
+            "on-scroll"     : 1,
+            "on-click-right": "mode",
+            "format": {
+                "months":     "<span color='%fg%'><b>{}</b></span>",
+                "days":       "<span color='%fg-dim%'>{}</span>",
+                "weeks":      "<span color='%green%'><b>W{}</b></span>",
+                "weekdays":   "<span color='%blue%'><b>{}</b></span>",
+                "today":      "<span color='%accent%'><b><u>{}</u></b></span>"
+            }
+        },
+        "actions": {
+            "on-click-right": "mode",
+            "on-click-forward": "tz_up",
+            "on-click-backward": "tz_down",
+            "on-scroll-up": "shift_up",
+            "on-scroll-down": "shift_down"
+        }
+    },
+
+    "cpu": {
+        "format": "%icon-cpu% {usage}%",
+        "tooltip": true,
+        "interval": 1,
+        "on-click": "kitty -e htop"
+    },
+
+    "memory": {
+        "format": "%icon-memory% {}%",
+        "interval": 1,
+        "on-click": "kitty -e htop"
+    },
+
+    "temperature": {
+        "critical-threshold": 80,
+        "format": "%icon-temperature% {temperatureC}°C",
+        "on-click": "kitty -e s-tui"
+    },
+
+    "battery": {
+        "states": {
+            "good": 95,
+            "warning": 30,
+            "critical": 15
+        },
+        "format": "{icon} {capacity}%",
+        "format-charging": "%icon-charging% {capacity}%",
+        "format-plugged": "%icon-charging% {capacity}%",
+        "format-alt": "{icon} {time}",
+        "format-icons": [%icon-battery%]
+    },
+
+    "network": {
+        "interval": 2,
+        "format-wifi": "%icon-wifi% {essid} ({signalStrength}%) ↓{bandwidthDownOctets} ↑{bandwidthUpOctets}",
+        "format-ethernet": "%icon-ethernet% {ifname} ↓{bandwidthDownOctets} ↑{bandwidthUpOctets}",
+        "format-linked": "%icon-ethernet% {ifname} (No IP)",
+        "format-disconnected": "%icon-offline% Disconnected",
+        "format-alt": "{ifname}: {ipaddr}/{cidr}",
+        "tooltip-format": "{ifname}: {ipaddr}\n↓ {bandwidthDownOctets}  ↑ {bandwidthUpOctets}",
+        "on-click": "kitty -e nmtui"
+    },
+
+    "pulseaudio": {
+        "format": "{icon} {volume}%",
+        "format-bluetooth": "%icon-bluetooth% {volume}%",
+        "format-bluetooth-muted": "%icon-muted%",
+        "format-muted": "%icon-muted%",
+        "format-icons": { "default": ["%icon-audio%"] },
+        "on-click": "pavucontrol",
+        "on-click-right": "pactl set-sink-mute @DEFAULT_SINK@ toggle",
+        "on-scroll-up": "pactl set-sink-volume @DEFAULT_SINK@ +2%",
+        "on-scroll-down": "pactl set-sink-volume @DEFAULT_SINK@ -2%"
+    },
+
+    "group/brightness": {
+        "orientation": "horizontal",
+        "modules": ["backlight", "custom/idle-lock"]
+    },
+
+    "backlight": {
+        "format": "{icon} {percent}%",
+        "format-icons": [%icon-brightness%],
+        "on-click": "sh $HOME/.config/waybar/idle-lock.sh toggle",
+        "on-scroll-up": "brightnessctl set +5%",
+        "on-scroll-down": "brightnessctl set 5%-"
+    },
+
+    "custom/idle-lock": {
+        "format": "%icon-lock%",
+        "exec": "sh $HOME/.config/waybar/idle-lock.sh status",
+        "interval": 5,
+        "signal": 9,
+        "tooltip-format": "Screen sleep disabled",
+        "on-click": "sh $HOME/.config/waybar/idle-lock.sh toggle"
+    },
+
+    "disk": {
+        "interval": 30,
+        "format": "%icon-disk% {percentage_used}%",
+        "path": "/",
+        "on-click": "firefox"
+    },
+
+    "custom/disk-io": {
+        "format": "%icon-disk-io% {}",
+        "exec": "sh $HOME/.config/waybar/disk-io.sh",
+        "interval": 3,
+        "tooltip": false
+    },
+
+    "tray": {
+        "icon-size": 18,
+        "spacing": 5
+    }
+}

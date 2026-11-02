@@ -298,9 +298,18 @@ Leuven Theme and Comic Mono
 #+begin_src emacs-lisp :tangle ~/.emacs
 (use-package autothemer)
 
-;; Generated from the day/night palettes in guix/channels/noonker/home/theme.scm.
-;; theme-switch reloads this file when the desktop theme changes.
-(load "~/.local/state/theme/current/emacs.el" t t)
+(defvar how-ya-feeling 'dark-tbh)
+
+(if im-at-work
+    (cond
+     ((eq how-ya-feeling 'dark-tbh)
+      (use-package cyberpunk-theme)
+      (load-theme 'cyberpunk t))
+     ((eq how-ya-feeling 'burn-my-eyes)
+      (load-theme 'leuven)))
+  ;; Generated from the day/night palettes in guix/channels/noonker/home/theme.scm.
+  ;; theme-switch reloads this file when the desktop theme changes.
+  (load "~/.local/state/theme/current/emacs.el" t t))
 
 
 (defun noonker/set-fonts (frame)

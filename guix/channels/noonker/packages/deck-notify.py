@@ -48,28 +48,32 @@ DEFAULT_TIMEOUT_MS = 7000  # used when the sender doesn't ask for a timeout
 MAX_BACK_CARDS = 5  # face-down cards drawn; the rank still counts them all
 
 # Geometry, in logical pixels.  Cards have poker proportions (5:7).
-CARD_W, CARD_H = 220, 308
-CARD_RADIUS = 10
-CORNER_INSET = 12  # corner index distance from the card edge
-SUIT_SIZE = 24
-TEXT_INSET_X = 16
-TEXT_INSET_Y = 72  # keeps the text clear of both corner indices
-DECK_DX, DECK_DY = 4, 4  # how far each lower card sticks out, down and left
+CARD_W, CARD_H = 165, 231
+CARD_RADIUS = 7
+RULE_INSET = 3  # from the card edge to the double rule, which is RULE_WIDTH deep
+RULE_WIDTH = 7
+CORNER_INSET = 13  # corner index distance from the card edge, clear of the rule
+SUIT_SIZE = 18
+TEXT_INSET_X = 14
+TEXT_INSET_Y = 56  # keeps the text clear of both corner indices
+DECK_DX, DECK_DY = 3, 3  # how far each lower card sticks out, down and left
 MAX_TILT_DEG = 3
-PAD = 12  # transparent room for tilted cards to overflow into
+PAD = 9  # transparent room for tilted cards to overflow into
 ICON_PX = SUIT_SIZE * 2  # rendered at 2x so HiDPI outputs stay crisp
 
 # Theme.  These are the defaults; load_theme() replaces them when the desktop
 # theme changes (on startup, and on SIGUSR1).
 THEME_FILE = os.path.expanduser("~/.local/state/theme/current/deck-notify.conf")
 BACK_PATTERN = "hatch"  # or "stars"
+RULE = (0x0c / 255, 0x12 / 255, 0x1a / 255)
+RULE_CUT = "rough"  # hand-cut like a woodblock, or "fine"
 BACKGROUND = (0x1c / 255, 0x1f / 255, 0x26 / 255)
 ACCENT = (0x89 / 255, 0xaa / 255, 0xeb / 255)
 CRITICAL = (0xf3 / 255, 0x8b / 255, 0xa8 / 255)
 TEXT = (0xe6 / 255, 0xe9 / 255, 0xef / 255)
-RANK_FONT = "JetBrains Mono Bold 15"
-TEXT_FONT = "JetBrains Mono 9"
-FALLBACK_SUIT_FONT = "Sans 18"
+RANK_FONT = "JetBrains Mono Bold 11"
+TEXT_FONT = "JetBrains Mono 8"
+FALLBACK_SUIT_FONT = "Sans 14"
 
 WIN_W = CARD_W + MAX_BACK_CARDS * DECK_DX + 2 * PAD
 WIN_H = CARD_H + MAX_BACK_CARDS * DECK_DY + 2 * PAD
@@ -109,7 +113,7 @@ def hex_color(value):
 
 
 def load_theme():
-    global BACKGROUND, ACCENT, CRITICAL, TEXT, BACK_PATTERN
+    global BACKGROUND, ACCENT, CRITICAL, TEXT, BACK_PATTERN, RULE, RULE_CUT
     parser = configparser.ConfigParser(interpolation=None)
     try:
         parser.read(THEME_FILE)
@@ -119,6 +123,8 @@ def load_theme():
         CRITICAL = hex_color(card["critical"])
         TEXT = hex_color(card["text"])
         BACK_PATTERN = card["pattern"]
+        RULE = hex_color(card["rule"])
+        RULE_CUT = card["rule_cut"]
     except (configparser.Error, KeyError, ValueError) as error:
         print(f"deck-notify: keeping current theme: {error!r}", file=sys.stderr)
 
@@ -249,13 +255,71 @@ def card_path(cr):
     cr.close_path()
 
 
-def draw_card_base(cr, border):
+def wobble(rng, length, amplitude):
+    """A smooth, random offset along an edge, as a function of the distance along it."""
+    terms = [
+        (k, rng.uniform(0.4, 1) * amplitude / k ** 0.5, rng.uniform(0, 2 * math.pi))
+        for k in (1, 2, 3, 5, 8, 13)
+    ]
+    return lambda t: sum(a * math.sin(2 * math.pi * k * t / length + p) for k, a, p in terms)
+
+
+def rule_edge(cr, rng, inset, amplitude):
+    """Trace a closed rectangle INSET from the card's edge, its sides a little unsteady."""
+    x0, y0, x1, y1 = inset, inset, CARD_W - inset, CARD_H - inset
+    sides = (
+        ((x0, y0), (x1, y0), (0, 1)),
+        ((x1, y0), (x1, y1), (-1, 0)),
+        ((x1, y1), (x0, y1), (0, -1)),
+        ((x0, y1), (x0, y0), (1, 0)),
+    )
+    for (ax, ay), (bx, by), (nx, ny) in sides:
+        length = math.hypot(bx - ax, by - ay)
+        offset = wobble(rng, length, amplitude)
+        steps = max(2, int(length / 4))
+        for i in range(steps + 1):
+            t = length * i / steps
+            d = offset(t)
+            cr.line_to(ax + (bx - ax) * i / steps + nx * d, ay + (by - ay) * i / steps + ny * d)
+    cr.close_path()
+
+
+def draw_rule(cr, seed, color):
+    """The double rule from the waybar frame: a heavy line outside a thin one.
+
+    It's filled between two separately wobbling edges, so its weight varies as a
+    cut line's does.  The seed keeps a card's rule the same between redraws.
+    """
+    rough = RULE_CUT == "rough"
+    amplitude = 0.35 if rough else 0
+    heavy, gap = (3.2, 1.6) if rough else (1, 2.2)
+    thin = RULE_WIDTH - heavy - gap if rough else 0.6
+    rng = random.Random(seed)
+    edges = (
+        RULE_INSET,
+        RULE_INSET + heavy,
+        RULE_INSET + heavy + gap,
+        RULE_INSET + heavy + gap + thin,
+    )
+    cr.save()
+    cr.set_fill_rule(cairo.FILL_RULE_EVEN_ODD)
+    cr.new_path()
+    for inset in edges:
+        cr.new_sub_path()
+        rule_edge(cr, rng, inset, amplitude)
+    cr.set_source_rgb(*color)
+    cr.fill()
+    cr.restore()
+
+
+def draw_card_base(cr, seed, color):
     card_path(cr)
     cr.set_source_rgb(*BACKGROUND)
     cr.fill_preserve()
-    cr.set_source_rgb(*border)
+    cr.set_source_rgba(*color, 0.5)
     cr.set_line_width(1)
     cr.stroke()
+    draw_rule(cr, seed, color)
 
 
 def draw_stars(cr, seed, count, alpha):
@@ -282,7 +346,7 @@ def draw_hatch(cr):
     cr.set_source_rgba(*ACCENT, 0.3)
     cr.set_line_width(1)
     span = CARD_W + CARD_H
-    for offset in range(-CARD_H, CARD_W, 12):
+    for offset in range(-CARD_H, CARD_W, 9):
         cr.move_to(offset, 0)
         cr.line_to(offset + span, span)
         cr.move_to(offset + CARD_H, 0)
@@ -295,13 +359,14 @@ def draw_card_back(cr, note):
     cr.translate(CARD_W / 2, CARD_H / 2)
     cr.rotate(note.tilt)
     cr.translate(-CARD_W / 2, -CARD_H / 2)
-    draw_card_base(cr, ACCENT)
+    draw_card_base(cr, note.id, RULE)
 
     cr.save()
-    card_path(cr)
+    inner = RULE_INSET + RULE_WIDTH
+    cr.rectangle(inner, inner, CARD_W - 2 * inner, CARD_H - 2 * inner)
     cr.clip()
     if BACK_PATTERN == "stars":
-        draw_stars(cr, note.id, 220, 0.8)
+        draw_stars(cr, note.id, 124, 0.8)
     else:
         draw_hatch(cr)
     cr.restore()
@@ -345,12 +410,13 @@ def draw_corner(cr, rank, suit, color):
 
 def draw_card_front(cr, note, rank):
     color = CRITICAL if note.urgency == URGENCY_CRITICAL else ACCENT
-    draw_card_base(cr, color)
+    draw_card_base(cr, note.id, CRITICAL if note.urgency == URGENCY_CRITICAL else RULE)
     if BACK_PATTERN == "stars":  # a faint sky behind the night cards' text
         cr.save()
-        card_path(cr)
+        inner = RULE_INSET + RULE_WIDTH
+        cr.rectangle(inner, inner, CARD_W - 2 * inner, CARD_H - 2 * inner)
         cr.clip()
-        draw_stars(cr, note.id, 40, 0.25)
+        draw_stars(cr, note.id, 22, 0.25)
         cr.restore()
 
     draw_corner(cr, rank, note.suit, color)

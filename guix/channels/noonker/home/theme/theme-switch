@@ -32,7 +32,7 @@ pkill -USR1 -x kitty
 pkill -USR2 -x '\.?waybar(-real)?'
 pkill -USR1 -f '/\.deck-notify-real'
 niri msg action load-config-file
-timeout 5 emacsclient -e "(load \"$current/emacs.el\" nil t)" >/dev/null 2>&1
+timeout 5 emacsclient -e "(unless (bound-and-true-p im-at-work) (load \"$current/emacs.el\" nil t))" >/dev/null 2>&1
 
 # Restarting the shader flickers, so don't do it unless the theme really changed
 # (darkman also calls this at login, when it usually hasn't).

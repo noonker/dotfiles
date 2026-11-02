@@ -1,0 +1,73 @@
+/* The bar is one long Tarot de Marseille card: cream stock inside a hand-cut double
+   rule (the SVG), plain black captions, and stencil color that misses its mark. */
+* {
+    font-family: "%ui-font%", "Noto Sans Symbols", "DejaVu Sans", "Noto Emoji";
+}
+
+window#waybar > box {
+    background-color: %bg%;
+    border-style: solid;
+    border-width: 5px;
+    /* The SVG is drawn at twice its size, so it's still sharp at scale 2. */
+    border-image: url("file:///home/person/.local/state/theme/current/waybar.svg") 10 / 5px round stretch;
+}
+
+/* Hand-ruled columns, like the caption box at the foot of a card. */
+#window, #custom-weather, #custom-quote, #clock, #pulseaudio, #brightness,
+#network, #cpu, #memory, #temperature, #battery, #disk, #custom-disk-io, #custom-uptime,
+#custom-updates {
+    border-right: 2px solid %fg%;
+}
+
+#window.empty {
+    border: none;
+    padding: 0;
+}
+
+/* The numerals at the head of a card; the focused one is the crosshatched back. */
+#workspaces {
+    border-right: 2px solid %fg%;
+}
+
+#workspaces button:hover {
+    background: %bg-high%;
+}
+
+#workspaces button.active, #workspaces button.focused {
+    color: %fg%;
+    font-weight: bold;
+    background-color: %bg-high%;
+    background-image:
+        repeating-linear-gradient(45deg, alpha(%accent2%, 0.75) 0px, alpha(%accent2%, 0.75) 1px, transparent 1px, transparent 4px),
+        repeating-linear-gradient(-45deg, alpha(%accent2%, 0.75) 0px, alpha(%accent2%, 0.75) 1px, transparent 1px, transparent 4px);
+}
+
+#workspaces button.urgent {
+    color: %bright-white%;
+    background: %accent%;
+}
+
+/* The stencil: a block of color behind each icon, cut a little off register. */
+#clock, #pulseaudio, #backlight, #network, #cpu, #memory, #temperature, #battery, #disk,
+#custom-disk-io, #custom-uptime, #custom-updates, #custom-quote, #custom-idle-lock {
+    padding-left: 5px;
+    background-size: 24px 100%;
+    background-position: 1px 0;
+    background-repeat: no-repeat;
+}
+
+#clock, #backlight, #memory, #battery, #pulseaudio, #custom-updates {
+    background-image: linear-gradient(%sun%, %sun%);
+}
+
+#network, #custom-disk-io, #custom-uptime {
+    background-image: linear-gradient(%sky%, %sky%);
+}
+
+#cpu, #temperature, #battery.charging, #battery.plugged, #network.ethernet {
+    background-image: linear-gradient(%rouge%, %rouge%);
+}
+
+#disk, #custom-quote, #custom-idle-lock, #pulseaudio.muted, #network.disconnected {
+    background-image: linear-gradient(%bg-high%, %bg-high%);
+}
