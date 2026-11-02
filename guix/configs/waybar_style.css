@@ -1,67 +1,5 @@
-/*Colorschemes, there are Gruvbox, Tokyo Night, and Everforest by default. The way it works is whichever colorscheme section is defined last will be used. Here everforest is last, but put any one you want to use as the last one.*/
-
-
-
-/* Tokyo Night */
-@define-color background #1a1b26;
-@define-color background-light #24283b;
-@define-color foreground #c0caf5;
-@define-color black #15161e;
-@define-color red #f7768e;
-@define-color green #9ece6a;
-@define-color yellow #e0af68;
-@define-color blue #7aa2f7;
-@define-color magenta #bb9af7;
-@define-color cyan #7dcfff;
-@define-color white #a9b1d6;
-@define-color orange #ff9e64;
-
-
-/* Everforest Dark Colors */
-@define-color background #2b3339;
-@define-color background-light #323c41;
-@define-color foreground #d3c6aa;
-@define-color black #3c474d;
-@define-color red #e67e80;
-@define-color green #a7c080;
-@define-color yellow #dbbc7f;
-@define-color blue #7fbbb3;
-@define-color magenta #d699b6;
-@define-color cyan #83c092;
-@define-color white #d3c6aa;
-@define-color orange #e69875;
-
-/* Pastel TTY Colors */
-@define-color background #212121;
-@define-color background-light #3a3a3a;
-@define-color foreground #e0e0e0;
-@define-color black #5a5a5a;
-@define-color red #ff9a9e;
-@define-color green #b5e8a9;
-@define-color yellow #ffe6a7;
-@define-color blue #63a4ff;
-@define-color magenta #dda0dd;
-@define-color cyan #a3e8e8;
-@define-color white #ffffff;
-@define-color orange #ff8952;
-
-
-
-/* Gruvbox Dark Colors */
-@define-color background #282828;
-@define-color background-light #3c3836;
-@define-color foreground #ebdbb2;
-@define-color black #32302f;
-@define-color red #cc241d;
-@define-color green #98971a;
-@define-color yellow #d79921;
-@define-color blue #458588;
-@define-color magenta #b16286;
-@define-color cyan #689d6a;
-@define-color white #ebdbb2;
-@define-color orange #d65d0e;
-
-
+/* Palette generated from channels/noonker/home/theme.scm */
+@import url("file:///home/person/.local/state/theme/current/waybar.css");
 
 /* Module-specific colors */
 @define-color workspaces-color @foreground;
@@ -100,7 +38,6 @@
     /* Base styling for all modules */
     border: none;
     border-radius: 5;
-    font-family: "Comic Code";
     font-size: 12px;
     min-height: 0;
 }

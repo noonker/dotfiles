@@ -1,0 +1,16 @@
+@define-color background %bg%;
+@define-color background-light %bg-alt%;
+@define-color foreground %fg%;
+@define-color black %black%;
+@define-color red %red%;
+@define-color green %green%;
+@define-color yellow %yellow%;
+@define-color blue %blue%;
+@define-color magenta %magenta%;
+@define-color cyan %cyan%;
+@define-color white %fg%;
+@define-color orange %orange%;
+
+* {
+    font-family: "%ui-font%";
+}

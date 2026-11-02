@@ -3,7 +3,7 @@
 // Autostart
 spawn-at-startup "dbus-update-activation-environment" "--all"
 spawn-at-startup "sh" "-c" "$HOME/.guix-home/profile/libexec/polkit-gnome-authentication-agent-1"
-spawn-at-startup "wlsunset" "-l" "44.4" "-L" "88.0"
+spawn-at-startup "wlsunset" "-l" "44.5" "-L" "-88.0"
 spawn-at-startup "deck-notify"
 spawn-at-startup "emacsclient" "-c"
 spawn-at-startup "wl-paste" "--watch" "cliphist" "store"
@@ -11,7 +11,10 @@ spawn-at-startup "waybar"
 spawn-at-startup "udiskie" "--automount" "--notify" "--no-tray"
 spawn-at-startup "xwayland-satellite"
 spawn-at-startup "sh" "-c" "sh ~/.config/waybar/idle-lock.sh start"
-spawn-at-startup "sh" "-c" "shaderbg '*' ~/.config/shaders/background.frag"
+// Darkman runs theme-switch as soon as it starts, and that signals deck-notify and
+// waybar, which would kill them if they hadn't installed their handlers yet.
+spawn-at-startup "sh" "-c" "sleep 5; exec darkman run"
+spawn-at-startup "sh" "-c" "shaderbg --fps 15 '*' ~/.local/state/theme/current/background.frag"
 
 // Prefer server-side decorations so niri can draw its own borders
 prefer-no-csd
@@ -47,14 +50,15 @@ layout {
 
     focus-ring {
         width 2
-        active-color "#3584e4"
-        inactive-color "#2d2d2d"
     }
 
     border {
         off
     }
 }
+
+// Focus ring colors, generated from channels/noonker/home/theme.scm
+include "/home/person/.local/state/theme/current/niri.kdl"
 
 // Cursor
 cursor {

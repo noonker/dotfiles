@@ -1,4 +1,2 @@
-
-//@theme "/home/person/.guix-home/profile/share/rofi/themes/arthur.rasi"
-
-@theme "/home/person/.guix-home/profile/share/rofi/themes/Monokai.rasi"
+// Generated from the day/night palettes in channels/noonker/home/theme.scm
+@theme "/home/person/.local/state/theme/current/rofi.rasi"

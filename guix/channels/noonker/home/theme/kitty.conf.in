@@ -1,0 +1,44 @@
+font_family      %font%
+bold_font        %font-bold%
+italic_font      %font-italic%
+bold_italic_font %font-bold-italic%
+
+foreground           %fg%
+background           %bg%
+selection_foreground %bg%
+selection_background %accent2%
+url_color            %blue%
+
+cursor            %accent%
+cursor_text_color %bg%
+
+color0  %black%
+color1  %red%
+color2  %green%
+color3  %yellow%
+color4  %blue%
+color5  %magenta%
+color6  %cyan%
+color7  %white%
+
+color8  %bright-black%
+color9  %bright-red%
+color10 %bright-green%
+color11 %bright-yellow%
+color12 %bright-blue%
+color13 %bright-magenta%
+color14 %bright-cyan%
+color15 %bright-white%
+
+active_tab_foreground   %bg%
+active_tab_background   %accent%
+inactive_tab_foreground %fg-dim%
+inactive_tab_background %bg-alt%
+tab_bar_background      %bg-alt%
+
+mark1_foreground %bg%
+mark1_background %accent%
+mark2_foreground %bg%
+mark2_background %blue%
+mark3_foreground %bg%
+mark3_background %magenta%

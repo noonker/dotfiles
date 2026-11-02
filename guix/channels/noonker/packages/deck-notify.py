@@ -9,10 +9,18 @@ Mouse: left = run the default action and discard the top card,
        right = discard the top card, middle = discard the whole deck.
 """
 
+import configparser
 import math
+import os
 import random
 import re
+import signal
 import sys
+
+# theme-switch sends SIGUSR1, and at login it runs while this is still starting.
+# Until main() installs its handler the default action would kill us, so ignore
+# it before the slow imports; main() reads the current theme anyway.
+signal.signal(signal.SIGUSR1, signal.SIG_IGN)
 
 import gi
 
@@ -51,7 +59,10 @@ MAX_TILT_DEG = 3
 PAD = 12  # transparent room for tilted cards to overflow into
 ICON_PX = SUIT_SIZE * 2  # rendered at 2x so HiDPI outputs stay crisp
 
-# Theme
+# Theme.  These are the defaults; load_theme() replaces them when the desktop
+# theme changes (on startup, and on SIGUSR1).
+THEME_FILE = os.path.expanduser("~/.local/state/theme/current/deck-notify.conf")
+BACK_PATTERN = "hatch"  # or "stars"
 BACKGROUND = (0x1c / 255, 0x1f / 255, 0x26 / 255)
 ACCENT = (0x89 / 255, 0xaa / 255, 0xeb / 255)
 CRITICAL = (0xf3 / 255, 0x8b / 255, 0xa8 / 255)
@@ -91,6 +102,25 @@ INTERFACE_XML = f"""
 
 REASON_EXPIRED, REASON_DISMISSED, REASON_CLOSED = 1, 2, 3
 URGENCY_CRITICAL = 2
+
+
+def hex_color(value):
+    return tuple(int(value[i:i + 2], 16) / 255 for i in (1, 3, 5))
+
+
+def load_theme():
+    global BACKGROUND, ACCENT, CRITICAL, TEXT, BACK_PATTERN
+    parser = configparser.ConfigParser(interpolation=None)
+    try:
+        parser.read(THEME_FILE)
+        card = parser["card"]
+        BACKGROUND = hex_color(card["background"])
+        ACCENT = hex_color(card["accent"])
+        CRITICAL = hex_color(card["critical"])
+        TEXT = hex_color(card["text"])
+        BACK_PATTERN = card["pattern"]
+    except (configparser.Error, KeyError, ValueError) as error:
+        print(f"deck-notify: keeping current theme: {error!r}", file=sys.stderr)
 
 
 # Icons ---------------------------------------------------------------------
@@ -228,17 +258,27 @@ def draw_card_base(cr, border):
     cr.stroke()
 
 
-def draw_card_back(cr, tilt):
-    cr.save()
-    cr.translate(CARD_W / 2, CARD_H / 2)
-    cr.rotate(tilt)
-    cr.translate(-CARD_W / 2, -CARD_H / 2)
-    draw_card_base(cr, ACCENT)
+def draw_stars(cr, seed, count, alpha):
+    """Scatter stars over the card; the same seed always gives the same sky."""
+    rng = random.Random(seed)
+    cr.set_source_rgba(*TEXT, alpha)
+    for _ in range(count):
+        x, y = rng.uniform(0, CARD_W), rng.uniform(0, CARD_H)
+        size = rng.choice((0.6, 0.6, 0.9, 1.2))
+        cr.arc(x, y, size, 0, 2 * math.pi)
+        cr.fill()
+        if rng.random() < 0.12:  # the odd four-pointed sparkle
+            arm = rng.uniform(3, 5)
+            cr.set_line_width(0.6)
+            cr.move_to(x - arm, y)
+            cr.line_to(x + arm, y)
+            cr.move_to(x, y - arm)
+            cr.line_to(x, y + arm)
+            cr.stroke()
 
-    # Cross-hatch, like the back of a real deck.
-    cr.save()
-    card_path(cr)
-    cr.clip()
+
+def draw_hatch(cr):
+    """Cross-hatch, like the back of a traditional deck."""
     cr.set_source_rgba(*ACCENT, 0.3)
     cr.set_line_width(1)
     span = CARD_W + CARD_H
@@ -248,6 +288,22 @@ def draw_card_back(cr, tilt):
         cr.move_to(offset + CARD_H, 0)
         cr.line_to(offset + CARD_H - span, span)
     cr.stroke()
+
+
+def draw_card_back(cr, note):
+    cr.save()
+    cr.translate(CARD_W / 2, CARD_H / 2)
+    cr.rotate(note.tilt)
+    cr.translate(-CARD_W / 2, -CARD_H / 2)
+    draw_card_base(cr, ACCENT)
+
+    cr.save()
+    card_path(cr)
+    cr.clip()
+    if BACK_PATTERN == "stars":
+        draw_stars(cr, note.id, 220, 0.8)
+    else:
+        draw_hatch(cr)
     cr.restore()
     cr.restore()
 
@@ -290,6 +346,12 @@ def draw_corner(cr, rank, suit, color):
 def draw_card_front(cr, note, rank):
     color = CRITICAL if note.urgency == URGENCY_CRITICAL else ACCENT
     draw_card_base(cr, color)
+    if BACK_PATTERN == "stars":  # a faint sky behind the night cards' text
+        cr.save()
+        card_path(cr)
+        cr.clip()
+        draw_stars(cr, note.id, 40, 0.25)
+        cr.restore()
 
     draw_corner(cr, rank, note.suit, color)
     cr.save()  # the opposite corner is the same index, upside down
@@ -367,7 +429,7 @@ class Deck:
             depth = len(backs) - index
             cr.save()
             cr.translate(FRONT_X - depth * DECK_DX, FRONT_Y + depth * DECK_DY)
-            draw_card_back(cr, note.tilt)
+            draw_card_back(cr, note)
             cr.restore()
 
         cr.save()
@@ -375,6 +437,11 @@ class Deck:
         draw_card_front(cr, self.notes[-1], str(len(self.notes)))
         cr.restore()
         return False
+
+    def on_theme_changed(self):
+        load_theme()
+        self.area.queue_draw()
+        return GLib.SOURCE_CONTINUE
 
     def refresh(self):
         if self.notes:
@@ -487,7 +554,9 @@ def on_name_lost(_connection, name):
 
 
 def main():
+    load_theme()
     deck = Deck()
+    GLib.unix_signal_add(GLib.PRIORITY_DEFAULT, signal.SIGUSR1, deck.on_theme_changed)
     Gio.bus_own_name(
         Gio.BusType.SESSION,
         BUS_NAME,

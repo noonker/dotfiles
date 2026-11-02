@@ -1,0 +1,43 @@
+#!/bin/sh
+# Switch the desktop between the day and night themes, or report the current one.
+# Usage: theme-switch [day|night|light|dark|toggle|status]
+# A manual switch lasts until the next sunrise, sunset or login, when darkman runs this.
+
+state_dir=${XDG_STATE_HOME:-$HOME/.local/state}/theme
+theme_dir=${XDG_CONFIG_HOME:-$HOME/.config}/theme
+current=$state_dir/current
+previous=$(basename "$(readlink "$current" 2>/dev/null)")
+
+case "${1:-status}" in
+    day | light) mode=day ;;
+    night | dark) mode=night ;;
+    toggle) if [ "$previous" = night ]; then mode=day; else mode=night; fi ;;
+    status) echo "${previous:-unset}"; exit 0 ;;
+    *) echo "usage: theme-switch [day|night|light|dark|toggle|status]" >&2; exit 2 ;;
+esac
+
+mkdir -p "$state_dir"
+ln -sfn "$theme_dir/$mode" "$current"
+
+# Applications that aren't running are fine: they read the pointer on startup.
+if [ "$mode" = day ]; then
+    gsettings set org.gnome.desktop.interface color-scheme prefer-light
+    gsettings set org.gnome.desktop.interface gtk-theme Adwaita
+else
+    gsettings set org.gnome.desktop.interface color-scheme prefer-dark
+    gsettings set org.gnome.desktop.interface gtk-theme Adwaita-dark
+fi
+
+pkill -USR1 -x kitty
+pkill -USR2 -x '\.?waybar(-real)?'
+pkill -USR1 -f '/\.deck-notify-real'
+niri msg action load-config-file
+timeout 5 emacsclient -e "(load \"$current/emacs.el\" nil t)" >/dev/null 2>&1
+
+# Restarting the shader flickers, so don't do it unless the theme really changed
+# (darkman also calls this at login, when it usually hasn't).
+if [ "$mode" != "$previous" ] || ! pgrep -x shaderbg >/dev/null; then
+    pkill -x shaderbg
+    niri msg action spawn -- shaderbg --fps 15 '*' "$current/background.frag"
+fi
+exit 0

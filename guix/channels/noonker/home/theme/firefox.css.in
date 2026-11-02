@@ -1,0 +1,55 @@
+/* Rendered once per palette, inside a prefers-color-scheme block.  These names
+   come from Firefox's own stylesheets and change between versions.  Popups and
+   toolbars redefine many of them, so they're set on those elements as well. */
+:root, #navigator-toolbox, #TabsToolbar, #nav-bar, #PersonalToolbar, #sidebar-box,
+#urlbar, .urlbarView, panel, menupopup, panelview {
+    --toolbox-background-color: %bg-alt% !important;
+    --toolbox-background-color-inactive: %bg-alt% !important;
+    --toolbox-text-color: %fg% !important;
+    --toolbox-text-color-inactive: %fg-dim% !important;
+    --toolbar-background-color: %bg% !important;
+    --toolbar-text-color: %fg% !important;
+    --toolbarbutton-icon-fill: %fg% !important;
+    --toolbarbutton-icon-fill-attention: %accent% !important;
+    --toolbarbutton-background-color-hover: %bg-high% !important;
+    --toolbarbutton-background-color-active: %bg-high% !important;
+    --toolbarseparator-color: %bg-high% !important;
+
+    --tab-background-color-selected: %bg% !important;
+    --tab-background-color-hover: %bg-high% !important;
+    --tab-border-color-selected: %accent% !important;
+    --tab-text-color: %fg-dim% !important;
+    --tab-text-color-hover: %fg% !important;
+    --tab-text-color-selected: %fg% !important;
+    --tabs-navbar-separator-color: %bg-high% !important;
+    --tabpanel-background-color: %bg% !important;
+    --chrome-content-separator-color: %bg-high% !important;
+
+    --toolbar-field-background-color: %bg-alt% !important;
+    --toolbar-field-background-color-focus: %bg% !important;
+    --toolbar-field-text-color: %fg% !important;
+    --toolbar-field-text-color-focus: %fg% !important;
+    --toolbar-field-border-color: %bg-high% !important;
+    --toolbar-field-border-color-focus: %accent% !important;
+    --urlbar-box-background-color-hover: %bg-high% !important;
+    --urlbar-box-background-color-active: %bg-high% !important;
+    --urlbar-box-text-color: %fg% !important;
+    --urlbarview-background-color-hover: %bg-alt% !important;
+    --urlbarview-background-color-selected: %accent% !important;
+    --urlbarview-text-color-selected: %bg% !important;
+    --urlbarview-text-color-secondary: %fg-dim% !important;
+    --urlbarview-text-color-action: %blue% !important;
+    --urlbarview-separator-color: %bg-high% !important;
+
+    --panel-background-color: %bg% !important;
+    --panel-text-color: %fg% !important;
+    --panel-border-color: %accent% !important;
+    --panel-separator-color: %bg-high% !important;
+    --sidebar-background-color: %bg-alt% !important;
+    --sidebar-text-color: %fg% !important;
+    --sidebar-border-color: %bg-high% !important;
+
+    --focus-outline-color: %accent% !important;
+    --color-accent-primary: %accent% !important;
+    font-family: "%ui-font%" !important;
+}

@@ -1,0 +1,103 @@
+// Arcana: a slowly turning wheel of fortune among the stars.
+#define PI 3.14159265
+
+const vec3 VOID = vec3(%bg.vec3%);
+const vec3 NEBULA = vec3(%bg-high.vec3%);
+const vec3 VIOLET = vec3(%accent2.vec3%);
+const vec3 GOLD = vec3(%accent.vec3%);
+const vec3 STARLIGHT = vec3(%fg.vec3%);
+
+float hash(vec2 p) {
+    p = fract(p * vec2(123.34, 456.21));
+    p += dot(p, p + 45.32);
+    return fract(p.x * p.y);
+}
+
+float noise(vec2 p) {
+    vec2 i = floor(p), f = fract(p);
+    f = f * f * (3.0 - 2.0 * f);
+    return mix(mix(hash(i), hash(i + vec2(1.0, 0.0)), f.x),
+               mix(hash(i + vec2(0.0, 1.0)), hash(i + vec2(1.0, 1.0)), f.x), f.y);
+}
+
+float fbm(vec2 p) {
+    float value = 0.0, amplitude = 0.5;
+    for (int i = 0; i < 4; i++) {
+        value += amplitude * noise(p);
+        p = p * 2.03 + vec2(17.0, 9.0);
+        amplitude *= 0.5;
+    }
+    return value;
+}
+
+// One grid of stars; density is the fraction of cells holding a star.
+float stars(vec2 uv, float scale, float density) {
+    vec2 grid = uv * scale;
+    vec2 cell = floor(grid);
+    float seed = hash(cell);
+    if (seed > density) return 0.0;
+    vec2 offset = vec2(hash(cell + 3.1), hash(cell + 7.7)) - 0.5;
+    float d = length(fract(grid) - 0.5 - offset * 0.7);
+    float twinkle = 0.55 + 0.45 * sin(iTime * (0.4 + seed * 12.0) + seed * 200.0);
+    return smoothstep(0.09, 0.0, d) * twinkle;
+}
+
+float line(float d, float width, float aa) {
+    return smoothstep(width + aa, width, abs(d));
+}
+
+float sector(float a, float count) {
+    float size = 2.0 * PI / count;
+    return abs(mod(a + size / 2.0, size) - size / 2.0);
+}
+
+void mainImage(out vec4 fragColor, in vec2 fragCoord) {
+    vec2 uv = (fragCoord - 0.5 * iResolution.xy) / iResolution.y;
+    float aa = 1.5 / iResolution.y;
+
+    // Nebula: two slow clouds, deep purple with a violet heart.
+    float drift = iTime * 0.006;
+    float cloud = fbm(uv * 2.2 + vec2(drift, -drift));
+    float heart = fbm(uv * 4.5 - vec2(drift * 1.5, 0.0) + cloud);
+    vec3 color = mix(VOID, NEBULA, smoothstep(0.3, 0.8, cloud));
+    color += VIOLET * 0.16 * smoothstep(0.5, 0.85, heart * cloud * 1.9);
+
+    color += STARLIGHT * stars(uv, 90.0, 0.25) * 0.55;
+    color += STARLIGHT * stars(uv + 3.7, 45.0, 0.15) * 0.8;
+    color += mix(GOLD, STARLIGHT, 0.5) * stars(uv - 1.9, 18.0, 0.12);
+
+    // The wheel.
+    float t = iTime * 0.015;
+    float r = length(uv);
+    float a = atan(uv.y, uv.x);
+    float glow = 0.75 + 0.25 * sin(iTime * 0.3);
+
+    float rings = line(r - 0.36, 0.0014, aa) + line(r - 0.345, 0.0006, aa)
+                + line(r - 0.24, 0.0009, aa) + line(r - 0.09, 0.0009, aa);
+    float ticks = step(0.26, r) * step(r, 0.345)
+                * line(sector(a + t, 72.0) * r, 0.0005, aa);
+    float major = step(0.24, r) * step(r, 0.345)
+                * line(sector(a + t, 12.0) * r, 0.0009, aa);
+    float gold = clamp(rings + ticks * 0.5 + major, 0.0, 1.0);
+
+    // Eight-pointed star turning the other way.
+    float ray = 0.05 + 0.18 * pow(1.0 - sector(a - t * 2.0, 8.0) / (PI / 8.0), 3.0);
+    gold = max(gold, smoothstep(ray + aa, ray, r) * step(0.09, r) * 0.8);
+
+    color = mix(color, GOLD, gold * glow * 0.75);
+    color += GOLD * smoothstep(0.5, 0.0, r) * 0.04 * glow;
+
+    // Crescent moons riding the outer band.
+    for (int i = 0; i < 4; i++) {
+        float angle = t + float(i) * PI / 2.0 + PI / 4.0;
+        vec2 moon = uv - 0.42 * vec2(cos(angle), sin(angle));
+        vec2 outward = normalize(uv - moon + 0.0001);
+        float crescent = smoothstep(0.024 + aa, 0.024, length(moon))
+                       * smoothstep(0.019, 0.019 + aa, length(moon + outward * 0.009));
+        color = mix(color, STARLIGHT, crescent * 0.9);
+    }
+
+    // Keep the corners dark so the wheel holds the eye.
+    color *= 1.0 - 0.45 * smoothstep(0.35, 1.0, r);
+    fragColor = vec4(color, 1.0);
+}

@@ -1,0 +1,63 @@
+* {
+    font: "%ui-font% 12";
+    background-color: transparent;
+    text-color: %fg%;
+}
+
+window {
+    background-color: %bg%;
+    border: 2px;
+    border-color: %accent%;
+    border-radius: 6px;
+    width: 40%;
+}
+
+mainbox {
+    padding: 12px;
+    spacing: 8px;
+}
+
+inputbar {
+    background-color: %bg-alt%;
+    border-radius: 4px;
+    padding: 8px;
+    spacing: 8px;
+    children: [prompt, entry];
+}
+
+prompt {
+    text-color: %accent%;
+}
+
+entry {
+    placeholder-color: %fg-dim%;
+}
+
+message {
+    padding: 8px;
+}
+
+listview {
+    lines: 10;
+    scrollbar: false;
+    spacing: 2px;
+}
+
+element {
+    padding: 6px;
+    border-radius: 4px;
+    spacing: 8px;
+}
+
+element alternate.normal {
+    background-color: transparent;
+}
+
+element selected.normal {
+    background-color: %accent%;
+    text-color: %bg%;
+}
+
+element-text, element-icon {
+    text-color: inherit;
+}

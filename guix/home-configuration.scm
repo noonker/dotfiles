@@ -15,6 +15,7 @@
 (use-modules (gnu home)
              (noonker home emacs)
              (noonker home hydroxide)
+             (noonker home theme)
              (noonker home pw-autoconnect)
              (noonker home git-repos)
              (noonker packages wine)
@@ -102,6 +103,7 @@
 					"blueman"
 					"brightnessctl"
 					"cliphist"
+					"darkman"
 					"grim"
 					"kitty"
 					"network-manager-applet"
@@ -254,6 +256,7 @@
 					"font-awesome"
 					"font-jetbrains-mono"
 					"font-liberation"
+					"font-new-heterodox-mono"
 
 					;; Appearance
 					"adwaita-icon-theme"
@@ -293,7 +296,9 @@
  ;; Below is the list of Home services.  To search for available
  ;; services, run 'guix home search KEYWORD' in a terminal.
  (services
-  (list
+  (append
+   desktop-theme-service
+   (list
    (service home-pipewire-service-type pipewire-config)
    (service home-dbus-service-type)
    emacs-daemon-service
@@ -347,7 +352,6 @@
 	      ("waybar/idle-lock.sh" ,(local-file (dotfile "guix/configs/waybar-idle-lock.sh")))
 	      ("containers/registries.conf" ,(local-file (dotfile "guix/configs/podman_registries.conf")))
 	      ("containers/policy.json" ,(local-file (dotfile "guix/configs/podman_policy.json")))
-	      ("shaders/background.frag" ,(local-file (dotfile "guix/configs/background.frag")))
 	      ("guix/channels.scm" ,(local-file (dotfile "guix/configs/guix_channels")))
 	      ("xdg-desktop-portal/portals.conf" ,(local-file (dotfile "guix/configs/portals.conf")))
 	      ("kitty/kitty.conf" ,(local-file (dotfile "guix/configs/kitty.conf")))
@@ -418,4 +422,4 @@
              (bash-profile (list (local-file
                                   "/home/person/git/dotfiles/guix/channels/noonker/home/.bash_profile"
                                   "bash_profile")))))
-   )))
+   ))))

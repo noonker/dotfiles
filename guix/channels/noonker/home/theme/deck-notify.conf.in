@@ -1,0 +1,6 @@
+[card]
+background=%bg%
+accent=%accent2%
+critical=%red%
+text=%fg%
+pattern=%pattern%

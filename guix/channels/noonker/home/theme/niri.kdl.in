@@ -1,0 +1,6 @@
+layout {
+    focus-ring {
+        active-color "%accent%"
+        inactive-color "%bg-high%"
+    }
+}
