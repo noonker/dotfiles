@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 64 64">
+<!-- A printer's manicule; the fingertip is the hotspot. -->
+<g transform="translate(5 4) rotate(-35)" stroke-linejoin="round" stroke-linecap="round">
+<g id="hand">
+<path id="cuff" d="M-9 47 L19 47 L20 60 L-9 60 Z"/>
+<path id="fist" d="M-4.5 4 C-4.5 -1.5 4.5 -1.5 4.5 4 L4.5 22 C8 19.5 12 20.5 12.5 24 C15.5 22.5 19 24 19 27.5 C21.5 27 24 28.5 24 32 L24 38 C24 43 20 46 17 48 L-6 48 C-9 45 -13 38 -15 32 C-16.5 28 -11 25.5 -8.5 30 L-4.5 35 Z"/>
+</g>
+<use xlink:href="#hand" fill="none" stroke="%bg%" stroke-width="6.5"/>
+<path d="M-9 47 L19 47 L20 60 L-9 60 Z" fill="%accent%" stroke="%fg%" stroke-width="2.6"/>
+<path d="M-4 49 L-5 58 M1 49 L0 58 M6 49 L5 58 M11 49 L10 58 M16 49 L15 58" fill="none" stroke="%fg%" stroke-width="1.5"/>
+<path d="M-4.5 4 C-4.5 -1.5 4.5 -1.5 4.5 4 L4.5 22 C8 19.5 12 20.5 12.5 24 C15.5 22.5 19 24 19 27.5 C21.5 27 24 28.5 24 32 L24 38 C24 43 20 46 17 48 L-6 48 C-9 45 -13 38 -15 32 C-16.5 28 -11 25.5 -8.5 30 L-4.5 35 Z" fill="%bg-high%" stroke="%fg%" stroke-width="2.6"/>
+<path d="M4.5 22 L4.5 30 M12.5 24 L12.5 32 M19 27.5 L19 34 M-3 4.5 L-3 6 M-4.5 35 L1 38 M3 41 L6 44 M9 41 L12 44" fill="none" stroke="%fg%" stroke-width="1.8"/>
+</g>
+</svg>

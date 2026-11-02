@@ -20,6 +20,7 @@
   #:use-module (gnu system setuid)
   #:use-module (guix gexp)
   #:use-module (guix records)
+  #:use-module (noonker home theme)
   #:use-module (noonker services boltd)
   #:use-module (noonker services podman)
   #:use-module (noonker services audio)
@@ -290,6 +291,7 @@
 			   %default-authorized-guix-keys)))))))
   (bootloader (bootloader-configuration
                 (bootloader grub-efi-bootloader)
+                (theme desktop-grub-theme)
                 (targets (list "/boot/efi"))
                 (keyboard-layout keyboard-layout)))
   (mapped-devices (list (mapped-device

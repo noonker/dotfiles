@@ -1,6 +1,10 @@
 (define-module (noonker home theme)
+  #:use-module (gnu bootloader grub)
   #:use-module (gnu home services)
   #:use-module (gnu packages fonts)
+  #:use-module (gnu packages gnome)
+  #:use-module (gnu packages gnome-xyz)
+  #:use-module (gnu packages xorg)
   #:use-module (gnu services)
   #:use-module (guix build-system trivial)
   #:use-module (guix gexp)
@@ -9,7 +13,8 @@
   #:use-module (ice-9 rdelim)
   #:use-module (ice-9 regex)
   #:use-module (srfi srfi-1)
-  #:export (desktop-theme-service))
+  #:export (desktop-theme-service
+            desktop-grub-theme))
 
 ;;; One palette per mode; every themed application's config is generated from
 ;;; these by filling in the templates in ./theme/.  `theme-switch' then points
@@ -24,6 +29,8 @@
     (font-italic . "Comic Code Italic")
     (font-bold-italic . "Comic Code Bold Italic")
     (ui-font . "Comic Code")
+    (book-font . "Cardo")
+    (paper . "#f7f4e8") (fold . "#575b40") (rule . "#0c121a") (book-ink . "#0c121a")
     (bg . "#f2f0e4") (bg-alt . "#e8e3d2") (bg-high . "#dfcfc7") ; card, flesh tint
     (fg . "#0c121a") (fg-dim . "#575b40")
     (accent . "#9d2606")                ; vermilion
@@ -50,6 +57,8 @@
     (font-italic . "auto")
     (font-bold-italic . "New Heterodox Mono Bold")
     (ui-font . "New Heterodox Mono")
+    (book-font . "Junicode")
+    (paper . "#1c1238") (fold . "#05020d") (rule . "#e8c46a") (book-ink . "#e6dff8")
     (bg . "#110a24") (bg-alt . "#1c1238") (bg-high . "#2f2058")
     (fg . "#e6dff8") (fg-dim . "#9c8fc6")
     (accent . "#e8c46a")                ; gold leaf
@@ -159,8 +168,9 @@
     ("waybar.jsonc.in" . "waybar.jsonc")
     ("waybar.css.in" . "waybar.css")
     ("rofi.rasi.in" . "rofi.rasi")
-    ("niri.kdl.in" . "niri.kdl")
     ("deck-notify.conf.in" . "deck-notify.conf")
+    ("swaylock.conf.in" . "swaylock.conf")
+    ("book.conf.in" . "book.conf")
     ("emacs.el.in" . "emacs.el")))
 
 (define (theme-file name)
@@ -190,19 +200,117 @@
        (if (match:substring m 2) (hex->vec3 value) value)))
    'post))
 
+;; The lock screen's cards: Jean Dodal's Tarot de Marseille, Lyon, 1701-1715, from the
+;; BnF's scans via Wikimedia Commons (public domain, PD-old-70):
+;;   https://commons.wikimedia.org/wiki/File:Jean_Dodal_M00.jpg  (Le Fol), and so on to M21
+;; Each mode's own card is the image in its swaylock.conf, for when theme-lock can't
+;; find today's.  `theme-card' picks today's, and has their names and meanings.
+(define %lock-cards
+  '(("day" . 0)
+    ("night" . 18)))
+
+(define (card-file number)
+  (theme-file (match number
+                (0 "lock-fool.jpg")
+                (18 "lock-moon.jpg")
+                (_ (string-append "cards/" (card-name number) ".jpg")))))
+
+(define (card-name number)
+  (string-append (if (< number 10) "0" "") (number->string number)))
+
+(define (card-scene kind mode palette number)
+  "The mode's scene of KIND, \"lock\" or \"book\" (an SVG template), around card NUMBER."
+  (let ((card (local-file (card-file number)
+                          (string-append "card-" (card-name number) ".jpg")))
+        (scene (plain-file (string-append kind "-" mode ".svg")
+                           (render palette
+                                   (read-template
+                                    (string-append kind "-" mode ".svg.in"))))))
+    (computed-file
+     (string-append "theme-" mode "-" kind "-" (card-name number) ".png")
+     (with-imported-modules '((guix build utils))
+       #~(begin
+           (use-modules (guix build utils))
+           ;; librsvg only follows an href to a file beside the SVG.
+           (copy-file #$scene "scene.svg")
+           (copy-file #$card "card.jpg")
+           (invoke #+(file-append librsvg "/bin/rsvg-convert")
+                   "-o" #$output "scene.svg"))))))
+
+;; The boot menu is always at night: La Lune and the sky, with GRUB's nearest colors.
+(define desktop-grub-theme
+  (grub-theme
+   (image
+    (let ((card (local-file (card-file 18) "card-18.jpg"))
+          (scene (plain-file "grub.svg"
+                             (render %night (read-template "grub.svg.in")))))
+      (computed-file
+       "theme-grub.png"
+       (with-imported-modules '((guix build utils))
+         #~(begin
+             (use-modules (guix build utils))
+             ;; librsvg only follows an href to a file beside the SVG.
+             (copy-file #$scene "grub.svg")
+             (copy-file #$card "card.jpg")
+             (invoke #+(file-append librsvg "/bin/rsvg-convert")
+                     "-o" #$output "grub.svg"))))))
+   (color-normal '((fg . light-gray) (bg . black)))
+   (color-highlight '((fg . yellow) (bg . black)))))
+
+(define (niri-config mode palette)
+  "The shared niri settings, and the mode's window animations with their shaders in."
+  (define (shader file)
+    (render palette (read-template file)))
+  (string-append
+   (render palette (read-template "niri.kdl.in"))
+   (fold (match-lambda*
+           (((key . file) text)
+            (regexp-substitute/global #f key text 'pre (shader file) 'post)))
+         (read-template (string-append "niri-" mode ".kdl.in"))
+         '(("%card-turn-shader%" . "niri-card-turn.glsl.in")
+           ("%gold-dust-shader%" . "niri-gold-dust.glsl.in")))))
+
 (define (mode-files mode palette)
   (define (generated template target)
     (list (string-append "theme/" mode "/" target)
           (plain-file (string-append "theme-" mode "-" target)
                       (render palette (read-template template)))))
-  (map (match-lambda ((template . target) (generated template target)))
-       (append `((,(string-append "background-" mode ".frag.in") . "background.frag")
-                 (,(string-append "waybar-" mode ".css.in") . "waybar-look.css")
-                 (,(string-append "waybar-" mode ".svg.in") . "waybar.svg"))
-               %templates)))
+  ;; Rendered ahead of time, since each takes a second or two.
+  (define (scene kind directory number)
+    (list (string-append "theme/" mode "/" directory "/" (card-name number) ".png")
+          (card-scene kind mode palette number)))
+  (cons* (list (string-append "theme/" mode "/lock.png")
+               (card-scene "lock" mode palette (assoc-ref %lock-cards mode)))
+         (list (string-append "theme/" mode "/niri.kdl")
+               (plain-file (string-append "theme-" mode "-niri.kdl")
+                           (niri-config mode palette)))
+         (list (string-append "theme/" mode "/chime.wav")
+               (local-file (theme-file (string-append "sounds/chime-" mode ".wav"))))
+         (list (string-append "theme/" mode "/lock.wav")
+               (local-file (theme-file (string-append "sounds/lock-" mode ".wav"))))
+         (append
+          (map (lambda (number) (scene "lock" "cards" number)) (iota 22))
+          (map (lambda (number) (scene "book" "book" number)) (iota 22))
+          (map (match-lambda ((template . target) (generated template target)))
+               (append `((,(string-append "background-" mode ".frag.in") . "background.frag")
+                         (,(string-append "waybar-" mode ".css.in") . "waybar-look.css")
+                         (,(string-append "waybar-" mode ".svg.in") . "waybar.svg"))
+                       %templates)))))
 
 (define %theme-switch
   (local-file "theme/theme-switch" "theme-switch" #:recursive? #t))
+
+(define %theme-lock
+  (local-file "theme/theme-lock" "theme-lock" #:recursive? #t))
+
+(define %theme-background
+  (local-file "theme/theme-background" "theme-background" #:recursive? #t))
+
+(define %theme-book
+  (local-file "theme/theme-book" "theme-book" #:recursive? #t))
+
+(define %theme-card
+  (local-file "theme/theme-card" "theme-card" #:recursive? #t))
 
 (define %darkman-config
   ;; Darkman only decides when to switch; theme-switch does the rest, including
@@ -265,20 +373,170 @@
     (description "The Noto Sans Symbols family alone, from font-google-noto.")
     (license (package-license font-google-noto))))
 
+;;; GTK.  adw-gtk3 builds its widgets from the same named colors as libadwaita, so one
+;;; table of roles can dress both toolkits.
+
+(define %gtk-colors
+  '(("accent_bg_color" . accent) ("accent_fg_color" . bg) ("accent_color" . accent)
+    ("destructive_bg_color" . red) ("destructive_fg_color" . bg) ("destructive_color" . red)
+    ("success_bg_color" . green) ("success_fg_color" . bg) ("success_color" . green)
+    ("warning_bg_color" . yellow) ("warning_fg_color" . bg) ("warning_color" . yellow)
+    ("error_bg_color" . red) ("error_fg_color" . bg) ("error_color" . red)
+    ("window_bg_color" . bg) ("window_fg_color" . fg)
+    ("view_bg_color" . bg) ("view_fg_color" . fg)
+    ("headerbar_bg_color" . bg-alt) ("headerbar_fg_color" . fg)
+    ("headerbar_border_color" . card-rule) ("headerbar_backdrop_color" . bg)
+    ("sidebar_bg_color" . bg-alt) ("sidebar_fg_color" . fg)
+    ("sidebar_backdrop_color" . bg)
+    ("card_bg_color" . bg-alt) ("card_fg_color" . fg)
+    ("dialog_bg_color" . bg) ("dialog_fg_color" . fg)
+    ("popover_bg_color" . bg-alt) ("popover_fg_color" . fg)
+    ("thumbnail_bg_color" . bg-alt) ("thumbnail_fg_color" . fg)))
+
+(define (gtk-colors palette format-color)
+  (string-concatenate
+   (map (match-lambda
+          ((name . key) (format-color name (assq-ref palette key))))
+        %gtk-colors)))
+
+(define (gtk3-theme adw-name palette)
+  "A GTK 3 theme: adw-gtk3 in PALETTE's colors.  It has to be a theme, not ~/.config's
+gtk.css, because only a theme is reloaded when it changes: the polkit agent runs all day."
+  (mixed-text-file
+   "gtk.css"
+   "@import url(\"" adw-gtk3-theme "/share/themes/" adw-name "/gtk-3.0/gtk.css\");\n"
+   (gtk-colors palette
+               (lambda (name color)
+                 (string-append "@define-color " name " " color ";\n")))
+   (render palette (read-template "gtk.css.in"))))
+
+(define (gtk4-theme base palette)
+  "Plain GTK 4 applications take a theme, and libadwaita ignores it."
+  (plain-file
+   "gtk.css"
+   (string-append "@import url(\"resource:///org/gtk/libgtk/theme/Default/" base ".css\");\n"
+                  (render palette (read-template "gtk4-plain.css.in")))))
+
+(define (gtk4-mode scheme palette)
+  (string-append
+   "@media (prefers-color-scheme: " scheme ") {\n:root {\n"
+   (gtk-colors palette
+               (lambda (name color)
+                 (string-append "--"
+                                (string-map (lambda (c) (if (char=? c #\_) #\- c)) name)
+                                ": " color ";\n")))
+   "}\n"
+   (render palette (read-template "gtk.css.in"))
+   "}\n"))
+
+;; For libadwaita, which ignores the theme but follows the color scheme by itself.
+(define %gtk4-css
+  (plain-file "gtk.css"
+              (string-append (gtk4-mode "light" %day)
+                             (gtk4-mode "dark" %night))))
+
+;;; Cursors.  Only the ones you see all day are drawn; the rest, like the resize arrows,
+;;; come from Adwaita through Inherits.
+
+;; Name, hotspot in the SVGs' 64-unit square, frames, and the names it also goes by.
+(define %cursors
+  '(("default" 5 4 1 "left_ptr" "arrow" "top_left_arrow")
+    ("pointer" 5 4 1 "hand" "hand1" "hand2" "pointing_hand")
+    ("text" 32 32 1 "xterm" "ibeam")
+    ("wait" 32 32 12 "watch" "progress" "left_ptr_watch" "half-busy")))
+
+;; niri multiplies its xcursor-size of 34 by the output's scale of 1.5, so 51 is what the
+;; laptop's screen shows.  The others are for scales 1 and 2, and for larger settings.
+(define %cursor-sizes '(24 34 48 51 68 102))
+
+(define (cursor-frame mode palette name frame frames)
+  "FRAME of FRAMES of cursor NAME, as an SVG; @angle@ is how far round it has turned."
+  (plain-file
+   (string-append "cursor-" mode "-" name "-" (number->string frame) ".svg")
+   (regexp-substitute/global
+    #f "@angle@"
+    (render palette (read-template (string-append "cursors/" mode "-" name ".svg.in")))
+    'pre (number->string (/ (* frame 360) frames)) 'post)))
+
+(define (cursor-theme theme mode palette)
+  (computed-file
+   (string-append "cursor-theme-" theme)
+   (with-imported-modules '((guix build utils))
+     #~(begin
+         (use-modules (guix build utils)
+                      (ice-9 format)
+                      (ice-9 match))
+         (define cursors (string-append #$output "/cursors"))
+         (mkdir-p cursors)
+         (call-with-output-file (string-append #$output "/index.theme")
+           (lambda (port)
+             (format port "[Icon Theme]\nName=~a\nInherits=Adwaita\n" #$theme)))
+         (for-each
+          (match-lambda
+            ((name hot-x hot-y aliases frames)
+             (call-with-output-file "cursor.cfg"
+               (lambda (port)
+                 (for-each
+                  (lambda (size)
+                    (let loop ((frames frames) (number 0))
+                      (match frames
+                        (() #t)
+                        ((frame . rest)
+                         (let ((png (format #f "~a-~a-~a.png" name size number)))
+                           (invoke #+(file-append librsvg "/bin/rsvg-convert")
+                                   "-w" (number->string size)
+                                   "-h" (number->string size)
+                                   "-o" png frame)
+                           (format port "~a ~a ~a ~a 90\n" size
+                                   (round (/ (* hot-x size) 64))
+                                   (round (/ (* hot-y size) 64))
+                                   png))
+                         (loop rest (+ number 1))))))
+                  '#$%cursor-sizes)))
+             (invoke #+(file-append xcursorgen "/bin/xcursorgen")
+                     "cursor.cfg" (string-append cursors "/" name))
+             (for-each (lambda (alias)
+                         (symlink name (string-append cursors "/" alias)))
+                       aliases)))
+          (list
+           #$@(map (match-lambda
+                     ((name hot-x hot-y frames . aliases)
+                      #~(list #$name #$hot-x #$hot-y '#$aliases
+                              (list #$@(map (lambda (frame)
+                                              (cursor-frame mode palette name
+                                                            frame frames))
+                                            (iota frames))))))
+                   %cursors)))))))
+
 ;; A list, since these extend several services.
 (define desktop-theme-service
   (list
    (simple-service 'desktop-theme-config
                    home-xdg-configuration-files-service-type
-                   (cons (list "darkman/config.yaml" %darkman-config)
-                         (append (mode-files "day" %day)
-                                 (mode-files "night" %night))))
+                   (cons* (list "darkman/config.yaml" %darkman-config)
+                          (list "gtk-4.0/gtk.css" %gtk4-css)
+                          (append (mode-files "day" %day)
+                                  (mode-files "night" %night))))
    (simple-service 'desktop-theme-fonts
                    home-profile-service-type
-                   (list font-noto-sans-symbols))
+                   (list font-noto-sans-symbols font-cardo font-junicode))
    (simple-service 'desktop-theme-scripts
                    home-files-service-type
                    (list (list "bin/theme-switch" %theme-switch)
+                         (list "bin/theme-lock" %theme-lock)
+                         (list "bin/theme-card" %theme-card)
+                         (list "bin/theme-book" %theme-book)
+                         (list "bin/theme-background" %theme-background)
+                         (list ".icons/Marseille" (cursor-theme "Marseille" "day" %day))
+                         (list ".icons/Arcana" (cursor-theme "Arcana" "night" %night))
+                         (list ".local/share/themes/Marseille/gtk-3.0/gtk.css"
+                               (gtk3-theme "adw-gtk3" %day))
+                         (list ".local/share/themes/Marseille/gtk-4.0/gtk.css"
+                               (gtk4-theme "Default-light" %day))
+                         (list ".local/share/themes/Arcana/gtk-3.0/gtk.css"
+                               (gtk3-theme "adw-gtk3-dark" %night))
+                         (list ".local/share/themes/Arcana/gtk-4.0/gtk.css"
+                               (gtk4-theme "Default-dark" %night))
                          ;; Run by darkman with "light" or "dark".
                          (list ".local/share/darkman/theme-switch" %theme-switch)
                          (list (string-append %firefox-profile "/chrome/userChrome.css")

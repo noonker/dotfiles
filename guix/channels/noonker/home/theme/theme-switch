@@ -16,28 +16,44 @@ case "${1:-status}" in
     *) echo "usage: theme-switch [day|night|light|dark|toggle|status]" >&2; exit 2 ;;
 esac
 
+# Freeze the screen and crossfade to whatever is there when the delay ends, which hides
+# the applications changing one by one and the shader restarting below.  Darkman also
+# calls this at login, usually with nothing to change, so don't blink for that.
+if [ "$mode" != "$previous" ]; then
+    niri msg action do-screen-transition --delay-ms 600
+fi
+
 mkdir -p "$state_dir"
 ln -sfn "$theme_dir/$mode" "$current"
 
 # Applications that aren't running are fine: they read the pointer on startup.
 if [ "$mode" = day ]; then
     gsettings set org.gnome.desktop.interface color-scheme prefer-light
-    gsettings set org.gnome.desktop.interface gtk-theme Adwaita
+    gsettings set org.gnome.desktop.interface gtk-theme Marseille
+    gsettings set org.gnome.desktop.interface cursor-theme Marseille
 else
     gsettings set org.gnome.desktop.interface color-scheme prefer-dark
-    gsettings set org.gnome.desktop.interface gtk-theme Adwaita-dark
+    gsettings set org.gnome.desktop.interface gtk-theme Arcana
+    gsettings set org.gnome.desktop.interface cursor-theme Arcana
 fi
 
 pkill -USR1 -x kitty
 pkill -USR2 -x '\.?waybar(-real)?'
 pkill -USR1 -f '/\.deck-notify-real'
 niri msg action load-config-file
-timeout 5 emacsclient -e "(unless (bound-and-true-p im-at-work) (load \"$current/emacs.el\" nil t))" >/dev/null 2>&1
 
 # Restarting the shader flickers, so don't do it unless the theme really changed
 # (darkman also calls this at login, when it usually hasn't).
 if [ "$mode" != "$previous" ] || ! pgrep -x shaderbg >/dev/null; then
     pkill -x shaderbg
-    niri msg action spawn -- shaderbg --fps 15 '*' "$current/background.frag"
+    niri msg action spawn -- "$HOME/bin/theme-background"
 fi
+
+# The change of light has a sound, unless ~/.local/state/theme/quiet exists.
+if [ "$mode" != "$previous" ] && [ ! -e "$state_dir/quiet" ]; then
+    pw-play "$current/chime.wav" >/dev/null 2>&1 &
+fi
+
+# Last, since a busy Emacs can take seconds, and everything else has to beat the delay.
+timeout 5 emacsclient -e "(unless (bound-and-true-p im-at-work) (load \"$current/emacs.el\" nil t))" >/dev/null 2>&1
 exit 0

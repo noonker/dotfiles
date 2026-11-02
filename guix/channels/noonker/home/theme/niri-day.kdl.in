@@ -1,0 +1,31 @@
+cursor {
+    xcursor-theme "Marseille"
+}
+
+// A window is a card: it's dealt face down and turned over, and turned back to leave.
+animations {
+    window-open {
+        duration-ms 420
+        curve "ease-out-cubic"
+        custom-shader r"
+            %card-turn-shader%
+            vec4 open_color(vec3 coords_geo, vec3 size_geo) {
+                float p = niri_clamped_progress;
+                return card_turn(coords_geo, size_geo, (1.0 - p) * 3.14159265)
+                       * smoothstep(0.0, 0.2, p);
+            }
+        "
+    }
+    window-close {
+        duration-ms 320
+        curve "ease-out-quad"
+        custom-shader r"
+            %card-turn-shader%
+            vec4 close_color(vec3 coords_geo, vec3 size_geo) {
+                float p = niri_clamped_progress;
+                return card_turn(coords_geo, size_geo, p * 3.14159265)
+                       * (1.0 - smoothstep(0.75, 1.0, p));
+            }
+        "
+    }
+}

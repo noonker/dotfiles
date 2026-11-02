@@ -1,0 +1,29 @@
+vec4 card_back(vec2 px, vec2 size) {
+    vec3 ink = vec3(%accent2.vec3%);
+    vec3 card = vec3(%bg.vec3%);
+    vec3 rule = vec3(%card-rule.vec3%);
+    float edge = min(min(px.x, px.y), min(size.x - px.x, size.y - px.y));
+    if (edge < 3.0) return vec4(rule, 1.0);
+    if (edge < 14.0) return vec4(card, 1.0);
+    if (edge < 16.0) return vec4(rule, 1.0);
+    // The crosshatched back of the deck.
+    float a = abs(fract((px.x + px.y) / 18.0) - 0.5);
+    float b = abs(fract((px.x - px.y) / 18.0) - 0.5);
+    return vec4(mix(card, ink, step(min(a, b), 0.14)), 1.0);
+}
+
+// ANGLE is 0 face up and pi face down, turning about the vertical axis in perspective.
+// niri only draws inside the window, so the near edge is held to the window's height
+// and the far edge recedes, or the corners would be cut off.
+vec4 card_turn(vec3 coords_geo, vec3 size_geo, float angle) {
+    float c = cos(angle);
+    float k = 0.5 * sin(angle);
+    float near = 1.0 - 0.5 * k;
+    float u = (coords_geo.x - 0.5) * near;
+    float s = u / (c - u * k);
+    float v = (coords_geo.y - 0.5) * (1.0 + s * k) / near;
+    if (abs(s) > 0.5 || abs(v) > 0.5) return vec4(0.0);
+    vec2 uv = vec2(s, v) + 0.5;
+    if (c < 0.0) return card_back(uv * size_geo.xy, size_geo.xy);
+    return texture2D(niri_tex, (niri_geo_to_tex * vec3(uv, 1.0)).st);
+}

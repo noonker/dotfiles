@@ -14,7 +14,7 @@ spawn-at-startup "sh" "-c" "sh ~/.config/waybar/idle-lock.sh start"
 // Darkman runs theme-switch as soon as it starts, and that signals deck-notify and
 // waybar, which would kill them if they hadn't installed their handlers yet.
 spawn-at-startup "sh" "-c" "sleep 5; exec darkman run"
-spawn-at-startup "sh" "-c" "shaderbg --fps 15 '*' ~/.local/state/theme/current/background.frag"
+spawn-at-startup "sh" "-c" "$HOME/bin/theme-background"
 
 // Prefer server-side decorations so niri can draw its own borders
 prefer-no-csd
@@ -60,10 +60,9 @@ layout {
 // Focus ring colors, generated from channels/noonker/home/theme.scm
 include "/home/person/.local/state/theme/current/niri.kdl"
 
-// Cursor
+// Cursor; the theme comes from the mode's niri.kdl, included above
 cursor {
-    xcursor-theme "Adwaita"
-    xcursor-size 68
+    xcursor-size 34
 }
 
 // Screenshots
@@ -95,6 +94,22 @@ window-rule {
     open-floating true
 }
 
+// The fortune, as an open book: it draws its own edges.
+window-rule {
+    match app-id="theme-book"
+    open-floating true
+    draw-border-with-background false
+    focus-ring {
+        off
+    }
+    border {
+        off
+    }
+    shadow {
+        off
+    }
+}
+
 window-rule {
     match title="File Operation Progress"
     open-floating true
@@ -112,7 +127,7 @@ binds {
     Mod+Q { close-window; }
     Mod+Shift+E { quit; }
     // Mod+Shift+C — no direct reload in niri; it picks up config changes automatically
-    Mod+Escape { spawn "swaylock" "-f" "-c" "333333"; }
+    Mod+Escape { spawn "sh" "-c" "$HOME/bin/theme-lock --sound"; }
     Mod+Tab { spawn "rofi" "-show" "window"; }
     Mod+Space { spawn "rofi" "-show" "drun"; }
 

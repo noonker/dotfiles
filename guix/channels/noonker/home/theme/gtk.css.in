@@ -1,0 +1,12 @@
+/* Shared by GTK 3 and 4, per palette.  The colors come from %gtk-colors in theme.scm. */
+window, dialog, popover, entry, textview, label {
+  font-family: "%ui-font%";
+}
+headerbar {
+  border-bottom: 1px solid %card-rule%;
+  box-shadow: none;
+}
+selection, text selection {
+  background-color: %accent%;
+  color: %bg%;
+}

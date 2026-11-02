@@ -9,10 +9,10 @@
 
 start() {
     setsid -f swayidle -w \
-        timeout 180 'swaylock -f -c 000000' \
+        timeout 180 "$HOME/bin/theme-lock" \
         timeout 300 'niri msg action power-off-monitors' \
             resume 'niri msg action power-on-monitors' \
-        before-sleep 'swaylock -f -c 000000' >/dev/null 2>&1
+        before-sleep "$HOME/bin/theme-lock" >/dev/null 2>&1
 }
 
 case "$1" in

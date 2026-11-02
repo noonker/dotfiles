@@ -1,0 +1,37 @@
+/* GTK 4 applications without libadwaita (pavucontrol).  GTK's own theme doesn't read
+   libadwaita's color variables, so its widgets are painted here. */
+window, .background, notebook, notebook > stack, scrolledwindow, viewport, list, listview, row {
+  background-color: %bg%;
+  color: %fg%;
+}
+notebook > header, headerbar, actionbar, popover > contents {
+  background-color: %bg-alt%;
+  color: %fg%;
+}
+notebook > header tab:checked, notebook > header.top > tabs > tab:checked {
+  box-shadow: inset 0 -3px %accent%;
+  border-color: %accent%;
+  color: %fg%;
+}
+button, dropdown > button, entry, spinbutton {
+  background-image: none;
+  background-color: %bg-alt%;
+  color: %fg%;
+  border-color: %fg-dim%;
+  box-shadow: none;
+}
+button:hover, button:checked { background-color: %bg-high%; }
+scale > trough { background-color: %bg-high%; border-color: %fg-dim%; }
+scale > trough > highlight, progressbar > trough > progress, levelbar block.filled {
+  background-image: none;
+  background-color: %accent%;
+  border-color: %accent%;
+}
+scale slider, scale > trough > slider { background-image: none; background-color: %bg-alt%; border-color: %fg%; }
+checkbutton check:checked, checkbutton radio:checked {
+  background-image: none;
+  background-color: %accent%;
+  color: %bg%;
+  border-color: %accent%;
+}
+scale marks, scale value { color: %fg-dim%; }

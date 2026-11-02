@@ -1,0 +1,39 @@
+#!/bin/sh
+# Today's card from the Major Arcana, the same one all day.
+# Usage: theme-card [json|number]
+#   json   - its name and meaning, for a look at what today's card is
+#   number - two digits, naming the lock screen's image for theme-lock
+
+# Seven steps round the deck each day, so the cards don't come up in order.
+number=$(( $(date +%-j) * 7 % 22 ))
+
+case $number in
+    0) numeral=0 name="Le Fol" meaning="A leap with no map. Begin before you are ready." ;;
+    1) numeral=I name="Le Bateleur" meaning="Everything you need is already on the table." ;;
+    2) numeral=II name="La Papesse" meaning="Keep your counsel. Read before you speak." ;;
+    3) numeral=III name="L'Impératrice" meaning="Make things, and let them grow." ;;
+    4) numeral=IIII name="L'Empereur" meaning="Build the structure and hold to it." ;;
+    5) numeral=V name="Le Pape" meaning="Learn from those who came before, or teach." ;;
+    6) numeral=VI name="L'Amoureux" meaning="A choice of the heart. Make it wholly." ;;
+    7) numeral=VII name="Le Chariot" meaning="Take the reins. Momentum is yours." ;;
+    8) numeral=VIII name="La Justice" meaning="Weigh it fairly. What you owe comes due." ;;
+    9) numeral=VIIII name="L'Ermite" meaning="Go quiet, and carry your own lamp." ;;
+    10) numeral=X name="La Roue de Fortune" meaning="The wheel turns. Ride the change." ;;
+    11) numeral=XI name="La Force" meaning="Gentleness is what holds the lion's jaw." ;;
+    12) numeral=XII name="Le Pendu" meaning="Stop struggling. See it upside down." ;;
+    13) numeral=XIII name="L'Arcane sans nom" meaning="Clear what is finished, so that things can grow." ;;
+    14) numeral=XIIII name="Tempérance" meaning="Pour slowly. Find the right mixture." ;;
+    15) numeral=XV name="Le Diable" meaning="Look at what binds you. The chains are loose." ;;
+    16) numeral=XVI name="La Maison Dieu" meaning="What was badly built comes down. Let it." ;;
+    17) numeral=XVII name="L'Étoile" meaning="Be calm, and pour yourself out. There is hope." ;;
+    18) numeral=XVIII name="La Lune" meaning="Not all is as it seems. Trust the tide." ;;
+    19) numeral=XVIIII name="Le Soleil" meaning="Plain joy, in plain sight. Enjoy the warmth." ;;
+    20) numeral=XX name="Le Jugement" meaning="Something calls you back. Answer it." ;;
+    21) numeral=XXI name="Le Monde" meaning="A circle closes. Dance for a moment." ;;
+esac
+
+case "${1:-json}" in
+    number) printf '%02d\n' "$number" ;;
+    json) printf '{"text": "%s %s", "tooltip": "%s"}\n' "$numeral" "$name" "$meaning" ;;
+    *) echo "usage: theme-card [json|number]" >&2; exit 2 ;;
+esac

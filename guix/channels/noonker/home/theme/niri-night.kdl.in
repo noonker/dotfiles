@@ -1,0 +1,27 @@
+cursor {
+    xcursor-theme "Arcana"
+}
+
+// A window gathers out of gold dust, and goes back to it.
+animations {
+    window-open {
+        duration-ms 480
+        curve "ease-out-quad"
+        custom-shader r"
+            %gold-dust-shader%
+            vec4 open_color(vec3 coords_geo, vec3 size_geo) {
+                return gold_dust(coords_geo, size_geo, niri_clamped_progress);
+            }
+        "
+    }
+    window-close {
+        duration-ms 420
+        curve "ease-out-quad"
+        custom-shader r"
+            %gold-dust-shader%
+            vec4 close_color(vec3 coords_geo, vec3 size_geo) {
+                return gold_dust(coords_geo, size_geo, 1.0 - niri_clamped_progress);
+            }
+        "
+    }
+}

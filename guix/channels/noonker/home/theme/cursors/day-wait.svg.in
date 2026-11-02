@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+<!-- The Wheel of Fortune, turning. -->
+<circle cx="32" cy="32" r="26" fill="%bg%" stroke="%fg%" stroke-width="3"/>
+<g transform="rotate(@angle@ 32 32)">
+<circle cx="32" cy="32" r="20" fill="%sun%" stroke="%fg%" stroke-width="2.5"/>
+<path d="M32 12 V52 M12 32 H52 M18 18 L46 46 M46 18 L18 46" stroke="%fg%" stroke-width="2.5"/>
+<path d="M32 6 l4 7 h-8 z M58 32 l-7 4 v-8 z M32 58 l-4 -7 h8 z M6 32 l7 -4 v8 z" fill="%accent%" stroke="%fg%" stroke-width="1.5" stroke-linejoin="round"/>
+</g>
+<circle cx="32" cy="32" r="5.5" fill="%accent%" stroke="%fg%" stroke-width="2.5"/>
+</svg>

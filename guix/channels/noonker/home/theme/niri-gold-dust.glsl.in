@@ -1,0 +1,28 @@
+float dust_hash(vec2 p) {
+    return fract(sin(dot(p, vec2(127.1, 311.7)) + niri_random_seed * 43.0) * 43758.5453);
+}
+
+float dust_noise(vec2 p) {
+    vec2 i = floor(p);
+    vec2 f = fract(p);
+    f = f * f * (3.0 - 2.0 * f);
+    return mix(mix(dust_hash(i), dust_hash(i + vec2(1.0, 0.0)), f.x),
+               mix(dust_hash(i + vec2(0.0, 1.0)), dust_hash(i + vec2(1.0, 1.0)), f.x),
+               f.y);
+}
+
+// SOLID is 0 for nothing but dust and 1 for the whole window.
+vec4 gold_dust(vec3 coords_geo, vec3 size_geo, float solid) {
+    if (coords_geo.x < 0.0 || coords_geo.x > 1.0 || coords_geo.y < 0.0 || coords_geo.y > 1.0)
+        return vec4(0.0);
+    vec2 px = coords_geo.xy * size_geo.xy;
+    float n = 0.65 * dust_noise(px / 90.0) + 0.35 * dust_hash(floor(px / 3.0));
+    float edge = solid * 1.2 - n;
+    vec4 window = texture2D(niri_tex, (niri_geo_to_tex * coords_geo).st);
+    if (edge > 0.1) return window;
+    if (edge < -0.1) return vec4(0.0);
+    // The specks along the edge: gold, thinning out into the empty side.
+    float speck = step(0.45, dust_hash(floor(px / 2.0) + 7.0));
+    float a = speck * (1.0 - abs(edge) * 6.0) * sin(min(solid, 1.0) * 3.14159265);
+    return vec4(vec3(%accent.vec3%) * a, a) + window * smoothstep(0.0, 0.1, edge);
+}

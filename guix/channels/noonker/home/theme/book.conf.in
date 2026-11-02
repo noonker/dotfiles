@@ -1,0 +1,4 @@
+# Rendered per palette.  Read by theme-book.
+book_font='%book-font%'
+book_ink='%book-ink%'
+book_accent='%accent%'

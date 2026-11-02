@@ -1,0 +1,19 @@
+#!/bin/sh
+# Lock the screen in the current theme, on today's card.  swaylock copes with a missing
+# or bad config or image by itself; this is for it failing to start at all, since the
+# screen must still lock.  Without today's card, the config's own image is used.
+# Usage: theme-lock [--sound]
+#   --sound - put the card down audibly, for locking by hand: an idle lock has no
+#             business making noise in an empty room.  ~/.local/state/theme/quiet
+#             silences it.
+state_dir=${XDG_STATE_HOME:-$HOME/.local/state}/theme
+current=$state_dir/current
+if [ "$1" = --sound ] && [ ! -e "$state_dir/quiet" ]; then
+    pw-play "$current/lock.wav" >/dev/null 2>&1 &
+fi
+card=$current/cards/$("$HOME/bin/theme-card" number).png
+set --
+if [ -e "$card" ]; then
+    set -- -i "$card"
+fi
+swaylock -f -C "$current/swaylock.conf" "$@" || exec swaylock -f -c 000000

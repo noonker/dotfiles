@@ -1,0 +1,97 @@
+#!/bin/sh
+# Open a fortune as a book, in the current theme: today's card on the left page and the
+# fortune on the right.  Run it again, or click the book or press Esc, to close it.
+# Usage: theme-book [FILE]
+#   FILE - read the text from here instead of asking fortune
+
+current=${XDG_STATE_HOME:-$HOME/.local/state}/theme/current
+page_width=560
+page_height=720
+
+# A second click closes it.  The pattern starts at mpv's own name, so it can't catch
+# anything that merely mentions the app ID on its command line.
+pkill -f '^[^ ]*mpv[^ ]* .*--wayland-app-id=theme-book' && exit 0
+
+dir=$(mktemp -d "${XDG_RUNTIME_DIR:-/tmp}/theme-book.XXXXXX") || exit 1
+trap 'rm -rf "$dir"' EXIT
+
+if [ -n "$1" ]; then
+    cat "$1" > "$dir/fortune"
+else
+    fortune > "$dir/fortune"
+fi
+
+# Too much for the page, or something wrong with the book: the words matter more.
+plain() {
+    yad --text-info --wrap --width=600 --height=500 --title=Fortune < "$dir/fortune"
+    exit 0
+}
+
+. "$current/book.conf" || plain
+
+# No size would fit this much on one page, so don't spend time trying.
+[ "$(wc -c < "$dir/fortune")" -le 2000 ] || plain
+
+# Rejoin wrapped lines; a blank line or an indented one, like an attribution, still breaks.
+# Then make it safe for markup, and set a raised capital in the accent color.
+markup=$(awk '
+    /^[ \t]*$/ { printf "%s\n\n", line; line = ""; next }
+    /^[ \t]/   { if (line != "") print line; sub(/^[ \t]+/, ""); print; line = ""; next }
+               { line = (line == "") ? $0 : line " " $0 }
+    END        { if (line != "") print line }' "$dir/fortune" |
+    sed 's/&/\&amp;/g; s/</\&lt;/g; s/>/\&gt;/g' |
+    awk -v accent="$book_accent" '
+        NR == 1 && /^[A-Za-z]/ {
+            printf "<span foreground=\"%s\" size=\"170%%\">%s</span>%s\n",
+                   accent, toupper(substr($0, 1, 1)), substr($0, 2)
+            next
+        }
+        { print }')
+
+# Short ones are centered in large type; longer ones are set like a page of text.
+if [ "$(wc -c < "$dir/fortune")" -lt 160 ]; then
+    set -- --align=center
+else
+    set -- --justify
+fi
+
+# The biggest size that fits.  A PNG's height is the big-endian word at byte 20.
+png_height() {
+    set -- $(od -An -tu1 -j20 -N4 "$1" 2>/dev/null)
+    if [ $# = 4 ]; then
+        echo $(( ($1 << 24) + ($2 << 16) + ($3 << 8) + $4 ))
+    else
+        echo 999999
+    fi
+}
+size=72
+while :; do
+    printf '%s' "$markup" | pango-view -q --markup --dpi=72 --margin=0 \
+        --width="$page_width" --wrap=word --line-spacing=1.15 "$@" \
+        --background=transparent --foreground="$book_ink" \
+        --font="$book_font $size" -o "$dir/page.png" /dev/stdin 2>/dev/null || plain
+    height=$(png_height "$dir/page.png")
+    [ "$height" -le "$page_height" ] && break
+    size=$(( size - 4 ))
+    [ "$size" -lt 22 ] && plain
+done
+
+# Lay the page on today's scene, centered between its ornaments, at y 230 to 950 and
+# around x 1292.  librsvg only follows an href to a file beside the SVG, not a symlink.
+cp "$current/book/$("$HOME/bin/theme-card" number).png" "$dir/scene.png" || plain
+cat > "$dir/book.svg" <<SVG
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="1800" height="1180">
+<image width="1800" height="1180" xlink:href="scene.png"/>
+<image x="1012" y="$(( 230 + (page_height - height) / 2 ))" width="$page_width" height="$height" xlink:href="page.png" preserveAspectRatio="none"/>
+</svg>
+SVG
+rsvg-convert -o "$dir/book.png" "$dir/book.svg" || plain
+
+printf 'MBTN_LEFT quit\nESC quit\nq quit\n' > "$dir/keys"
+mpv --no-config --really-quiet --no-audio --force-window=yes \
+    --image-display-duration=inf --no-osc --no-osd-bar --osd-level=0 \
+    --no-input-default-bindings --input-conf="$dir/keys" --cursor-autohide=no \
+    --background=none --background-color=#00000000 --no-border --autofit-larger=95%x95% \
+    --title=Fortune --wayland-app-id=theme-book "$dir/book.png"
+# mpv reports 4 when a second click closes it, and 1 to 3 when it couldn't show the book.
+case $? in 1 | 2 | 3) plain ;; esac
