@@ -23,6 +23,7 @@
              (noonker packages tidalcycles)
              (noonker packages sc3-plugins)
              (noonker packages sclang-lsp-proxy)
+             (noonker packages deck-notify)
              (noonker packages saleae-logic)
              (gnu packages)
              (gnu services)
@@ -95,7 +96,7 @@
  ;; Home profile, under ~/.guix-home/profile.
  (packages
   (append
-   (list serialosc renoise tidalcycles sclang-lsp-proxy saleae-logic)
+   (list serialosc renoise tidalcycles sclang-lsp-proxy saleae-logic deck-notify)
    (specifications->packages (list
 					;; Niri / Wayland
 					"blueman"
@@ -103,7 +104,6 @@
 					"cliphist"
 					"grim"
 					"kitty"
-					"mako"
 					"network-manager-applet"
 					"niri"
 					"pavucontrol"
@@ -344,6 +344,7 @@
 	      ("waybar/config" ,(local-file (dotfile "guix/configs/waybar.conf")))
 	      ("waybar/style.css" ,(local-file (dotfile "guix/configs/waybar_style.css")))
 	      ("waybar/disk-io.sh" ,(local-file (dotfile "guix/configs/waybar-disk-io.sh")))
+	      ("waybar/idle-lock.sh" ,(local-file (dotfile "guix/configs/waybar-idle-lock.sh")))
 	      ("containers/registries.conf" ,(local-file (dotfile "guix/configs/podman_registries.conf")))
 	      ("containers/policy.json" ,(local-file (dotfile "guix/configs/podman_policy.json")))
 	      ("shaders/background.frag" ,(local-file (dotfile "guix/configs/background.frag")))

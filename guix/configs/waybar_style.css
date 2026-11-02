@@ -252,6 +252,15 @@ window#waybar {
 #backlight {
     color: @backlight-color;
     border-bottom-color: @backlight-color;
+    margin-right: 0;
+}
+
+/* Lock sits flush against #backlight so the pair reads as one widget */
+#custom-idle-lock {
+    color: @idle-inhibitor-active-color;
+    border-bottom: 2px solid @backlight-color;
+    padding: 0 10px 0 0;
+    margin: 0 2px 0 0;
 }
 
 #disk {

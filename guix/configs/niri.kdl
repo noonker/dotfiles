@@ -4,13 +4,13 @@
 spawn-at-startup "dbus-update-activation-environment" "--all"
 spawn-at-startup "sh" "-c" "$HOME/.guix-home/profile/libexec/polkit-gnome-authentication-agent-1"
 spawn-at-startup "wlsunset" "-l" "44.4" "-L" "88.0"
-spawn-at-startup "mako" "--border-radius=2" "--font=JetBrains Mono 8" "--max-visible=5" "--outer-margin=5" "--margin=3" "--background=#1c1f26" "--border-color=#89AAEB" "--border-size=1" "--default-timeout=7000"
+spawn-at-startup "deck-notify"
 spawn-at-startup "emacsclient" "-c"
 spawn-at-startup "wl-paste" "--watch" "cliphist" "store"
 spawn-at-startup "waybar"
 spawn-at-startup "udiskie" "--automount" "--notify" "--no-tray"
 spawn-at-startup "xwayland-satellite"
-spawn-at-startup "swayidle" "-w" "timeout" "180" "swaylock -f -c 000000" "timeout" "300" "niri msg action power-off-monitors" "resume" "niri msg action power-on-monitors" "before-sleep" "swaylock -f -c 000000"
+spawn-at-startup "sh" "-c" "sh ~/.config/waybar/idle-lock.sh start"
 spawn-at-startup "sh" "-c" "shaderbg '*' ~/.config/shaders/background.frag"
 
 // Prefer server-side decorations so niri can draw its own borders
