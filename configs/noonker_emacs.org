@@ -348,7 +348,7 @@ Random global behavior configs
 (tool-bar-mode -1) ;; Don't show the ugly emacs toolbar
 (scroll-bar-mode -1) ;; No scroll bars
 (menu-bar-mode -1) ;; No menu bar
-(display-time-mode 1) ;; Show a clock in the modeline
+(display-time-mode -1) ;; Waybar has the clock
 (winner-mode 1) ;; Undo recent buffer configurations
 (defalias 'yes-or-no-p 'y-or-n-p) ;; Shorten yes and no
 (global-subword-mode 1) ;; Makes emacs understand CamelCase words as two words
@@ -3272,9 +3272,14 @@ Load my RSS feeds
 #+end_src
 
 * Doom
-#+begin_src emacs-lisp
+Its faces come from the desktop theme: see guix/channels/noonker/home/theme/emacs.el.in.
+#+begin_src emacs-lisp :tangle ~/.emacs
 (use-package doom-modeline
   :config (doom-modeline-mode 1))
+
+;; The height of waybar, whose rule it echoes.
+(setq doom-modeline-height 28)
+(column-number-mode 1)
 
 ;; If non-nil, cause imenu to see `doom-modeline' declarations.
 ;; This is done by adjusting `lisp-imenu-generic-expression' to
@@ -3286,12 +3291,12 @@ Load my RSS feeds
 (setq doom-modeline-bar-width 4)
 
 ;; Whether to use hud instead of default bar. It's only respected in GUI.
-(setq doom-modeline-hud nil)
+(setq doom-modeline-hud t)
 
 ;; The limit of the window width.
 ;; If `window-width' is smaller than the limit, some information won't be
 ;; displayed. It can be an integer or a float number. `nil' means no limit."
-(setq doom-modeline-window-width-limit 85)
+(setq doom-modeline-window-width-limit 60)
 
 ;; How to detect the project root.
 ;; nil means to use `default-directory'.
@@ -3320,7 +3325,7 @@ Load my RSS feeds
 ;; If you are experiencing the laggy issue, especially while editing remote files
 ;; with tramp, please try `file-name' style.
 ;; Please refer to https://github.com/bbatsov/projectile/issues/657.
-(setq doom-modeline-buffer-file-name-style 'auto)
+(setq doom-modeline-buffer-file-name-style 'truncate-with-project)
 
 ;; Whether display icons in the mode-line.
 ;; While using the server mode in GUI, should set the value explicitly.
@@ -3391,7 +3396,7 @@ Load my RSS feeds
 (setq doom-modeline-continuous-word-count-modes '(markdown-mode gfm-mode org-mode))
 
 ;; Whether display the buffer encoding.
-(setq doom-modeline-buffer-encoding t)
+(setq doom-modeline-buffer-encoding 'nondefault)
 
 ;; Whether display the indentation information.
 (setq doom-modeline-indent-info nil)
@@ -3459,10 +3464,10 @@ Load my RSS feeds
 (setq doom-modeline-irc-stylize 'identity)
 
 ;; Whether display the battery status. It respects `display-battery-mode'.
-(setq doom-modeline-battery t)
+(setq doom-modeline-battery nil) ; Waybar shows this.
 
 ;; Whether display the time. It respects `display-time-mode'.
-(setq doom-modeline-time t)
+(setq doom-modeline-time nil) ; Waybar shows this.
 
 ;; Whether display the misc segment on all mode lines.
 ;; If nil, display only if the mode line is active.
