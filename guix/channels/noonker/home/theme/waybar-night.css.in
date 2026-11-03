@@ -10,12 +10,9 @@ window#waybar > box {
     border-image: linear-gradient(to right, transparent, %accent% 12%, %accent2% 50%, %accent% 88%, transparent) 1;
 }
 
-/* Heterodox is a delicate face with a small lowercase, and at this size its hairlines fade
-   into the dark.  Its bold has the same widths, so this only makes it stronger.  Tooltips
-   are windows of their own, and aren't touched. */
+/* Scoped so that tooltips, which are windows of their own, aren't touched. */
 window#waybar * {
     font-size: 13px;
-    font-weight: bold;
 }
 
 #window.empty {

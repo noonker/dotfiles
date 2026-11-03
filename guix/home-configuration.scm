@@ -254,6 +254,7 @@
 
 					;; Fonts
 					"font-awesome"
+					"font-iosevka"
 					"font-jetbrains-mono"
 					"font-liberation"
 					"font-new-heterodox-mono"

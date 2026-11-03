@@ -1,0 +1,3 @@
+# Rendered per palette.  Read by theme-switch.
+ui_font='%ui-font%'
+mono_font='%font%'

@@ -1,6 +1,7 @@
 (define-module (noonker home theme)
   #:use-module (gnu bootloader grub)
   #:use-module (gnu home services)
+  #:use-module (gnu home services fontutils)
   #:use-module (gnu packages fonts)
   #:use-module (gnu packages gnome)
   #:use-module (gnu packages gnome-xyz)
@@ -62,13 +63,13 @@
 ;; Arcana: the night sky on the back of a tarot deck.
 (define %night-palette
   '((pattern . "stars")
-    ;; The "A" cut is the only strictly fixed-pitch one, but it has no bold.  The
-    ;; plain family's y and z are narrower, so it's only used where the grid
-    ;; doesn't matter; its bold has the same cell width as A.  Neither has italics.
-    (font . "New Heterodox Mono A") (font-bold . "New Heterodox Mono Bold")
+    ;; The Fixed cut of Iosevka: every glyph one cell wide and no ligatures, so a
+    ;; line of code looks the same in kitty and Firefox as in Emacs, which doesn't
+    ;; draw them.  It has real bolds and italics, which kitty finds by itself.
+    (font . "Iosevka Fixed") (font-bold . "auto")
     (font-italic . "auto")
-    (font-bold-italic . "New Heterodox Mono Bold")
-    (ui-font . "New Heterodox Mono")
+    (font-bold-italic . "auto")
+    (ui-font . "Iosevka Fixed")
     (book-font . "Junicode")
     (paper . "#1c1238") (fold . "#05020d") (rule . "#e8c46a") (book-ink . "#e6dff8")
     (bg . "#110a24") (bg-alt . "#1c1238") (bg-high . "#2f2058")
@@ -183,6 +184,8 @@
     ("deck-notify.conf.in" . "deck-notify.conf")
     ("swaylock.conf.in" . "swaylock.conf")
     ("book.conf.in" . "book.conf")
+    ("fonts.conf.in" . "fonts.conf")
+    ("fonts.sh.in" . "fonts.sh")
     ("emacs.el.in" . "emacs.el")))
 
 (define (theme-file name)
@@ -377,7 +380,10 @@
 
 (define %firefox-user-js
   (plain-file "user.js"
-              "user_pref(\"toolkit.legacyUserProfileCustomizations.stylesheets\", true);\n"))
+              (string-append
+               "user_pref(\"toolkit.legacyUserProfileCustomizations.stylesheets\", true);\n"
+               ;; Firefox's default for monospace is 13px, not the 16px of everything else.
+               "user_pref(\"font.size.monospace.x-western\", 16);\n")))
 
 ;; The alchemical symbols on the day bar.  This is the only family they need, and
 ;; font-google-noto is 290 MB of them, which would also change every font fallback.
@@ -499,6 +505,10 @@ gtk.css, because only a theme is reloaded when it changes: the polkit agent runs
                           (list "gtk-4.0/gtk.css" %gtk4-css)
                           (append (mode-files "day" %day)
                                   (mode-files "night" %night))))
+   (simple-service 'desktop-theme-fontconfig
+                   home-fontconfig-service-type
+                   (list '(include (@ (ignore_missing "yes"))
+                                   "~/.local/state/theme/current/fonts.conf")))
    (simple-service 'desktop-theme-fonts
                    home-profile-service-type
                    (list font-noto-sans-symbols font-cardo font-junicode shaderbg-baked))

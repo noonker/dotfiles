@@ -1,0 +1,10 @@
+<?xml version="1.0"?>
+<!DOCTYPE fontconfig SYSTEM "fonts.dtd">
+<!-- Rendered per palette, and included from ~/.config/fontconfig/fonts.conf through the
+     theme pointer, so applications that just ask for "monospace" get the theme's font. -->
+<fontconfig>
+  <alias binding="same">
+    <family>monospace</family>
+    <prefer><family>%font%</family></prefer>
+  </alias>
+</fontconfig>

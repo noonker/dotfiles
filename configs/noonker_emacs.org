@@ -318,7 +318,7 @@ Leuven Theme and Comic Mono
   (with-selected-frame frame
     (progn
 (if (string= "blep" (system-name))
-      (set-face-attribute 'default nil :font (or (bound-and-true-p noonker/theme-font) "Comic Code") :height 100))
+      (set-face-attribute 'default nil :font (or (bound-and-true-p noonker/theme-font) "Comic Code") :height 120))
 
   (if im-at-work
       (set-face-attribute 'default nil :font "JetBrains Mono" :height 180))

@@ -36,6 +36,14 @@ else
     gsettings set org.gnome.desktop.interface gtk-theme Arcana
     gsettings set org.gnome.desktop.interface cursor-theme Arcana
 fi
+. "$current/fonts.sh"
+gsettings set org.gnome.desktop.interface font-name "$ui_font 11"
+gsettings set org.gnome.desktop.interface document-font-name "$ui_font 11"
+gsettings set org.gnome.desktop.interface monospace-font-name "$mono_font 11"
+# Emacs follows these and kitty and Firefox don't.  Subpixel fringes every stem in color,
+# and it's wrong at any fractional scale, since GTK 3 draws at 2x and niri scales that down.
+gsettings set org.gnome.desktop.interface font-antialiasing grayscale
+gsettings set org.gnome.desktop.interface font-hinting slight
 # GTK doubles this for old cursor names like Emacs's and draws those itself, while niri draws
 # the rest, so it has to match niri's xcursor-size or those come out half as big again.
 gsettings set org.gnome.desktop.interface cursor-size 34
