@@ -1,0 +1,219 @@
+#!/bin/sh
+# Today's three-card reading from the Oracle.  It's drawn once a day and kept, one file for
+# each day, in ~/.cache/theme-oracle.
+# Usage: theme-oracle [bar|page|open]
+#   bar  - JSON for waybar, drawing today's reading first if it isn't there yet.  It names only the
+#          present card: all three push the end of the bar off the panel beside a long window title.
+#          The tooltip has all three.
+#   page - the reading as text
+#   open - the reading as a book, in theme-book: the cards on the left page and what the Oracle
+#          made of them on the right
+
+# Where the Oracle lives is private, so it's kept out of this file and the repo, which is public, and
+# out of the store: ~/.config/theme-oracle/url has its address, ~/.authinfo the key for it, and
+# ~/.config/theme-oracle/images the one address card faces may be fetched from.
+url_file=${XDG_CONFIG_HOME:-$HOME/.config}/theme-oracle/url
+images_file=${XDG_CONFIG_HOME:-$HOME/.config}/theme-oracle/images
+cache=${XDG_CACHE_HOME:-$HOME/.cache}/theme-oracle
+today=$(date +%F)
+reading=$cache/$today.json
+tries=$cache/$today.tries
+faces=$cache/faces
+current=${XDG_STATE_HOME:-$HOME/.local/state}/theme/current
+
+say() { echo "theme-oracle: $*" >&2; }
+
+# The API key, from the line in ~/.authinfo whose machine is that address.
+api_key() {
+    awk -v want="${api#*://}" '{ for (i = 1; i < NF; i += 2) {
+               if ($i == "machine") host = $(i + 1)
+               if ($i == "password") pass = $(i + 1)
+           }
+           if (index(host, want)) { print pass; exit } }' "$HOME/.authinfo" 2>/dev/null
+}
+
+# Ask the API, leaving the reply in $tmp/body and its headers in $tmp/head, and print the HTTP
+# status.  The key goes in on stdin, so it doesn't show on curl's command line.
+request() {
+    printf 'header = "Authorization: Bearer %s"\n' "$key" |
+        curl -sS -m 30 -K - -D "$tmp/head" -o "$tmp/body" -w '%{http_code}' "$@"
+}
+
+# This draw is over and can't come back, so the next one has to be a new one.
+spent() {
+    echo $(( $(cat "$tries" 2>/dev/null || echo 0) + 1 )) > "$tries"
+}
+
+# Keep the card faces too, so the book still opens with the network down.  These are public
+# images on another host, so this is the one request here that doesn't send the key.
+fetch_faces() {
+    mkdir -p "$faces"
+    images=$(cat "$images_file" 2>/dev/null)
+    images=${images%/}
+    jq -r '.result.cards[].image' "$1" | while read -r url; do
+        face=$faces/${url##*/}
+        [ -s "$face" ] && continue
+        case $url in
+            "$images"/*) [ -n "$images" ] || continue ;;
+            *) say "not fetching a card face from outside $images_file"; continue ;;
+        esac
+        curl -sS -m 20 --proto =https -o "$face.part" "$url" && mv "$face.part" "$face"
+    done
+}
+
+# Fetch today's reading.  The Idempotency-Key is made from the date, so another bar on another
+# display, a restart, or a retry after losing the network all get the same cards.  It only changes
+# after a draw has failed, and three of those end the day: each may be charged to the account.
+draw() {
+    api=$(cat "$url_file" 2>/dev/null)
+    api=${api%/}
+    if [ -z "$api" ]; then
+        say "no address in $url_file"
+        return 1
+    fi
+    key=$(api_key)
+    if [ -z "$key" ]; then
+        say "no key for the address in ~/.authinfo"
+        return 1
+    fi
+    spent_so_far=$(cat "$tries" 2>/dev/null || echo 0)
+    if [ "$spent_so_far" -ge 3 ]; then
+        say "three failed draws today, so no more until tomorrow"
+        return 1
+    fi
+
+    code=$(request -X POST "$api/api/v1/oracle/readings" \
+                   -H "Idempotency-Key: theme-oracle-$today-$spent_so_far" \
+                   -H 'Content-Type: application/json' \
+                   -d '{"spread":"three"}')
+    give_up=$(( $(date +%s) + 600 ))
+    while :; do
+        case $code in
+            200 | 202) ;;
+            409) spent; say "idempotency-conflict"; return 1 ;;
+            *) say "HTTP $code $(jq -r '.errorCode // empty' "$tmp/body" 2>/dev/null)"; return 1 ;;
+        esac
+        status=$(jq -r '.reading.status // empty' "$tmp/body")
+        case $status in
+            succeeded)
+                jq '.reading' "$tmp/body" > "$tmp/reading" &&
+                    jq -e '.result.cards | length == 3' "$tmp/reading" > /dev/null &&
+                    mv "$tmp/reading" "$reading" &&
+                    fetch_faces "$reading"
+                return 0
+                ;;
+            queued | running) ;;
+            *)
+                spent
+                say "$status $(jq -r '.reading.error.code // empty' "$tmp/body")"
+                return 1
+                ;;
+        esac
+        # Still in hand on the server, so a later run asks again with the same key and picks it up.
+        [ "$(date +%s)" -lt "$give_up" ] || { say "still $status after 10 minutes"; return 1; }
+        wait=$(sed -n 's/^[Rr]etry-[Aa]fter: *\([0-9]*\).*/\1/p' "$tmp/head")
+        sleep "$(( ${wait:-5} < 1 ? 1 : ${wait:-5} > 60 ? 60 : ${wait:-5} ))"
+        code=$(request "$api$(jq -r '.reading.statusUrl' "$tmp/body")")
+    done
+}
+
+# Today's reading if there is one.  Waiting on the lock means a second bar finds the first's result.
+ensure_today() {
+    [ -s "$reading" ] && return
+    mkdir -p "$cache" || return
+    tmp=$(mktemp -d "$cache/.draw.XXXXXX") || return
+    (
+        flock 9
+        [ -s "$reading" ] || draw
+    ) 9> "$cache/.lock"
+    rm -rf "$tmp"
+}
+
+# The newest reading there is: yesterday's is better than nothing with the network down.
+latest() {
+    ls "$cache"/*.json 2>/dev/null | tail -n 1
+}
+
+bar() {
+    ensure_today
+    file=$(latest)
+    if [ -z "$file" ]; then
+        echo '{"text": "the cards are silent", "tooltip": "No reading yet. It will try again in ten minutes."}'
+        return
+    fi
+    jq -c --arg drawn "$(basename "$file" .json)" --arg today "$today" '
+        .result.cards |
+        { text: (.[1] | .name + (if .reversed then " ↓" else "" end) | @html),
+          tooltip: ((if $drawn == $today then "" else "No reading yet today. This is \($drawn)'"'"'s.\n\n" end)
+                    + (map("\(.position): \(.name)\(if .reversed then ", reversed" else "" end)\n\(.meaning)")
+                       | join("\n\n")) | @html) }' "$file"
+}
+
+silence="The cards are silent. There is no reading yet."
+
+page() {
+    file=$(latest)
+    if [ -z "$file" ]; then
+        echo "$silence"
+        return
+    fi
+    jq -r '.result |
+        (.cards[] | "\(.position): \(.name)\(if .reversed then ", reversed" else "" end). \(.meaning)\n"),
+        .interpretation' "$file"
+}
+
+# The scene with its card painted out and these three laid on it, each beside its own text.  A
+# reversed card is drawn the way it fell.  A face that can't be had just leaves its text.
+left_page() {
+    . "$current/book.conf" || return
+    fetch_faces "$1"
+    {
+        echo '<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="1800" height="1180">'
+        echo "<rect x=\"270\" y=\"180\" width=\"480\" height=\"820\" fill=\"$book_paper\"/>"
+        for i in 0 1 2; do
+            y=$(( 192 + i * 268 ))
+            jq -r --arg accent "$book_accent" --argjson i "$i" '.result.cards[$i] |
+                "<span foreground=\"\($accent)\" size=\"80%\">\(.position | @html)\(if .reversed then ", reversed" else "" end)</span>",
+                "<span size=\"140%\">\(.name | @html)</span>",
+                (.meaning | @html),
+                "<i><span size=\"85%\">\(.keywords | join(", ") | @html)</span></i>"' "$1" |
+                pango-view -q --markup --dpi=72 --margin=0 --width=430 --wrap=word \
+                    --background=transparent --foreground="$book_ink" \
+                    --font="$book_font 23" -o "$2/text$i.png" /dev/stdin 2>/dev/null
+            echo "<image x=\"375\" y=\"$y\" width=\"430\" height=\"240\" preserveAspectRatio=\"xMinYMin meet\" xlink:href=\"text$i.png\"/>"
+            url=$(jq -r ".result.cards[$i].image" "$1")
+            if cp "$faces/${url##*/}" "$2/face$i.png" 2>/dev/null; then
+                turn=
+                [ "$(jq -r ".result.cards[$i].reversed" "$1")" = true ] &&
+                    turn=" transform=\"rotate(180 275 $(( y + 120 )))\""
+                echo "<image x=\"205\" y=\"$y\" width=\"140\" height=\"240\"$turn xlink:href=\"face$i.png\"/>"
+            fi
+        done
+        echo '</svg>'
+    } > "$2/left.svg"
+    rsvg-convert -o "$2/left.png" "$2/left.svg"
+}
+
+open_book() {
+    file=$(latest)
+    if [ -z "$file" ]; then
+        tmp=$(mktemp -d "${XDG_RUNTIME_DIR:-/tmp}/theme-oracle.XXXXXX") || exit 1
+        echo "$silence" > "$tmp/page"
+        "$HOME/bin/theme-book" "$tmp/page"
+        rm -rf "$tmp"
+        return
+    fi
+    tmp=$(mktemp -d "${XDG_RUNTIME_DIR:-/tmp}/theme-oracle.XXXXXX") || exit 1
+    jq -r '.result.interpretation' "$file" > "$tmp/right"
+    page > "$tmp/plain"
+    left_page "$file" "$tmp"
+    "$HOME/bin/theme-book" "$tmp/right" "$tmp/left.png" "$tmp/plain"
+    rm -rf "$tmp"
+}
+
+case "${1:-bar}" in
+    bar) bar ;;
+    page) page ;;
+    open) open_book ;;
+    *) echo "usage: theme-oracle [bar|page|open]" >&2; exit 2 ;;
+esac

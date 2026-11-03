@@ -1,7 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
-<!-- A serifed I, cut as a woodblock letter. -->
-<g fill="none" stroke-linecap="round">
-<path d="M22 11 Q28 12 32 16 Q36 12 42 11 M32 16 L32 48 M22 53 Q28 52 32 48 Q36 52 42 53" stroke="%bg%" stroke-width="8"/>
-<path d="M22 11 Q28 12 32 16 Q36 12 42 11 M32 16 L32 48 M22 53 Q28 52 32 48 Q36 52 42 53" stroke="%fg%" stroke-width="4"/>
-</g>
-</svg>

@@ -36,6 +36,9 @@ else
     gsettings set org.gnome.desktop.interface gtk-theme Arcana
     gsettings set org.gnome.desktop.interface cursor-theme Arcana
 fi
+# GTK doubles this for old cursor names like Emacs's and draws those itself, while niri draws
+# the rest, so it has to match niri's xcursor-size or those come out half as big again.
+gsettings set org.gnome.desktop.interface cursor-size 34
 
 pkill -USR1 -x kitty
 pkill -USR2 -x '\.?waybar(-real)?'

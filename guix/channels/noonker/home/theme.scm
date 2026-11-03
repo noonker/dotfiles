@@ -4,6 +4,8 @@
   #:use-module (gnu packages fonts)
   #:use-module (gnu packages gnome)
   #:use-module (gnu packages gnome-xyz)
+  #:use-module (gnu packages imagemagick)
+  #:use-module (gnu packages python)
   #:use-module (gnu packages xorg)
   #:use-module (gnu services)
   #:use-module (guix build-system trivial)
@@ -46,6 +48,8 @@
     (ochre . "#e1bd5c")                 ; the sun's ring and rays, not for text
     (olive . "#a8953f")                 ; its disc, a little lighter than the card's
     (moss . "#5e6340")                  ; the wall's green, not for text
+    (slate . "#47637f")                 ; the wheel's spokes, lightened for hatching, not for text
+    (flesh . "#ecc9ad")                 ; the deck's faces, lightened for hatching, not for text
     (card-rule . "#0c121a") (card-rule-cut . "rough") ; black, hand-cut
     (black . "#0c121a") (red . "#9d2606") (green . "#3f5a12")
     (yellow . "#635e00") (blue . "#2f538c") (magenta . "#ad3156")
@@ -328,6 +332,9 @@
 (define %theme-book
   (local-file "theme/theme-book" "theme-book" #:recursive? #t))
 
+(define %theme-oracle
+  (local-file "theme/theme-oracle" "theme-oracle" #:recursive? #t))
+
 (define %theme-card
   (local-file "theme/theme-card" "theme-card" #:recursive? #t))
 
@@ -455,78 +462,33 @@ gtk.css, because only a theme is reloaded when it changes: the polkit agent runs
               (string-append (gtk4-mode "light" %day)
                              (gtk4-mode "dark" %night))))
 
-;;; Cursors.  Only the ones you see all day are drawn; the rest, like the resize arrows,
-;;; come from Adwaita through Inherits.
+;;; Cursors.  All of them are drawn by theme/cursors.py, which says why they look as they do.
 
-;; Name, hotspot in the SVGs' 64-unit square, frames, and the names it also goes by.
-(define %cursors
-  '(("default" 5 4 1 "left_ptr" "arrow" "top_left_arrow")
-    ("pointer" 5 4 1 "hand" "hand1" "hand2" "pointing_hand")
-    ("text" 32 32 1 "xterm" "ibeam")
-    ("wait" 32 32 12 "watch" "progress" "left_ptr_watch" "half-busy")))
-
-;; niri multiplies its xcursor-size of 34 by the output's scale of 1.5, so 51 is what the
-;; laptop's screen shows.  The others are for scales 1 and 2, and for larger settings.
-(define %cursor-sizes '(24 34 48 51 68 102))
-
-(define (cursor-frame mode palette name frame frames)
-  "FRAME of FRAMES of cursor NAME, as an SVG; @angle@ is how far round it has turned."
+(define (cursor-palette mode palette)
+  "The colors in PALETTE, in the form cursors.py reads."
   (plain-file
-   (string-append "cursor-" mode "-" name "-" (number->string frame) ".svg")
-   (regexp-substitute/global
-    #f "@angle@"
-    (render palette (read-template (string-append "cursors/" mode "-" name ".svg.in")))
-    'pre (number->string (/ (* frame 360) frames)) 'post)))
+   (string-append "cursor-palette-" mode)
+   (string-join
+    (filter-map (match-lambda
+                  ((key . value)
+                   (and (string? value)
+                        (string-prefix? "#" value)
+                        (string-append (symbol->string key) " " value))))
+                palette)
+    "\n")))
 
 (define (cursor-theme theme mode palette)
   (computed-file
    (string-append "cursor-theme-" theme)
    (with-imported-modules '((guix build utils))
      #~(begin
-         (use-modules (guix build utils)
-                      (ice-9 format)
-                      (ice-9 match))
-         (define cursors (string-append #$output "/cursors"))
-         (mkdir-p cursors)
-         (call-with-output-file (string-append #$output "/index.theme")
-           (lambda (port)
-             (format port "[Icon Theme]\nName=~a\nInherits=Adwaita\n" #$theme)))
-         (for-each
-          (match-lambda
-            ((name hot-x hot-y aliases frames)
-             (call-with-output-file "cursor.cfg"
-               (lambda (port)
-                 (for-each
-                  (lambda (size)
-                    (let loop ((frames frames) (number 0))
-                      (match frames
-                        (() #t)
-                        ((frame . rest)
-                         (let ((png (format #f "~a-~a-~a.png" name size number)))
-                           (invoke #+(file-append librsvg "/bin/rsvg-convert")
-                                   "-w" (number->string size)
-                                   "-h" (number->string size)
-                                   "-o" png frame)
-                           (format port "~a ~a ~a ~a 90\n" size
-                                   (round (/ (* hot-x size) 64))
-                                   (round (/ (* hot-y size) 64))
-                                   png))
-                         (loop rest (+ number 1))))))
-                  '#$%cursor-sizes)))
-             (invoke #+(file-append xcursorgen "/bin/xcursorgen")
-                     "cursor.cfg" (string-append cursors "/" name))
-             (for-each (lambda (alias)
-                         (symlink name (string-append cursors "/" alias)))
-                       aliases)))
-          (list
-           #$@(map (match-lambda
-                     ((name hot-x hot-y frames . aliases)
-                      #~(list #$name #$hot-x #$hot-y '#$aliases
-                              (list #$@(map (lambda (frame)
-                                              (cursor-frame mode palette name
-                                                            frame frames))
-                                            (iota frames))))))
-                   %cursors)))))))
+         (use-modules (guix build utils))
+         (invoke #+(file-append python-minimal "/bin/python3")
+                 #$(local-file "theme/cursors.py")
+                 #$mode #$(cursor-palette mode palette) #$output
+                 "--rsvg" #+(file-append librsvg "/bin/rsvg-convert")
+                 "--convert" #+(file-append imagemagick "/bin/convert")
+                 "--xcursorgen" #+(file-append xcursorgen "/bin/xcursorgen"))))))
 
 ;; A list, since these extend several services.
 (define desktop-theme-service
@@ -546,6 +508,7 @@ gtk.css, because only a theme is reloaded when it changes: the polkit agent runs
                          (list "bin/theme-lock" %theme-lock)
                          (list "bin/theme-card" %theme-card)
                          (list "bin/theme-book" %theme-book)
+                         (list "bin/theme-oracle" %theme-oracle)
                          (list "bin/theme-background" %theme-background)
                          (list ".icons/Marseille" (cursor-theme "Marseille" "day" %day))
                          (list ".icons/Arcana" (cursor-theme "Arcana" "night" %night))

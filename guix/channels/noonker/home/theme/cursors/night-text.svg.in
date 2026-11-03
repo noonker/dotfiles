@@ -1,6 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
-<!-- A gilt rule, with a star at each end. -->
-<path d="M32 15 V49" stroke="%bg%" stroke-width="7" stroke-linecap="round"/>
-<path d="M32 15 V49" stroke="%accent%" stroke-width="3.5" stroke-linecap="round"/>
-<path d="M32 3 l2.8 8.2 l8.2 2.8 l-8.2 2.8 l-2.8 8.2 l-2.8 -8.2 l-8.2 -2.8 l8.2 -2.8 Z M32 39 l2.8 8.2 l8.2 2.8 l-8.2 2.8 l-2.8 8.2 l-2.8 -8.2 l-8.2 -2.8 l8.2 -2.8 Z" fill="%accent%" stroke="%bg%" stroke-width="1.5" paint-order="stroke"/>
-</svg>

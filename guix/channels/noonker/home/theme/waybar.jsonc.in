@@ -49,9 +49,10 @@
 
     "custom/quote": {
         "format": "%icon-quote% {}",
-        "interval": 3600,
-        "exec": "fortune -s",
-        "on-click": "$HOME/bin/theme-book",
+        "return-type": "json",
+        "interval": 600,
+        "exec": "$HOME/bin/theme-oracle bar",
+        "on-click": "$HOME/bin/theme-oracle open",
         "tooltip": true
     },
 

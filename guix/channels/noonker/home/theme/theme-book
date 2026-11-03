@@ -1,8 +1,10 @@
 #!/bin/sh
 # Open a fortune as a book, in the current theme: today's card on the left page and the
 # fortune on the right.  Run it again, or click the book or press Esc, to close it.
-# Usage: theme-book [FILE]
-#   FILE - read the text from here instead of asking fortune
+# Usage: theme-book [FILE [LEFT [PLAIN]]]
+#   FILE  - read the text from here instead of asking fortune
+#   LEFT  - a PNG the size of the scene to lay over it, for whatever goes on the left page instead
+#   PLAIN - what to show if the book can't, when that's more than FILE
 
 current=${XDG_STATE_HOME:-$HOME/.local/state}/theme/current
 page_width=560
@@ -15,6 +17,12 @@ pkill -f '^[^ ]*mpv[^ ]* .*--wayland-app-id=theme-book' && exit 0
 dir=$(mktemp -d "${XDG_RUNTIME_DIR:-/tmp}/theme-book.XXXXXX") || exit 1
 trap 'rm -rf "$dir"' EXIT
 
+left=
+if [ -n "$2" ] && cp "$2" "$dir/left.png"; then
+    left='<image width="1800" height="1180" xlink:href="left.png"/>'
+fi
+plain_file=$3
+
 if [ -n "$1" ]; then
     cat "$1" > "$dir/fortune"
 else
@@ -23,7 +31,7 @@ fi
 
 # Too much for the page, or something wrong with the book: the words matter more.
 plain() {
-    yad --text-info --wrap --width=600 --height=500 --title=Fortune < "$dir/fortune"
+    yad --text-info --wrap --width=600 --height=500 --title=Fortune < "${plain_file:-$dir/fortune}"
     exit 0
 }
 
@@ -65,6 +73,7 @@ png_height() {
     fi
 }
 size=72
+[ "$(wc -c < "$dir/fortune")" -lt 600 ] || size=30    # a long one is nowhere near 72, so don't try
 while :; do
     printf '%s' "$markup" | pango-view -q --markup --dpi=72 --margin=0 \
         --width="$page_width" --wrap=word --line-spacing=1.15 "$@" \
@@ -72,8 +81,8 @@ while :; do
         --font="$book_font $size" -o "$dir/page.png" /dev/stdin 2>/dev/null || plain
     height=$(png_height "$dir/page.png")
     [ "$height" -le "$page_height" ] && break
-    size=$(( size - 4 ))
-    [ "$size" -lt 22 ] && plain
+    size=$(( size - 2 ))
+    [ "$size" -lt 16 ] && plain
 done
 
 # Lay the page on today's scene, centered between its ornaments, at y 230 to 950 and
@@ -82,6 +91,7 @@ cp "$current/book/$("$HOME/bin/theme-card" number).png" "$dir/scene.png" || plai
 cat > "$dir/book.svg" <<SVG
 <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="1800" height="1180">
 <image width="1800" height="1180" xlink:href="scene.png"/>
+$left
 <image x="1012" y="$(( 230 + (page_height - height) / 2 ))" width="$page_width" height="$height" xlink:href="page.png" preserveAspectRatio="none"/>
 </svg>
 SVG
