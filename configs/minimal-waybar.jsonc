@@ -1,0 +1,67 @@
+// Minimal waybar config.  Install as ~/.config/waybar/config
+{
+    "layer": "top",
+    "position": "top",
+    "height": 28,
+    "spacing": 8,
+    "modules-left": ["niri/workspaces", "niri/window"],
+    "modules-right": ["pulseaudio", "backlight", "network", "cpu", "memory", "battery", "clock", "tray"],
+
+    "niri/window": {
+        "separate-outputs": true
+    },
+
+    "pulseaudio": {
+        "format": "vol {volume}%",
+        "format-muted": "vol muted",
+        "on-click": "pavucontrol",
+        "on-click-right": "wpctl set-mute @DEFAULT_AUDIO_SINK@ toggle",
+        "on-scroll-up": "wpctl set-volume @DEFAULT_AUDIO_SINK@ 2%+",
+        "on-scroll-down": "wpctl set-volume @DEFAULT_AUDIO_SINK@ 2%-"
+    },
+
+    "backlight": {
+        "format": "bri {percent}%",
+        "on-scroll-up": "brightnessctl set +5%",
+        "on-scroll-down": "brightnessctl set 5%-"
+    },
+
+    "network": {
+        "format-wifi": "{essid} {signalStrength}%",
+        "format-ethernet": "{ifname}",
+        "format-linked": "{ifname} (no IP)",
+        "format-disconnected": "offline",
+        "tooltip-format": "{ifname}: {ipaddr}/{cidr}",
+        "on-click": "kitty -e nmtui"
+    },
+
+    "cpu": {
+        "format": "cpu {usage}%",
+        "on-click": "kitty -e htop"
+    },
+
+    "memory": {
+        "format": "mem {}%",
+        "on-click": "kitty -e htop"
+    },
+
+    "battery": {
+        "states": {
+            "warning": 30,
+            "critical": 15
+        },
+        "format": "bat {capacity}%",
+        "format-charging": "chg {capacity}%",
+        "format-plugged": "ac {capacity}%"
+    },
+
+    "clock": {
+        "format": "{:%a %F %H:%M}",
+        "tooltip-format": "<tt>{calendar}</tt>"
+    },
+
+    "tray": {
+        "icon-size": 16,
+        "spacing": 6
+    }
+}

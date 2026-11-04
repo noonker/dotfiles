@@ -1,0 +1,49 @@
+/* Minimal waybar style.  Install as ~/.config/waybar/style.css */
+* {
+    font-family: monospace;
+    font-size: 13px;
+    border: none;
+    border-radius: 0;
+    min-height: 0;
+}
+
+window#waybar {
+    background: #222222;
+    color: #dddddd;
+}
+
+tooltip {
+    background: #222222;
+    color: #dddddd;
+}
+
+#workspaces button {
+    padding: 0 6px;
+    color: #999999;
+    background: transparent;
+    box-shadow: none;
+}
+
+#workspaces button.active {
+    color: #ffffff;
+    background: #444444;
+}
+
+#workspaces button.urgent,
+#battery.critical:not(.charging) {
+    color: #ffffff;
+    background: #aa3333;
+}
+
+#battery.warning:not(.charging) {
+    color: #e0b050;
+}
+
+#window {
+    padding: 0 8px;
+    color: #bbbbbb;
+}
+
+.modules-right {
+    padding-right: 6px;
+}
