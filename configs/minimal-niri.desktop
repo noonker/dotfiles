@@ -1,0 +1,10 @@
+# Lists Guix's niri in Ubuntu's GDM.  Guix Home can't write outside $HOME, so:
+#   sudo install -m644 minimal-niri.desktop /usr/share/wayland-sessions/niri.desktop
+# GDM doesn't start sessions in a login shell, and the login shell is what
+# puts the Guix Home profile on PATH.
+[Desktop Entry]
+Name=Niri
+Comment=A scrollable-tiling Wayland compositor (Guix)
+Exec=/bin/bash -lc "exec niri --session"
+Type=Application
+DesktopNames=niri
