@@ -1,14 +1,5 @@
 #+title: Noonker's Config
 
-
-Below is my configuration for Emacs. It is a literate config: =make home= tangles it into =~/.emacs= at build time (see =guix/channels/noonker/home/emacs.scm=).
-It is broken up into several sections:
- - Packages - Where the packages come from
- - Behavior - Packages & tweaks to the behavior of emacs
- - Tools - Any packages which modify the behavior of emacs
- - Programming - Packages & tweaks to programming modes
- - Text - Any packages which are used primarily for writing of text (mostly org-mode)
- - Custom Functions - Any simple functions I've added to enrich my emacs life
 * Packages
 
 Packages come from Guix: see =guix/channels/noonker/packages/emacs.scm= and the Emacs section of =guix/home-configuration.scm=. =use-package= here only controls when they load and how they're configured.
@@ -211,40 +202,8 @@ Packages come from Guix: see =guix/channels/noonker/packages/emacs.scm= and the 
 
 ** Theme
 
-Leuven Theme and Comic Mono
-
 #+begin_src emacs-lisp :tangle ~/.emacs
-(use-package autothemer)
-
-(defvar how-ya-feeling 'dark-tbh)
-
-(if im-at-work
-    (cond
-     ((eq how-ya-feeling 'dark-tbh)
-      (use-package cyberpunk-theme)
-      (load-theme 'cyberpunk t))
-     ((eq how-ya-feeling 'burn-my-eyes)
-      (load-theme 'leuven)))
-  ;; Generated from the day/night palettes in guix/channels/noonker/home/theme.scm.
-  ;; theme-switch reloads this file when the desktop theme changes.
-  (load "~/.local/state/theme/current/emacs.el" t t))
-
-
-(defun noonker/set-fonts (frame)
-  (interactive)
-
-  (with-selected-frame frame
-    (progn
-(if (string= "blep" (system-name))
-      (set-face-attribute 'default nil :font (or (bound-and-true-p noonker/theme-font) "Comic Code") :height 120))
-
-  (if im-at-work
-      (set-face-attribute 'default nil :font "JetBrains Mono" :height 180))
-      )
-    )
- )
-
-(add-hook 'after-make-frame-functions 'noonker/set-fonts)
+(load "~/.local/state/theme/current/emacs.el" t t)
 #+end_src
 
 ** Global Config
@@ -287,14 +246,6 @@ Random global behavior configs
 (setq ediff-split-window-function 'split-window-horizontally)
 (setq ediff-window-setup-function 'ediff-setup-windows-plain)
 
-(defun my-electric-pair-inhibit-p (c)
-  "Inhibit electric pairing for the carat character."
-  (if (char-equal c ?<)
-      t
-    (electric-pair-default-inhibit c)))
-
-(setq electric-pair-inhibit-predicate #'my-electric-pair-inhibit-p)
-
 (use-package expand-region)
 #+end_src
 
@@ -328,8 +279,8 @@ Emacs can nearly transparently use .gpg encrypted files in emacs. These settings
 
 #+begin_src emacs-lisp :tangle ~/.emacs
 (if (not im-at-work)
-    (setq epa-file-encrypt-to "noonker@gmail.com") ;; Encrypt to my gpg key
-)
+    (setq epa-file-encrypt-to "noonker@gmail.com")) ;; Encrypt to my gpg key
+	
 (setf epg-pinentry-mode 'loopback) ;; No UI popup. Ask for password in modeline
 #+end_src
 
@@ -664,14 +615,6 @@ export PYTHONPATH=%s
             (add-hook 'after-save-hook #'noonker/python-format-with-black nil 'local)))
 #+end_src
 
-** Platformio
-
-Platformio is for programming embedded devices
-
-#+begin_src emacs-lisp :tangle ~/.emacs
-(use-package platformio-mode)
-#+end_src
-
 ** Typescript
 
 Typescript
@@ -740,6 +683,7 @@ Clojure
 (use-package json)
 (use-package json-mode)
 (use-package counsel-jq) ;; Query json file with jq + counsel
+(use-package json-to-org-table)
 #+end_src
 
 ** Yaml
@@ -751,6 +695,7 @@ Clojure
 #+begin_src emacs-lisp :tangle ~/.emacs
 (use-package rmsbolt)
 #+end_src
+
 ** Passwords 
 
 #+begin_src emacs-lisp :tangle ~/.emacs
@@ -2090,10 +2035,6 @@ Blogging with hugo
   (insert (completing-read "tag: " '("thoughts" "microblogging" "emacs" "tech" "hell" "accordion" "ctf" "security" "tools" "email" "privacy"))))
 #+end_src
 
-*** Json-to-org-table
-#+begin_src emacs-lisp :tangle ~/.emacs
-(use-package json-to-org-table)
-#+end_src
 
 ** Easydraw
 
@@ -2837,7 +2778,7 @@ E.g. 68656c6c6f -> hello"
 
 * Music
 #+begin_src emacs-lisp :tangle ~/.emacs
-(if is-guix
+(if (and is-guix (not im-at-work))
     (progn
 			(setenv "QT_QPA_PLATFORM" "xcb")
       (add-to-list 'load-path "/home/person/.local/share/SuperCollider/downloaded-quarks/scel/el")
@@ -2885,21 +2826,23 @@ E.g. 68656c6c6f -> hello"
 ;;   - `tidalcycles' Guix package is in the home profile (brings ghc + cabal).
 ;;   - Run `tidal-bootstrap' once at the shell to `cabal install --lib tidal',
 ;;     which also installs BootTidal.hs into the user cabal store.
-(use-package haskell-mode)
+( (if (not im-at-work))
+	(progn
+		(use-package haskell-mode)
 
-(use-package tidal
-  :after haskell-mode
-  :mode ("\\.tidal\\'" . tidal-mode)
-  :config
-  ;; Auto-discover BootTidal.hs from the user's cabal store so we don't have
-  ;; to hardcode the ghc version / tidal version into the path.
-  (let* ((hits (ignore-errors
-                 (process-lines
-                  "bash" "-lc"
-                  "ls -t ~/.cabal/store/*/tidal-*/share/BootTidal.hs 2>/dev/null | head -1"))))
-    (when (and hits (file-exists-p (car hits)))
-      (setq tidal-boot-script-path (car hits))))
-  (setq tidal-interpreter "ghci"))
+		(use-package tidal
+			:after haskell-mode
+			:mode ("\\.tidal\\'" . tidal-mode)
+			:config
+			;; Auto-discover BootTidal.hs from the user's cabal store so we don't have
+			;; to hardcode the ghc version / tidal version into the path.
+			(let* ((hits (ignore-errors
+										 (process-lines
+											"bash" "-lc"
+											"ls -t ~/.cabal/store/*/tidal-*/share/BootTidal.hs 2>/dev/null | head -1"))))
+				(when (and hits (file-exists-p (car hits)))
+					(setq tidal-boot-script-path (car hits))))
+			(setq tidal-interpreter "ghci"))))
 #+end_src
 
 #+begin_src emacs-lisp :tangle ~/.emacs
@@ -3036,15 +2979,6 @@ E.g. 68656c6c6f -> hello"
       
       )))
 #+end_src
-* Finally
-Load my RSS feeds
-#+begin_src emacs-lisp :tangle ~/.emacs
-(defun noonker/init-other ()
-  (interactive)
-  (if (not im-at-work)
-      (load-file "~/.password-store/Config/elfeed.el.gpg")))
-#+end_src
-
 * Doom
 Its faces come from the desktop theme: see guix/channels/noonker/home/theme/emacs.el.in.
 #+begin_src emacs-lisp :tangle ~/.emacs
@@ -3289,145 +3223,139 @@ Its faces come from the desktop theme: see guix/channels/noonker/home/theme/emac
 ** Youtube
 
 #+begin_src emacs-lisp :tangle ~/.emacs
-(setq youtube-feeds
-      '(
-	("https://www.youtube.com/feeds/videos.xml?channel_id=UC5fdssPqmmGhkhsJi4VcckA" innuendo-studios youtube)
-	("https://www.youtube.com/feeds/videos.xml?channel_id=UCDsElQQt_gCZ9LgnW-7v-cQ" kirsten-dirksen youtube)
-	("https://www.youtube.com/feeds/videos.xml?channel_id=UCwHwDuNd9lCdA7chyyquDXw" bread-on-penguins youtube)
-	("https://www.youtube.com/feeds/videos.xml?channel_id=UCWZ3HFiJkxG1K8C4HVnyBvQ" vic-berger youtube)
-	("https://www.youtube.com/feeds/videos.xml?channel_id=UCWjmAUHmajb1-eo5WKk_22A" audiotree music youtube)
-	("https://www.youtube.com/feeds/videos.xml?channel_id=UC9-y-6csu5WGm29I7JiwpnA" computerphile youtube)
-	("https://www.youtube.com/feeds/videos.xml?channel_id=UCSkzHxIcfoEr69MWBdo0ppg" cuck-philosophy youtube)
-	("https://www.youtube.com/feeds/videos.xml?channel_id=UCa_8y96THr7LzMg8BsU-sUw" just-wondering youtube)
-	("https://www.youtube.com/feeds/videos.xml?channel_id=UC3I2GFN_F8WudD_2jUZbojA" KEXP youtube music)
-	("https://www.youtube.com/feeds/videos.xml?channel_id=UCJgBqh3tYway5A5VgV4dZRw" mr-bill youtube music)
-	("https://www.youtube.com/feeds/videos.xml?channel_id=UCoxcjq-8xIDTYp3uz647V5A" numberphile youtube)
-	("https://www.youtube.com/feeds/videos.xml?channel_id=UC--DwaiMV-jtO-6EvmKOnqg" oa-labs youtube)
-	("https://www.youtube.com/feeds/videos.xml?channel_id=UCvBqzzvUBLCs8Y7Axb-jZew" sixety-symbols youtube)
-	("https://www.youtube.com/feeds/videos.xml?channel_id=UCGaVdbSav8xWuFWTadK6loA" vlogbrothers youtube)
-	("https://www.youtube.com/feeds/videos.xml?channel_id=UCy-AwzC0US6T_DALeiqnLHQ" yan-z youtube music)
-	("https://www.youtube.com/feeds/videos.xml?channel_id=UCdBnxYbzwu5CypEdMfu4_jA" leeya-katrina youtube music )
-	("https://www.youtube.com/feeds/videos.xml?channel_id=UCzIlUODCqKo7Og_OIp66x9g" lucy-riddett youtube music)
-	("https://www.youtube.com/feeds/videos.xml?channel_id=UCaB0Vx7zrGJRrOQb42bI99g" milan youtube  music)
-	("https://www.youtube.com/feeds/videos.xml?channel_id=UCtc5INMrIDrDEbv2FLK4bVg" natalie-chami youtube music)
-	("https://www.youtube.com/feeds/videos.xml?channel_id=UCO8yPl56VVCnRM7qnnBIDew" peter-neils youtube music)
-	("https://www.youtube.com/feeds/videos.xml?channel_id=UCdsLnOiepq0GEPpGY14V5Rg" piotr-jagielski youtube music)
-	("https://www.youtube.com/feeds/videos.xml?channel_id=UCchFx5hTGnhjya-odX_6Fpw" rory-hoffman youtube music)
-	("https://www.youtube.com/feeds/videos.xml?channel_id=UCl-WbRCwODSd2BRQSxJcq2g" tenebrae-chior youtube music)
-	("https://www.youtube.com/feeds/videos.xml?channel_id=UC8fqt_PDhDDszL5Zi8EauqA" terminal-passage youtube music)
-	("https://www.youtube.com/feeds/videos.xml?channel_id=UCg6IiNQqZWJH3ZFfJhXRMsg" octavism youtube music)
-	("https://www.youtube.com/feeds/videos.xml?channel_id=UCrfKGpvbEQXcbe68dzXgJuA" forgotten-weapons youtube)
-	("https://www.youtube.com/feeds/videos.xml?channel_id=UCpbx4wlyihmnsBy9uAE_kdA" stick-in-the-wheel youtube music)
-	("https://www.youtube.com/feeds/videos.xml?channel_id=UCeUNM9NqJqZXfRNeuW4_2sg" inrangetv youtube)
-	("https://www.youtube.com/feeds/videos.xml?channel_id=UCC6KehJqUUrWLlfPCWh7lTA" moshe-zuchter youtube   music)
-	("https://www.youtube.com/feeds/videos.xml?channel_id=UCnPl-b0Xw-A20ukIQEJ0_Nw" yuri-charyguine youtube)
-	("https://www.youtube.com/feeds/videos.xml?channel_id=UClcE-kVhqyiHCcjYwcpfj9w" liveoverflow youtube)
-	("https://www.youtube.com/feeds/videos.xml?channel_id=UCIA8TCSZ-BaBX-aJv92tpRQ" tim-heidecker youtube)
-	("https://www.youtube.com/feeds/videos.xml?channel_id=UCCd1Cwjp3hK1tTxevgnHD3g" aline-gingertail youtube music)
-	("https://www.youtube.com/feeds/videos.xml?channel_id=UC-_SoG6x0XvcQRgQEh7Ce9Q" dj-cummerbund youtube  music)
-	("https://www.youtube.com/feeds/videos.xml?channel_id=UCcXhhVwCT6_WqjkEniejRJQ" wintergatan youtube)
-	("https://www.youtube.com/feeds/videos.xml?channel_id=UCw2Veg8X4aCUitGn9xTMi8A" cassie-accordion youtube)
-	("https://www.youtube.com/feeds/videos.xml?channel_id=UCltmf0pqjXyLtNsF2vek_wQ" guqin youtube music)
-	("https://www.youtube.com/feeds/videos.xml?channel_id=UCdutJyKPX5uOJxNN0wM4g-A" classic-documentary youtube)
-	("https://www.youtube.com/feeds/videos.xml?channel_id=UCF3I2RRLRVh_HuXP9sNlhNg" weltmeister youtube music)
-	("https://www.youtube.com/feeds/videos.xml?channel_id=UC-AQKm7HUNMmxjdS371MSwg" channel-5 youtube)
-	("https://www.youtube.com/feeds/videos.xml?channel_id=UC4eYXhJI4-7wSWc8UNRwD4A" npr-music youtube)
-	("https://www.youtube.com/feeds/videos.xml?channel_id=UCk0tHQym-zIaxjrVuTzojdg" embahn youtube music)
-	("https://www.youtube.com/feeds/videos.xml?channel_id=UCigygyPkHm07o-wQvkET7Og" george-collier youtubemusic )
-	("https://www.youtube.com/feeds/videos.xml?channel_id=UCposMD82i8gEmpnSG-rrO1g" mojca youtube music)
-	("https://www.youtube.com/feeds/videos.xml?channel_id=UCrCTC5_t-HaVJ025DbYITiw" alice-capelle youtube music)
-	("https://www.youtube.com/feeds/videos.xml?channel_id=UCqM0zDcFNdAHj7uQkprLszg" positron youtube)
-	("https://www.youtube.com/feeds/videos.xml?channel_id=UCuVLTxl-I0glJYPfcPKJg7w" heymun youtube music)
-	("https://www.youtube.com/feeds/videos.xml?channel_id=UCAzPN3ilUBKEU0hcQ0vuxpw" george-secor youtube music)
-	("https://www.youtube.com/feeds/videos.xml?channel_id=UCJjFX23mI0oZaZirtIgyE-Q" david-lange youtube)
-	("https://www.youtube.com/feeds/videos.xml?channel_id=UCzJVGqsvZ3ti197NMIjE5ig" elina-spitsa youtube music)
-	("https://www.youtube.com/feeds/videos.xml?channel_id=UC6EnFbK-P5q0zeaqI5yobKg" benjamin-finegold youtube)
-	("https://www.youtube.com/feeds/videos.xml?channel_id=UC7shUDSkHjuQNegPhGdANQQ" art-of-listening youtube music)
-	("https://www.youtube.com/feeds/videos.xml?channel_id=UC8TZwtZ17WKFJSmwTZQpBTA" my-analogue-journal youtube music)
-	("https://www.youtube.com/feeds/videos.xml?channel_id=UCWamialv2ZhqR7BPPu0Niug" side-channel-security youtube)
-	("https://www.youtube.com/feeds/videos.xml?channel_id=UCQB04t2hxSBVTjxpbIHdI-w" sam-aaron youtube music)
-	("https://www.youtube.com/feeds/videos.xml?channel_id=UCwfYU2M8TBAus0TIaNtjxlQ" jam-in-the-van youtube music)
-	("https://www.youtube.com/feeds/videos.xml?channel_id=UCd2KNtfphz8HvYzM4pwtHmg" like-a-version youtube music)
-	("https://www.youtube.com/feeds/videos.xml?channel_id=UCz5RHlX7cGeayKn4FU6u7tA" little-elephant youtube music)
-	("https://www.youtube.com/feeds/videos.xml?channel_id=UCBQ8NG_fqzmAmGEriQW1XZQ" our-vinyl youtube music)
-	("https://www.youtube.com/feeds/videos.xml?channel_id=UCOCjoq4cms20Ik39r1aOqXA" cardinal-sessions youtube music)
-	("https://www.youtube.com/feeds/videos.xml?channel_id=UCfKl318qMJ2p8TUmfL4wdPQ" songs-from-the-shed youtube music)
-	("https://www.youtube.com/feeds/videos.xml?channel_id=UChsZje1ssMSDgWoxm4VQn_w" wild-honey-pie youtube music)
-	("https://www.youtube.com/feeds/videos.xml?channel_id=UCG36u-k09zdIPQh5EEdVgTA" mahogany-music youtube  Mahogany music)
-	("https://www.youtube.com/feeds/videos.xml?channel_id=UCRLZb8PpI9N7COmYqHiDH7A" sofar-sounds youtube music)
-	("https://www.youtube.com/feeds/videos.xml?channel_id=UC_VZvcOjwfLK0BY79tB-moQ" melodart youtube music)
-	("https://www.youtube.com/feeds/videos.xml?channel_id=UC7kIy8fZavEni8Gzl8NLjOQ" alexoconnor youtube)
-	("https://www.youtube.com/feeds/videos.xml?channel_id=UCDIJ45Bba6nzrGL5v8b7fMw" conneromalley youtube)
-	("https://www.youtube.com/feeds/videos.xml?channel_id=UCNAxrHudMfdzNi6NxruKPLw" samharris youtube)
-	("https://www.youtube.com/feeds/videos.xml?channel_id=UCASM0cgfkJxQ1ICmRilfHLw" patrick-boyle youtube)
-	("https://www.youtube.com/feeds/videos.xml?channel_id=UCshObcm-nLhbu8MY50EZ5Ng" benn-jordan youtube)
-	("https://www.youtube.com/feeds/videos.xml?channel_id=UC7royq87tX5w3q5XRxk4tVw" encanti youtube)
-	("https://www.youtube.com/feeds/videos.xml?channel_id=UC554eY5jNUfDq3yDOJYirOQ" destiny youtube)
-	("https://www.youtube.com/feeds/videos.xml?channel_id=UCAf4fP8QzKkJ_t-c1F2v27Q" eli-fieldsteel youtube)
-	("https://www.youtube.com/feeds/videos.xml?channel_id=UCXWshk1jyhNJDs4m-9zSQiA" divya youtube)
-	("https://www.youtube.com/feeds/videos.xml?channel_id=UCc-cLumEjZiivL93UJO21ng" destiny-vault youtube)
-	("https://www.youtube.com/feeds/videos.xml?channel_id=UCjY8KAGllKyZZd2FYF1vbPw" paul-krugman youtube)
-	("https://www.youtube.com/feeds/videos.xml?channel_id=UC718uEQF7bdg4QnnXo8uQJA" emacs-propaganda youtube)
-	("https://www.youtube.com/feeds/videos.xml?channel_id=UCOLGEEl-F3vQ6M1chJ5DsEw" synthdef youtube)
-	("https://www.youtube.com/feeds/videos.xml?channel_id=UCaLlzGqiPE2QRj6sSOawJRg" clojuretv youtube)
-	("https://www.youtube.com/feeds/videos.xml?channel_id=UCLmaR7ew57x0XJEe_-REUyg" book-club-radio music youtube)
-	))
+(if (not im-at-work)
+		(setq youtube-feeds
+					'(
+						("https://www.youtube.com/feeds/videos.xml?channel_id=UC5fdssPqmmGhkhsJi4VcckA" innuendo-studios youtube)
+						("https://www.youtube.com/feeds/videos.xml?channel_id=UCDsElQQt_gCZ9LgnW-7v-cQ" kirsten-dirksen youtube)
+						("https://www.youtube.com/feeds/videos.xml?channel_id=UCwHwDuNd9lCdA7chyyquDXw" bread-on-penguins youtube)
+						("https://www.youtube.com/feeds/videos.xml?channel_id=UCWZ3HFiJkxG1K8C4HVnyBvQ" vic-berger youtube)
+						("https://www.youtube.com/feeds/videos.xml?channel_id=UCWjmAUHmajb1-eo5WKk_22A" audiotree music youtube)
+						("https://www.youtube.com/feeds/videos.xml?channel_id=UC9-y-6csu5WGm29I7JiwpnA" computerphile youtube)
+						("https://www.youtube.com/feeds/videos.xml?channel_id=UCSkzHxIcfoEr69MWBdo0ppg" cuck-philosophy youtube)
+						("https://www.youtube.com/feeds/videos.xml?channel_id=UCa_8y96THr7LzMg8BsU-sUw" just-wondering youtube)
+						("https://www.youtube.com/feeds/videos.xml?channel_id=UC3I2GFN_F8WudD_2jUZbojA" KEXP youtube music)
+						("https://www.youtube.com/feeds/videos.xml?channel_id=UCJgBqh3tYway5A5VgV4dZRw" mr-bill youtube music)
+						("https://www.youtube.com/feeds/videos.xml?channel_id=UCoxcjq-8xIDTYp3uz647V5A" numberphile youtube)
+						("https://www.youtube.com/feeds/videos.xml?channel_id=UC--DwaiMV-jtO-6EvmKOnqg" oa-labs youtube)
+						("https://www.youtube.com/feeds/videos.xml?channel_id=UCvBqzzvUBLCs8Y7Axb-jZew" sixety-symbols youtube)
+						("https://www.youtube.com/feeds/videos.xml?channel_id=UCGaVdbSav8xWuFWTadK6loA" vlogbrothers youtube)
+						("https://www.youtube.com/feeds/videos.xml?channel_id=UCy-AwzC0US6T_DALeiqnLHQ" yan-z youtube music)
+						("https://www.youtube.com/feeds/videos.xml?channel_id=UCdBnxYbzwu5CypEdMfu4_jA" leeya-katrina youtube music )
+						("https://www.youtube.com/feeds/videos.xml?channel_id=UCzIlUODCqKo7Og_OIp66x9g" lucy-riddett youtube music)
+						("https://www.youtube.com/feeds/videos.xml?channel_id=UCaB0Vx7zrGJRrOQb42bI99g" milan youtube  music)
+						("https://www.youtube.com/feeds/videos.xml?channel_id=UCtc5INMrIDrDEbv2FLK4bVg" natalie-chami youtube music)
+						("https://www.youtube.com/feeds/videos.xml?channel_id=UCO8yPl56VVCnRM7qnnBIDew" peter-neils youtube music)
+						("https://www.youtube.com/feeds/videos.xml?channel_id=UCdsLnOiepq0GEPpGY14V5Rg" piotr-jagielski youtube music)
+						("https://www.youtube.com/feeds/videos.xml?channel_id=UCchFx5hTGnhjya-odX_6Fpw" rory-hoffman youtube music)
+						("https://www.youtube.com/feeds/videos.xml?channel_id=UCl-WbRCwODSd2BRQSxJcq2g" tenebrae-chior youtube music)
+						("https://www.youtube.com/feeds/videos.xml?channel_id=UC8fqt_PDhDDszL5Zi8EauqA" terminal-passage youtube music)
+						("https://www.youtube.com/feeds/videos.xml?channel_id=UCg6IiNQqZWJH3ZFfJhXRMsg" octavism youtube music)
+						("https://www.youtube.com/feeds/videos.xml?channel_id=UCrfKGpvbEQXcbe68dzXgJuA" forgotten-weapons youtube)
+						("https://www.youtube.com/feeds/videos.xml?channel_id=UCpbx4wlyihmnsBy9uAE_kdA" stick-in-the-wheel youtube music)
+						("https://www.youtube.com/feeds/videos.xml?channel_id=UCeUNM9NqJqZXfRNeuW4_2sg" inrangetv youtube)
+						("https://www.youtube.com/feeds/videos.xml?channel_id=UCC6KehJqUUrWLlfPCWh7lTA" moshe-zuchter youtube   music)
+						("https://www.youtube.com/feeds/videos.xml?channel_id=UCnPl-b0Xw-A20ukIQEJ0_Nw" yuri-charyguine youtube)
+						("https://www.youtube.com/feeds/videos.xml?channel_id=UClcE-kVhqyiHCcjYwcpfj9w" liveoverflow youtube)
+						("https://www.youtube.com/feeds/videos.xml?channel_id=UCIA8TCSZ-BaBX-aJv92tpRQ" tim-heidecker youtube)
+						("https://www.youtube.com/feeds/videos.xml?channel_id=UCCd1Cwjp3hK1tTxevgnHD3g" aline-gingertail youtube music)
+						("https://www.youtube.com/feeds/videos.xml?channel_id=UC-_SoG6x0XvcQRgQEh7Ce9Q" dj-cummerbund youtube  music)
+						("https://www.youtube.com/feeds/videos.xml?channel_id=UCcXhhVwCT6_WqjkEniejRJQ" wintergatan youtube)
+						("https://www.youtube.com/feeds/videos.xml?channel_id=UCw2Veg8X4aCUitGn9xTMi8A" cassie-accordion youtube)
+						("https://www.youtube.com/feeds/videos.xml?channel_id=UCltmf0pqjXyLtNsF2vek_wQ" guqin youtube music)
+						("https://www.youtube.com/feeds/videos.xml?channel_id=UCdutJyKPX5uOJxNN0wM4g-A" classic-documentary youtube)
+						("https://www.youtube.com/feeds/videos.xml?channel_id=UCF3I2RRLRVh_HuXP9sNlhNg" weltmeister youtube music)
+						("https://www.youtube.com/feeds/videos.xml?channel_id=UC-AQKm7HUNMmxjdS371MSwg" channel-5 youtube)
+						("https://www.youtube.com/feeds/videos.xml?channel_id=UC4eYXhJI4-7wSWc8UNRwD4A" npr-music youtube)
+						("https://www.youtube.com/feeds/videos.xml?channel_id=UCk0tHQym-zIaxjrVuTzojdg" embahn youtube music)
+						("https://www.youtube.com/feeds/videos.xml?channel_id=UCigygyPkHm07o-wQvkET7Og" george-collier youtubemusic )
+						("https://www.youtube.com/feeds/videos.xml?channel_id=UCposMD82i8gEmpnSG-rrO1g" mojca youtube music)
+						("https://www.youtube.com/feeds/videos.xml?channel_id=UCrCTC5_t-HaVJ025DbYITiw" alice-capelle youtube music)
+						("https://www.youtube.com/feeds/videos.xml?channel_id=UCqM0zDcFNdAHj7uQkprLszg" positron youtube)
+						("https://www.youtube.com/feeds/videos.xml?channel_id=UCuVLTxl-I0glJYPfcPKJg7w" heymun youtube music)
+						("https://www.youtube.com/feeds/videos.xml?channel_id=UCAzPN3ilUBKEU0hcQ0vuxpw" george-secor youtube music)
+						("https://www.youtube.com/feeds/videos.xml?channel_id=UCJjFX23mI0oZaZirtIgyE-Q" david-lange youtube)
+						("https://www.youtube.com/feeds/videos.xml?channel_id=UCzJVGqsvZ3ti197NMIjE5ig" elina-spitsa youtube music)
+						("https://www.youtube.com/feeds/videos.xml?channel_id=UC6EnFbK-P5q0zeaqI5yobKg" benjamin-finegold youtube)
+						("https://www.youtube.com/feeds/videos.xml?channel_id=UC7shUDSkHjuQNegPhGdANQQ" art-of-listening youtube music)
+						("https://www.youtube.com/feeds/videos.xml?channel_id=UC8TZwtZ17WKFJSmwTZQpBTA" my-analogue-journal youtube music)
+						("https://www.youtube.com/feeds/videos.xml?channel_id=UCWamialv2ZhqR7BPPu0Niug" side-channel-security youtube)
+						("https://www.youtube.com/feeds/videos.xml?channel_id=UCQB04t2hxSBVTjxpbIHdI-w" sam-aaron youtube music)
+						("https://www.youtube.com/feeds/videos.xml?channel_id=UCwfYU2M8TBAus0TIaNtjxlQ" jam-in-the-van youtube music)
+						("https://www.youtube.com/feeds/videos.xml?channel_id=UCd2KNtfphz8HvYzM4pwtHmg" like-a-version youtube music)
+						("https://www.youtube.com/feeds/videos.xml?channel_id=UCz5RHlX7cGeayKn4FU6u7tA" little-elephant youtube music)
+						("https://www.youtube.com/feeds/videos.xml?channel_id=UCBQ8NG_fqzmAmGEriQW1XZQ" our-vinyl youtube music)
+						("https://www.youtube.com/feeds/videos.xml?channel_id=UCOCjoq4cms20Ik39r1aOqXA" cardinal-sessions youtube music)
+						("https://www.youtube.com/feeds/videos.xml?channel_id=UCfKl318qMJ2p8TUmfL4wdPQ" songs-from-the-shed youtube music)
+						("https://www.youtube.com/feeds/videos.xml?channel_id=UChsZje1ssMSDgWoxm4VQn_w" wild-honey-pie youtube music)
+						("https://www.youtube.com/feeds/videos.xml?channel_id=UCG36u-k09zdIPQh5EEdVgTA" mahogany-music youtube  Mahogany music)
+						("https://www.youtube.com/feeds/videos.xml?channel_id=UCRLZb8PpI9N7COmYqHiDH7A" sofar-sounds youtube music)
+						("https://www.youtube.com/feeds/videos.xml?channel_id=UC_VZvcOjwfLK0BY79tB-moQ" melodart youtube music)
+						("https://www.youtube.com/feeds/videos.xml?channel_id=UC7kIy8fZavEni8Gzl8NLjOQ" alexoconnor youtube)
+						("https://www.youtube.com/feeds/videos.xml?channel_id=UCDIJ45Bba6nzrGL5v8b7fMw" conneromalley youtube)
+						("https://www.youtube.com/feeds/videos.xml?channel_id=UCNAxrHudMfdzNi6NxruKPLw" samharris youtube)
+						("https://www.youtube.com/feeds/videos.xml?channel_id=UCASM0cgfkJxQ1ICmRilfHLw" patrick-boyle youtube)
+						("https://www.youtube.com/feeds/videos.xml?channel_id=UCshObcm-nLhbu8MY50EZ5Ng" benn-jordan youtube)
+						("https://www.youtube.com/feeds/videos.xml?channel_id=UC7royq87tX5w3q5XRxk4tVw" encanti youtube)
+						("https://www.youtube.com/feeds/videos.xml?channel_id=UC554eY5jNUfDq3yDOJYirOQ" destiny youtube)
+						("https://www.youtube.com/feeds/videos.xml?channel_id=UCAf4fP8QzKkJ_t-c1F2v27Q" eli-fieldsteel youtube)
+						("https://www.youtube.com/feeds/videos.xml?channel_id=UCXWshk1jyhNJDs4m-9zSQiA" divya youtube)
+						("https://www.youtube.com/feeds/videos.xml?channel_id=UCc-cLumEjZiivL93UJO21ng" destiny-vault youtube)
+						("https://www.youtube.com/feeds/videos.xml?channel_id=UCjY8KAGllKyZZd2FYF1vbPw" paul-krugman youtube)
+						("https://www.youtube.com/feeds/videos.xml?channel_id=UC718uEQF7bdg4QnnXo8uQJA" emacs-propaganda youtube)
+						("https://www.youtube.com/feeds/videos.xml?channel_id=UCOLGEEl-F3vQ6M1chJ5DsEw" synthdef youtube)
+						("https://www.youtube.com/feeds/videos.xml?channel_id=UCaLlzGqiPE2QRj6sSOawJRg" clojuretv youtube)
+						("https://www.youtube.com/feeds/videos.xml?channel_id=UCLmaR7ew57x0XJEe_-REUyg" book-club-radio music youtube)
+						)))
 #+end_src
 
 ** Podcasts
 #+begin_src emacs-lisp :tangle ~/.emacs
-(setq podcast-feeds
-      '(
-	("http://feeds.99percentinvisible.org/99percentinvisible" 99pi podcast)
-	("https://feeds.buzzsprout.com/244372.rss" crazy-town podcast)
-	("http://rss.acast.com/nature" nature podcast)
-	("https://feeds.eff.org/howtofixtheinternet" how-to-fix-the-internet podcast)
-	("https://feeds.megaphone.fm/search-engine" search-engine podcast)
-	("https://feeds.megaphone.fm/TBIEA2761282490" four-oh-four podcast)
-	("http://feeds.feedburner.com/birdnote/OYfP" bird-note podcast) 
-	("https://www.kcrw.com/culture/shows/nocturne/rss.xml" nocturne podcast)
-	("http://feeds.wnyc.org/onthemedia" on-the-media podcast)
-	("https://www.npr.org/rss/podcast.php?id=510289" planet-money podcast)
-	("http://rss.acast.com/pulseoftheplanet" pulse-of-the-planet podcast) 
-	("http://feeds.wnyc.org/radiolab" radiolab  podcast)
-	("https://anchor.fm/s/7f22824/podcast/rss" sounds-by-nature podcast)
-	("https://www.ecoshock.org/feed/lofi" radio-ecoshock podcast)
-	("http://feeds.wpr.org/wpr-politics" wpr-politics podcast)
-	("http://feeds.wnyc.org/tnypoetry" new-yorker-poetry podcast) 
-	("https://feeds.simplecast.com/p7Q9jZ0K" poem-of-the-day podcast)
-	("https://www.npr.org/rss/podcast.php?id=510019" all-songs-considered podcast)
-	("https://feeds.megaphone.fm/darknetdiaries" darknet-diaries podcast)
-	("https://feeds.simplecast.com/dxZsm5kX" pod-save-america podcast)
-	("https://feeds.simplecast.com/Sl5CSM3S" the-daily podcast)
-	("https://feeds.npr.org/510318/podcast.xml" up-first podcast)
-	))
-#+end_src
-
-** Listen to this
-#+begin_src emacs-lisp :tangle ~/.emacs
-(setq music-firehose-feeds
-      '(
-      ("https://www.reddit.com/r/listentothis/.rss" listen-to-this music reddit)
-      ))
+(if (not im-at-work)
+		(setq podcast-feeds
+					'(
+						("http://feeds.99percentinvisible.org/99percentinvisible" 99pi podcast)
+						("https://feeds.buzzsprout.com/244372.rss" crazy-town podcast)
+						("http://rss.acast.com/nature" nature podcast)
+						("https://feeds.eff.org/howtofixtheinternet" how-to-fix-the-internet podcast)
+						("https://feeds.megaphone.fm/search-engine" search-engine podcast)
+						("https://feeds.megaphone.fm/TBIEA2761282490" four-oh-four podcast)
+						("http://feeds.feedburner.com/birdnote/OYfP" bird-note podcast) 
+						("https://www.kcrw.com/culture/shows/nocturne/rss.xml" nocturne podcast)
+						("http://feeds.wnyc.org/onthemedia" on-the-media podcast)
+						("https://www.npr.org/rss/podcast.php?id=510289" planet-money podcast)
+						("http://rss.acast.com/pulseoftheplanet" pulse-of-the-planet podcast) 
+						("http://feeds.wnyc.org/radiolab" radiolab  podcast)
+						("https://anchor.fm/s/7f22824/podcast/rss" sounds-by-nature podcast)
+						("https://www.ecoshock.org/feed/lofi" radio-ecoshock podcast)
+						("http://feeds.wpr.org/wpr-politics" wpr-politics podcast)
+						("http://feeds.wnyc.org/tnypoetry" new-yorker-poetry podcast) 
+						("https://feeds.simplecast.com/p7Q9jZ0K" poem-of-the-day podcast)
+						("https://www.npr.org/rss/podcast.php?id=510019" all-songs-considered podcast)
+						("https://feeds.megaphone.fm/darknetdiaries" darknet-diaries podcast)
+						("https://feeds.simplecast.com/dxZsm5kX" pod-save-america podcast)
+						("https://feeds.simplecast.com/Sl5CSM3S" the-daily podcast)
+						("https://feeds.npr.org/510318/podcast.xml" up-first podcast)
+						)))
 #+end_src
 
 ** Government Firehoses
 #+begin_src emacs-lisp
 (setq government-feeds
       '(
-	("https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany&CIK=0001078075&type=&dateb=&owner=include&start=0&count=40&output=atom" sec gov first sec)
-	("https://www.ftc.gov/feeds/press-release.xml" ftc gov first ftc)
-	("https://www.ftc.gov/feeds/press-release-competition.xml" gov first ftc)
-	("https://www.ftc.gov/feeds/press-release-consumer-protection.xml" gov first ftc)
-	("https://api2.fcc.gov/edocs/public/api/v1/rss/" gov first fcc)
-	("https://api2.fcc.gov/edocs/public/api/v1/rss/docTypes/Cit" gov first fcc)
-	("http://licensing.fcc.gov/myibfs/yesterdaysFilingsFeed.do" gov first fcc)
-	("http://licensing.fcc.gov/myibfs/yesterdaysActionsFeed.do" gov first fcc)
-	("http://licensing.fcc.gov/myibfs/recentPNFeed.do" gov first fcc)
-	("http://efilingapps.fec.gov/rss/generate?preDefinedFilingType=ALL" gov first fec)
-	("https://efilingapps.fec.gov/rss/generate?preDefinedFilingType=ALL" gov fec first)
-	("https://www.nsa.gov/DesktopModules/ArticleCS/RSS.ashx?ContentType=1&Site=920&max=20" gov first nsa)
-	))
+				("https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany&CIK=0001078075&type=&dateb=&owner=include&start=0&count=40&output=atom" sec gov first sec)
+				("https://www.ftc.gov/feeds/press-release.xml" ftc gov first ftc)
+				("https://www.ftc.gov/feeds/press-release-competition.xml" gov first ftc)
+				("https://www.ftc.gov/feeds/press-release-consumer-protection.xml" gov first ftc)
+				("https://api2.fcc.gov/edocs/public/api/v1/rss/" gov first fcc)
+				("https://api2.fcc.gov/edocs/public/api/v1/rss/docTypes/Cit" gov first fcc)
+				("http://licensing.fcc.gov/myibfs/yesterdaysFilingsFeed.do" gov first fcc)
+				("http://licensing.fcc.gov/myibfs/yesterdaysActionsFeed.do" gov first fcc)
+				("http://licensing.fcc.gov/myibfs/recentPNFeed.do" gov first fcc)
+				("http://efilingapps.fec.gov/rss/generate?preDefinedFilingType=ALL" gov first fec)
+				("https://efilingapps.fec.gov/rss/generate?preDefinedFilingType=ALL" gov fec first)
+				("https://www.nsa.gov/DesktopModules/ArticleCS/RSS.ashx?ContentType=1&Site=920&max=20" gov first nsa)
+				))
 #+end_src
 
 ** Security Feeds
@@ -3527,35 +3455,36 @@ Its faces come from the desktop theme: see guix/channels/noonker/home/theme/emac
 #+end_src
 ** Culture Feeds
 #+begin_src emacs-lisp :tangle ~/.emacs
-(setq culture-feeds
-      '(
-	("https://thebaffler.com/latest/feed" the-baffler lefty news)
-	("https://www.resilience.org/feed/" resillience lefty news)
-	("https://www.newyorker.com/feed/everything" new-yorker lefty)
-	("https://defector.com/feed/" defector lefty)
-	("http://jacobinmag.com/feed" jacobin lefty)
-	("https://journalofcontroversialideas.org/rss" controvertial-ideas lefty)
-	("https://www.documentjournal.com/category/above-the-fold/rss" document-journal lefty)
-	("https://dansinker.com/feed.xml" dansinker)
-	))
+(if (im-at-work)
+		(setq culture-feeds
+					'(
+						("https://thebaffler.com/latest/feed" the-baffler lefty news)
+						("https://www.resilience.org/feed/" resillience lefty news)
+						("https://www.newyorker.com/feed/everything" new-yorker lefty)
+						("https://defector.com/feed/" defector lefty)
+						("http://jacobinmag.com/feed" jacobin lefty)
+						("https://journalofcontroversialideas.org/rss" controvertial-ideas lefty)
+						("https://www.documentjournal.com/category/above-the-fold/rss" document-journal lefty)
+						("https://dansinker.com/feed.xml" dansinker)
+						)))
 #+end_src
 
 ** Live Feeds
 #+begin_src emacs-lisp :tangle ~/.emacs
 (setq news-live-feeds
       '(
-	("http://rss.nytimes.com/services/xml/rss/nyt/HomePage.xml" news first skim)
-	("http://feeds.propublica.org/propublica/main" first skim)
-	))
+				("http://rss.nytimes.com/services/xml/rss/nyt/HomePage.xml" news first skim)
+				("http://feeds.propublica.org/propublica/main" first skim)
+				))
 #+end_src
 
 ** Local Feeds
 #+begin_src emacs-lisp :tangle ~/.emacs
 (setq local-feeds
       '(
-	("https://gopresstimes.com/de-pere" go-press-times local)
-	("http://host.madison.com/search/?f=rss&t=article&c=news/state_and_regional&q=%23wsj&l=25&s=start_time&sd=desc" madison-news local)
-	))
+				("https://gopresstimes.com/de-pere" go-press-times local)
+				("http://host.madison.com/search/?f=rss&t=article&c=news/state_and_regional&q=%23wsj&l=25&s=start_time&sd=desc" madison-news local)
+				))
 #+end_src
 
 ** Tech Feeds
