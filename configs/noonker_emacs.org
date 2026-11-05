@@ -42,7 +42,8 @@ Used to disable code that isn't suitable for work environments."
 The faces come from the desktop theme: see =guix/channels/noonker/home/theme/emacs.el.in=.
 
 #+begin_src emacs-lisp
-(load "~/.local/state/theme/current/emacs.el" t t)
+(if (not im-at-work)
+		(load "~/.local/state/theme/current/emacs.el" t t))
 
 ;; `theme-switch' reloads the theme file, which calls this for the current frame.
 (defun noonker/set-fonts (frame)
@@ -50,7 +51,7 @@ The faces come from the desktop theme: see =guix/channels/noonker/home/theme/ema
   (interactive (list (selected-frame)))
   (with-selected-frame frame
     (if im-at-work
-        (set-face-attribute 'default nil :font "JetBrains Mono" :height 180)
+        (set-face-attribute 'default nil :font "JetBrains Mono" :height 110)
       (set-face-attribute 'default nil
                           :font (or (bound-and-true-p noonker/theme-font) "Comic Code")
                           :height 120))))
@@ -1066,14 +1067,6 @@ Supports: t (Today→Tasks), n (Now + clock-in), b (Backlog→Backlog)."
     (org-roam-db-autosync-mode)))
 
 (use-package consult-org-roam)
-
-(use-package org-roam-ui
-  :after org-roam
-  :config
-  (setq org-roam-ui-sync-theme t
-        org-roam-ui-follow t
-        org-roam-ui-update-on-save t
-        org-roam-ui-open-on-start t))
 #+end_src
 
 ** Tables

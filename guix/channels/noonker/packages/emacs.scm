@@ -8,8 +8,7 @@
   #:use-module (guix git-download)
   #:use-module (guix packages)
   #:use-module (gnu packages emacs-build)
-  #:use-module (gnu packages emacs-xyz)
-  #:use-module ((nongnu packages emacs) #:select (emacs-org-roam-ui)))
+  #:use-module (gnu packages emacs-xyz))
 
 (define-public emacs-agent-shell-monome
   (let ((commit "e5539031db55568522f0c11391f71bd69e0f88db")
@@ -500,22 +499,6 @@
       (description "Major mode for YARA rules.")
       (license license:gpl2+))))
 
-;; The fork adds a time range selector.  The upstream package is in nonguix.
-(define-public emacs-org-roam-ui/fork
-  (let ((commit "6321da1a1666981c2f5d0e7acc05f53d087759f5"))
-    (package
-      (inherit emacs-org-roam-ui)
-      (version (git-version "0" "0" commit))
-      (source
-       (origin
-         (method git-fetch)
-         (uri (git-reference
-               (url "https://github.com/noonker/org-roam-ui")
-               (commit commit)))
-         (file-name (git-file-name "emacs-org-roam-ui" version))
-         (sha256
-          (base32 "1a8z0l2x507k5qfxbzwy0d9b0v2bway94a8l4il3malma3xsanc3")))))))
-
 (define-public %my-emacs-packages
   (list emacs-agent-shell-monome
         emacs-agent-shell-org-loops
@@ -537,5 +520,4 @@
         emacs-somafm
         emacs-tidal
         emacs-verb
-        emacs-yara-mode
-        emacs-org-roam-ui/fork))
+        emacs-yara-mode))
