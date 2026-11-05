@@ -7,7 +7,7 @@ bookmarks=$(emacsclient -e '(noonker/json-bookmarks)' | jq -r . | jq -r '
   "\($cat) / \(.key) - \(.value[1]) | \(.value[0])"
 ')
 
-selected=$(echo "$bookmarks" | rofi -dmenu -i -p "🔖 Bookmarks" -matching fuzzy)
+selected=$(echo "$bookmarks" | rofi -dmenu -i -p "🔖 Bookmarks" -matching fuzzy -sort -sorting-method fzf)
 
 if [ -n "$selected" ]; then
   url=$(echo "$selected" | sed 's/.*| //')

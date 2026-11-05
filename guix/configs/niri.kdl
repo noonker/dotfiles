@@ -143,6 +143,7 @@ binds {
 
     // Bookmarks
     Mod+B { spawn "sh" "-c" "~/bin/bookmark-search"; }
+    Mod+Shift+B { spawn "sh" "-c" "~/bin/es-search"; }
 
     // Org capture
     Mod+C { spawn "sh" "-c" "~/bin/org-today-capture"; }

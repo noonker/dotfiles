@@ -1688,6 +1688,645 @@ E.g. 68656c6c6f -> hello"
     (insert (decode-coding-string bytes 'raw-text))))
 #+end_src
 
+** Elasticsearch Search
+=bin/es-search= (=Mod+Shift+B=) picks a cluster, then an index, then builds a query one filter at a time from the index's field list.  The result opens in the browser or is copied as a verb source block.
+
+That script only draws rofi menus.  Everything else is here: each answer goes to =noonker/es-rofi-step=, which replies with the next menu as JSON.  A screen is a function returning a menu, =noonker/es--stack= holds the open screens, and Esc pops one.
+
+=es-test-cluster up= starts the "Local (podman)" cluster.
+
+#+begin_src emacs-lisp
+(require 'json)
+(require 'map)
+(require 'subr-x)
+(require 'url-util)
+
+(defvar noonker/es-clusters
+  '(("Local (podman)" :url "http://127.0.0.1:9200"))
+  "Elasticsearch clusters to offer, as (NAME . PLIST).
+PLIST takes :url, and optionally :headers (see `noonker/es-headers')
+and :insecure, which skips TLS verification for self-signed clusters.")
+
+(defvar noonker/es-headers nil
+  "Additional headers for every Elasticsearch request, as (NAME . VALUE).
+A cluster's own :headers are added to these and win on a clash.  VALUE
+is a string, or a symbol naming a function that returns one.  Use a
+function for secrets: it is called for each request, and a verb block
+gets a {{(function)}} code tag instead of the secret itself.  For example:
+  ((\"Authorization\" . my/es-authorization))")
+
+(defvar noonker/es-cache-ttl 3600
+  "Seconds to keep a cluster's index and field lists.")
+
+(defvar noonker/es-timeout 10
+  "Seconds to wait for an Elasticsearch request.
+Emacs is blocked while it waits, so keep this short.")
+
+(defvar noonker/es--cache (make-hash-table :test #'equal)
+  "Maps (CLUSTER-NAME . RESOURCE) to (TIME . VALUE).")
+
+(defvar noonker/es--stack nil "Open screens, innermost first.")
+(defvar noonker/es--menu nil "The menu rofi is showing.")
+(defvar noonker/es--flash nil "An error to show on the next menu.")
+(defvar noonker/es--gui-env nil "Display variables from the es-search script.")
+(defvar noonker/es--cluster nil "The chosen entry of `noonker/es-clusters'.")
+(defvar noonker/es--index nil "The chosen index, alias or data stream.")
+(defvar noonker/es--clauses nil "The query's filters, as plists, newest first.")
+(defvar noonker/es--sort nil "The sort, as (FIELD . ORDER), or nil.")
+(defvar noonker/es--size 20 "How many hits to ask for.")
+
+;;; HTTP
+
+(defun noonker/es--headers ()
+  "Return the current cluster's additional headers as (NAME . VALUE)."
+  (let (merged)
+    (dolist (header (append noonker/es-headers
+                            (plist-get (cdr noonker/es--cluster) :headers)))
+      (setf (alist-get (car header) merged nil nil #'string-equal-ignore-case)
+            (cdr header)))
+    (nreverse merged)))
+
+(defun noonker/es--url (path)
+  "Return the URL of PATH on the current cluster."
+  (concat (string-trim-right (plist-get (cdr noonker/es--cluster) :url) "/+")
+          path))
+
+(defun noonker/es--index-path (suffix)
+  "Return the path of SUFFIX on the current index."
+  (concat "/" (url-hexify-string noonker/es--index) suffix))
+
+(defun noonker/es--curl-string (string)
+  "Quote STRING for a curl config file."
+  (format "\"%s\"" (replace-regexp-in-string "[\"\\\\]" "\\\\\\&" string)))
+
+(defun noonker/es--curl-config (method path body)
+  "Return a curl config for METHOD on PATH with JSON string BODY.
+A config on stdin keeps secret headers out of the process list."
+  (mapconcat
+   #'identity
+   (append
+    (list "silent" "show-error"
+          (format "max-time = \"%s\"" noonker/es-timeout)
+          (concat "request = " (noonker/es--curl-string method))
+          (concat "url = " (noonker/es--curl-string (noonker/es--url path)))
+          "write-out = \"\\n%{http_code}\""
+          "header = \"Accept: application/json\"")
+    (when (plist-get (cdr noonker/es--cluster) :insecure) '("insecure"))
+    (mapcar (pcase-lambda (`(,name . ,value))
+              (concat "header = "
+                      (noonker/es--curl-string
+                       (format "%s: %s" name
+                               (if (functionp value) (funcall value) value)))))
+            (noonker/es--headers))
+    (when body
+      (list "header = \"Content-Type: application/json\""
+            (concat "data-binary = " (noonker/es--curl-string body)))))
+   "\n"))
+
+(defun noonker/es--json (object)
+  "Return OBJECT as a JSON string.
+`json-serialize' gives raw UTF-8 bytes, which Emacs would print as
+octal escapes and mangle when inserted."
+  (decode-coding-string (json-serialize object) 'utf-8))
+
+(defun noonker/es--parse (json)
+  "Parse the string JSON into alists and lists."
+  (json-parse-string json :object-type 'alist :array-type 'list
+                     :null-object nil :false-object :false))
+
+(defun noonker/es--error-reason (status body)
+  "Describe the failed response BODY with HTTP STATUS."
+  (let* ((parsed (ignore-errors (noonker/es--parse body)))
+         (err (and (consp parsed) (alist-get 'error parsed)))
+         (cause (and (consp err) (car (alist-get 'root_cause err)))))
+    (format "HTTP %s: %s" status
+            (cond (cause (alist-get 'reason cause))
+                  ((consp err) (alist-get 'reason err))
+                  (err err)
+                  (t (truncate-string-to-width (string-trim body) 200))))))
+
+(defun noonker/es--request (method path &optional body)
+  "Send METHOD to PATH on the current cluster and return the parsed reply.
+BODY, if any, is an object for `noonker/es--json'.  Uses curl because
+Emacs's own TLS warnings would prompt, and there may be no frame to
+answer them."
+  (with-temp-buffer
+    (let* ((coding-system-for-read 'utf-8)
+           (coding-system-for-write 'utf-8)
+           (config (noonker/es--curl-config
+                    method path (and body (noonker/es--json body))))
+           (exit (call-process-region config nil "curl" nil '(t t) nil
+                                      "--config" "-")))
+      (goto-char (point-max))
+      (forward-line 0)
+      (unless (eql exit 0)
+        (user-error "%s" (string-trim (buffer-substring (point-min) (point)))))
+      (let ((status (string-to-number
+                     (buffer-substring (point) (point-max))))
+            (reply (buffer-substring (point-min) (max (point-min) (1- (point))))))
+        (if (<= 200 status 299)
+            (noonker/es--parse reply)
+          (user-error "%s" (noonker/es--error-reason status reply)))))))
+
+;;; Cached lookups
+
+(defun noonker/es--cached (resource fetch)
+  "Return the current cluster's RESOURCE, calling FETCH if it isn't fresh."
+  (let* ((key (cons (car noonker/es--cluster) resource))
+         (entry (gethash key noonker/es--cache)))
+    (if (and entry
+             (< (float-time (time-since (car entry))) noonker/es-cache-ttl))
+        (cdr entry)
+      (let ((value (funcall fetch)))
+        (puthash key (cons (current-time) value) noonker/es--cache)
+        value))))
+
+(defun noonker/es--forget-cluster ()
+  "Forget everything cached for the current cluster."
+  (let ((name (car noonker/es--cluster)))
+    (dolist (key (hash-table-keys noonker/es--cache))
+      (when (equal (car key) name)
+        (remhash key noonker/es--cache)))))
+
+(defun noonker/es--indices ()
+  "Return the current cluster's searchable targets as (NAME . KIND), sorted."
+  (noonker/es--cached
+   'indices
+   (lambda ()
+     (let ((resolved (noonker/es--request "GET" "/_resolve/index/*")))
+       (sort (mapcan (pcase-lambda (`(,key . ,kind))
+                       (mapcar (lambda (target)
+                                 (cons (alist-get 'name target) kind))
+                               (alist-get key resolved)))
+                     '((indices . "index")
+                       (aliases . "alias")
+                       (data_streams . "data stream")))
+             :key #'car)))))
+
+(defun noonker/es--nested-path (field nested)
+  "Return the deepest of the paths NESTED that contains FIELD, or nil."
+  (car (sort (seq-filter (lambda (path)
+                           (string-prefix-p (concat path ".") field))
+                         nested)
+             :key #'length :reverse t)))
+
+(defun noonker/es--fields ()
+  "Return the current index's fields, sorted by name.
+Each one is a plist of :name, :type, :aggregatable and :nested."
+  (noonker/es--cached
+   (cons 'fields noonker/es--index)
+   (lambda ()
+     (let* ((path (noonker/es--index-path "/_field_caps?fields=*"))
+            (caps (alist-get 'fields (noonker/es--request "GET" path)))
+            ;; An alias over several indices can give a field several types;
+            ;; the first is good enough to choose operators.
+            (fields (mapcar (lambda (field)
+                              (cons (symbol-name (car field)) (cdadr field)))
+                            caps))
+            (nested (mapcar #'car
+                            (seq-filter (lambda (field)
+                                          (equal (alist-get 'type (cdr field))
+                                                 "nested"))
+                                        fields))))
+       (sort
+        (mapcan
+         (pcase-lambda (`(,name . ,cap))
+           (unless (or (eq (alist-get 'metadata_field cap) t)
+                       (member (alist-get 'type cap) '("object" "nested")))
+             (list (list :name name
+                         :type (alist-get 'type cap)
+                         :aggregatable (eq (alist-get 'aggregatable cap) t)
+                         :nested (noonker/es--nested-path name nested)))))
+         fields)
+        :key (lambda (field) (plist-get field :name)))))))
+
+;;; The query
+
+(defun noonker/es--numeric-type-p (type)
+  "Return non-nil if the field type TYPE holds numbers."
+  (member type '("long" "integer" "short" "byte" "double" "float"
+                 "half_float" "scaled_float" "unsigned_long")))
+
+(defun noonker/es--coerce (type value)
+  "Convert the string VALUE to JSON suited to a field of type TYPE."
+  (cond ((and (noonker/es--numeric-type-p type)
+              (string-match-p "\\`-?[0-9.]+\\'" value))
+         (string-to-number value))
+        ((and (equal type "boolean") (equal value "true")) t)
+        ((and (equal type "boolean") (equal value "false")) :false)
+        (t value)))
+
+(defun noonker/es--field-query (op field value)
+  "Return the query for operator OP on the plist FIELD with string VALUE."
+  (let* ((name (plist-get field :name))
+         (key (intern name))
+         (type (plist-get field :type))
+         (leaf
+          (pcase op
+            ('exists `((exists (field . ,name))))
+            ('terms `((terms (,key . ,(vconcat
+                                       (mapcar (lambda (item)
+                                                 (noonker/es--coerce type item))
+                                               (split-string value "," t " *")))))))
+            ((or 'gt 'gte 'lt 'lte)
+             `((range (,key (,op . ,(noonker/es--coerce type value))))))
+            (_ `((,op (,key . ,(noonker/es--coerce type value))))))))
+    (if-let* ((path (plist-get field :nested)))
+        `((nested (path . ,path) (query . ,leaf)))
+      leaf)))
+
+(defun noonker/es--query ()
+  "Return the `query' object for the current filters."
+  (if (null noonker/es--clauses)
+      '((match_all))
+    (let (bool)
+      (dolist (clause (reverse noonker/es--clauses))
+        (let ((occur (plist-get clause :occur)))
+          (setf (alist-get occur bool)
+                (vconcat (alist-get occur bool)
+                         (vector (plist-get clause :query))))))
+      `((bool . ,(nreverse bool))))))
+
+(defun noonker/es--body ()
+  "Return the whole search request body."
+  `((query . ,(noonker/es--query))
+    (size . ,noonker/es--size)
+    ,@(when noonker/es--sort
+        `((sort . [((,(intern (car noonker/es--sort))
+                     (order . ,(cdr noonker/es--sort))))])))))
+
+(defun noonker/es--browser-url ()
+  "Return a URL that runs the search with a GET, for use in a browser."
+  (concat (noonker/es--url (noonker/es--index-path "/_search"))
+          "?pretty&source_content_type=application%2Fjson&source="
+          (url-hexify-string (noonker/es--json (noonker/es--body)))))
+
+(defun noonker/es--verb-block ()
+  "Return the search as an Org source block for verb."
+  (let ((body (with-temp-buffer
+                (insert (noonker/es--json (noonker/es--body)))
+                (json-pretty-print-buffer)
+                (string-trim (buffer-string)))))
+    (concat
+     "#+begin_src verb :wrap src ob-verb-response\n"
+     "POST " (noonker/es--url (noonker/es--index-path "/_search")) "\n"
+     "Accept: application/json\n"
+     "Content-Type: application/json\n"
+     (mapconcat (pcase-lambda (`(,name . ,value))
+                  (format "%s: %s\n" name
+                          (if (functionp value) (format "{{(%s)}}" value) value)))
+                (noonker/es--headers)
+                "")
+     "\n" body "\n"
+     "#+end_src\n")))
+
+;;; Leaving rofi
+
+(defun noonker/es--gui-environment ()
+  "Return `process-environment' with the desktop's display variables.
+The daemon starts outside the desktop session and doesn't have them."
+  (append noonker/es--gui-env process-environment))
+
+(defun noonker/es--notify (body)
+  "Show BODY as a desktop notification, if that's possible."
+  (ignore-errors
+    (require 'notifications)
+    (notifications-notify :title "es-search" :body body)))
+
+(defun noonker/es--open-in-browser ()
+  "Open the search in the default browser and finish."
+  (let ((process-environment (noonker/es--gui-environment)))
+    (browse-url-xdg-open (noonker/es--browser-url)))
+  (setq noonker/es--stack nil))
+
+(defun noonker/es--copy-verb-block ()
+  "Copy the search as a verb source block and finish."
+  (let ((block (noonker/es--verb-block))
+        (process-environment (noonker/es--gui-environment))
+        (interprogram-cut-function nil))
+    (kill-new block)
+    (let ((copied (eql 0 (ignore-errors
+                           (call-process-region block nil "wl-copy")))))
+      (noonker/es--notify (if copied
+                              "Copied the verb block"
+                            "Copied the verb block to the kill ring only"))))
+  (setq noonker/es--stack nil))
+
+;;; Screens
+
+(defun noonker/es--add-clause (label occur query)
+  "Add a filter described by LABEL and go back to the query screen."
+  (push (list :label label :occur occur :query query) noonker/es--clauses)
+  (noonker/es--back-to-query))
+
+(defun noonker/es--back-to-query ()
+  "Close every screen above the query screen."
+  (setq noonker/es--stack (memq #'noonker/es--query-menu noonker/es--stack)))
+
+(defun noonker/es--open-screen (screen)
+  "Open SCREEN on top of the current one."
+  (push screen noonker/es--stack))
+
+(defun noonker/es--cluster-menu ()
+  "Screen: pick a cluster."
+  (list :prompt "Cluster"
+        :items (mapcar (lambda (cluster)
+                         (cons (format "%s  %s" (car cluster)
+                                       (plist-get (cdr cluster) :url))
+                               cluster))
+                       noonker/es-clusters)
+        :select (lambda (cluster)
+                  (setq noonker/es--cluster cluster)
+                  (noonker/es--open-screen #'noonker/es--index-menu))))
+
+(defun noonker/es--index-menu ()
+  "Screen: pick an index from the current cluster."
+  (list :prompt "Index"
+        :items
+        (append
+         (mapcar (pcase-lambda (`(,name . ,kind))
+                   (cons (format "%s  [%s]" name kind) name))
+                 (noonker/es--indices))
+         '(("↻ Refresh the list" . :refresh)))
+        :select
+        (lambda (choice)
+          (if (eq choice :refresh)
+              (noonker/es--forget-cluster)
+            (setq noonker/es--index choice
+                  noonker/es--clauses nil
+                  noonker/es--sort nil
+                  noonker/es--size 20)
+            (noonker/es--open-screen #'noonker/es--query-menu)))))
+
+(defun noonker/es--query-summary ()
+  "Describe the query so far, including how many documents it matches."
+  (let ((hits (condition-case err
+                  (let ((count (noonker/es--request
+                                "POST" (noonker/es--index-path "/_count")
+                                `((query . ,(noonker/es--query))))))
+                    (format "%s hits" (alist-get 'count count)))
+                (error (format "⚠ %s" (error-message-string err))))))
+    (string-join
+     (append
+      (list (format "%s / %s: %s" (car noonker/es--cluster) noonker/es--index hits))
+      (mapcar (lambda (clause) (plist-get clause :label))
+              (reverse noonker/es--clauses))
+      (list (format "size %s%s" noonker/es--size
+                    (if noonker/es--sort
+                        (format ", sorted by %s %s"
+                                (car noonker/es--sort) (cdr noonker/es--sort))
+                      ""))))
+     "\n")))
+
+(defun noonker/es--query-menu ()
+  "Screen: the query so far, and what to do with it."
+  (let ((headers (noonker/es--headers)))
+    (list
+     :prompt "Query"
+     :mesg (noonker/es--query-summary)
+     :items
+     `(("+ Filter on a field" . ,(lambda ()
+                                   (noonker/es--open-screen
+                                    #'noonker/es--field-menu)))
+       ("+ Full-text search (Lucene syntax)"
+        . ,(lambda () (noonker/es--open-screen #'noonker/es--search-menu)))
+       ,(cons (if headers
+                  "→ Open in browser (additional headers can't be sent)"
+                "→ Open in browser")
+              #'noonker/es--open-in-browser)
+       ("⧉ Copy as verb source block" . noonker/es--copy-verb-block)
+       ,@(when noonker/es--clauses
+           `(("− Remove a filter"
+              . ,(lambda () (noonker/es--open-screen
+                             #'noonker/es--remove-menu)))))
+       ("⇅ Sort" . ,(lambda () (noonker/es--open-screen #'noonker/es--sort-menu)))
+       ("# Size" . ,(lambda () (noonker/es--open-screen #'noonker/es--size-menu)))
+       ("↻ Refresh the field list" . noonker/es--forget-cluster))
+     :select #'funcall)))
+
+(defun noonker/es--field-label (field)
+  "Return the menu text for the plist FIELD."
+  (format "%s  [%s]" (plist-get field :name) (plist-get field :type)))
+
+(defun noonker/es--field-menu ()
+  "Screen: pick a field to filter on."
+  (list :prompt "Field"
+        :items (mapcar (lambda (field)
+                         (cons (noonker/es--field-label field) field))
+                       (noonker/es--fields))
+        :select (lambda (field)
+                  (noonker/es--open-screen
+                   (lambda () (noonker/es--operator-menu field))))))
+
+(defun noonker/es--operators (type)
+  "Return the operators for field type TYPE, as (LABEL OCCUR OP)."
+  (append
+   (cond
+    ((member type '("text" "match_only_text"))
+     '(("contains" must match)
+       ("contains the phrase" must match_phrase)
+       ("does not contain" must_not match)))
+    ((member type '("date" "date_nanos"))
+     '(("since" filter gte)
+       ("until" filter lte)))
+    ((noonker/es--numeric-type-p type)
+     '(("=" filter term)
+       ("≠" must_not term)
+       (">" filter gt)
+       ("≥" filter gte)
+       ("<" filter lt)
+       ("≤" filter lte)))
+    ((member type '("keyword" "constant_keyword" "wildcard"))
+     '(("is" filter term)
+       ("is not" must_not term)
+       ("is one of (comma separated)" filter terms)
+       ("starts with" filter prefix)
+       ("matches wildcard" filter wildcard)))
+    (t
+     '(("is" filter term)
+       ("is not" must_not term))))
+   '(("exists" filter exists)
+     ("is missing" must_not exists))))
+
+(defun noonker/es--operator-menu (field)
+  "Screen: pick an operator for the plist FIELD."
+  (list :prompt (plist-get field :name)
+        :items (mapcar (lambda (operator) (cons (car operator) operator))
+                       (noonker/es--operators (plist-get field :type)))
+        :select
+        (pcase-lambda (`(,label ,occur ,op))
+          (if (eq op 'exists)
+              (noonker/es--add-clause
+               (format "%s %s" (plist-get field :name) label)
+               occur (noonker/es--field-query op field nil))
+            (noonker/es--open-screen
+             (lambda () (noonker/es--value-menu field label occur op)))))))
+
+(defun noonker/es--top-values (field)
+  "Return the commonest values of FIELD under the query so far.
+Each is (\"VALUE (COUNT)\" . \"VALUE\").  Return nil if that doesn't work:
+these are only suggestions."
+  (ignore-errors
+    (let* ((name (plist-get field :name))
+           (reply (noonker/es--request
+                   "POST" (noonker/es--index-path "/_search")
+                   `((size . 0)
+                     (query . ,(noonker/es--query))
+                     (aggs (top (terms (field . ,name) (size . 25))))))))
+      (mapcar (lambda (bucket)
+                (let ((value (format "%s" (or (alist-get 'key_as_string bucket)
+                                              (alist-get 'key bucket)))))
+                  (cons (format "%s (%s)" value (alist-get 'doc_count bucket))
+                        value)))
+              (map-nested-elt reply '(aggregations top buckets))))))
+
+(defun noonker/es--value-suggestions (field)
+  "Return suggested values for the plist FIELD, as (TEXT . VALUE)."
+  (let ((type (plist-get field :type)))
+    (cond
+     ((member type '("date" "date_nanos"))
+      (mapcar (lambda (value) (cons value value))
+              '("now-15m" "now-1h" "now-24h" "now-7d" "now-30d" "now/d")))
+     ((equal type "boolean") '(("true" . "true") ("false" . "false")))
+     ;; A terms aggregation sees nothing in a nested field without a wrapper,
+     ;; and text fields have no doc values to count.  Numbers are left out as
+     ;; rofi would fuzzy-match a typed 100 to a suggested 100.99.
+     ((and (plist-get field :aggregatable)
+           (not (plist-get field :nested))
+           (not (noonker/es--numeric-type-p type)))
+      (noonker/es--top-values field)))))
+
+(defun noonker/es--value-menu (field label occur op)
+  "Screen: enter a value for operator LABEL on the plist FIELD.
+OCCUR and OP say how the filter goes into the query."
+  (let* ((name (plist-get field :name))
+         (items (noonker/es--value-suggestions field)))
+    (list :prompt (format "%s %s" name label)
+          :mesg (when items "Ctrl+Return uses exactly what you typed")
+          :items items
+          :custom t
+          :select (lambda (value)
+                    (noonker/es--add-clause
+                     (format "%s %s %s" name label value)
+                     occur (noonker/es--field-query op field value))))))
+
+(defun noonker/es--search-menu ()
+  "Screen: enter a Lucene query string."
+  (list :prompt "Search"
+        :mesg "Lucene syntax, for example: status:paid AND total:>100"
+        :items nil
+        :custom t
+        :select (lambda (value)
+                  (noonker/es--add-clause
+                   (format "search: %s" value)
+                   'must `((query_string (query . ,value)))))))
+
+(defun noonker/es--remove-menu ()
+  "Screen: pick a filter to remove."
+  (list :prompt "Remove"
+        :items (mapcar (lambda (clause) (cons (plist-get clause :label) clause))
+                       (reverse noonker/es--clauses))
+        :select (lambda (clause)
+                  (setq noonker/es--clauses (delq clause noonker/es--clauses))
+                  (noonker/es--back-to-query))))
+
+(defun noonker/es--sort-menu ()
+  "Screen: pick a field to sort by."
+  (list :prompt "Sort by"
+        :items
+        (cons
+         '("No sorting" . nil)
+         (mapcan (lambda (field)
+                   (when (and (plist-get field :aggregatable)
+                              (not (plist-get field :nested)))
+                     (list (cons (noonker/es--field-label field)
+                                 (plist-get field :name)))))
+                 (noonker/es--fields)))
+        :select
+        (lambda (name)
+          (if (null name)
+              (progn (setq noonker/es--sort nil)
+                     (noonker/es--back-to-query))
+            (noonker/es--open-screen
+             (lambda ()
+               (list :prompt name
+                     :items '(("Descending" . "desc") ("Ascending" . "asc"))
+                     :select (lambda (order)
+                               (setq noonker/es--sort (cons name order))
+                               (noonker/es--back-to-query)))))))))
+
+(defun noonker/es--size-menu ()
+  "Screen: pick how many hits to ask for."
+  (list :prompt "Size"
+        :items (mapcar (lambda (size) (cons size size))
+                       '("10" "20" "100" "1000" "10000"))
+        :custom t
+        :select (lambda (size)
+                  (unless (string-match-p "\\`[0-9]+\\'" size)
+                    (user-error "Size has to be a whole number: %s" size))
+                  (setq noonker/es--size (string-to-number size))
+                  (noonker/es--back-to-query))))
+
+;;; The conversation with bin/es-search
+
+(defun noonker/es--escape-markup (text)
+  "Escape TEXT for rofi's message box, which reads Pango markup."
+  (replace-regexp-in-string
+   "[&<>]" (lambda (char)
+             (pcase char ("&" "&amp;") ("<" "&lt;") (">" "&gt;")))
+   text t t))
+
+(defun noonker/es--render ()
+  "Return the JSON for the current screen.
+A screen that fails is closed, and its error shown on the one below."
+  (setq noonker/es--menu nil)
+  (while (and noonker/es--stack (not noonker/es--menu))
+    (condition-case err
+        (setq noonker/es--menu (funcall (car noonker/es--stack)))
+      (error
+       (setq noonker/es--flash (error-message-string err))
+       (pop noonker/es--stack))))
+  (if (null noonker/es--menu)
+      (noonker/es--json '((done . t)))
+    (let ((mesg (string-join
+                 (delq nil (list (when noonker/es--flash
+                                   (format "⚠ %s" noonker/es--flash))
+                                 (plist-get noonker/es--menu :mesg)))
+                 "\n")))
+      (setq noonker/es--flash nil)
+      (noonker/es--json
+       `((done . :false)
+         (prompt . ,(plist-get noonker/es--menu :prompt))
+         (mesg . ,(noonker/es--escape-markup mesg))
+         (custom . ,(if (plist-get noonker/es--menu :custom) t :false))
+         (items . ,(vconcat (mapcar #'car (plist-get noonker/es--menu :items)))))))))
+
+(defun noonker/es-rofi-start (wayland-display display)
+  "Begin a new search and return the first menu as JSON.
+WAYLAND-DISPLAY and DISPLAY come from the desktop session."
+  (setq noonker/es--stack (list #'noonker/es--cluster-menu)
+        noonker/es--flash nil
+        noonker/es--gui-env
+        (append (unless (string-empty-p wayland-display)
+                  (list (concat "WAYLAND_DISPLAY=" wayland-display)))
+                (unless (string-empty-p display)
+                  (list (concat "DISPLAY=" display)))))
+  (noonker/es--render))
+
+(defun noonker/es-rofi-step (choice)
+  "Act on CHOICE from the current menu and return the next one as JSON.
+CHOICE is the selected or typed text, or nil if rofi was cancelled."
+  (condition-case err
+      (if (null choice)
+          (pop noonker/es--stack)
+        (let ((item (assoc choice (plist-get noonker/es--menu :items)))
+              (select (plist-get noonker/es--menu :select)))
+          (cond (item (funcall select (cdr item)))
+                ((plist-get noonker/es--menu :custom) (funcall select choice)))))
+    (error (setq noonker/es--flash (error-message-string err))))
+  (noonker/es--render))
+#+end_src
+
 * Communication
 ** Mail
 #+begin_src emacs-lisp

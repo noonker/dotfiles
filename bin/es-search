@@ -1,0 +1,27 @@
+#!/usr/bin/env bash
+# es-search: rofi menus for building an Elasticsearch query.  This only draws
+# what Emacs asks for; the logic is under "Elasticsearch Search" in
+# configs/noonker_emacs.org.
+# Depends: rofi, emacsclient, jq
+set -uo pipefail
+
+elisp_string() { jq -n --arg s "$1" '$s'; }
+ask_emacs() { emacsclient -a false -e "$1" | jq -er .; }
+fail() { rofi -e "es-search: Emacs did not answer. Is the daemon running?"; exit 1; }
+
+step=$(ask_emacs "(noonker/es-rofi-start $(elisp_string "${WAYLAND_DISPLAY:-}") $(elisp_string "${DISPLAY:-}"))") || fail
+
+while [ "$(jq -r .done <<<"$step")" != true ]; do
+    args=(-dmenu -i -matching fuzzy -sort -sorting-method fzf
+          -p "$(jq -r .prompt <<<"$step")")
+    mesg=$(jq -r .mesg <<<"$step")
+    [ -n "$mesg" ] && args+=(-mesg "$mesg")
+    [ "$(jq -r .custom <<<"$step")" = true ] || args+=(-no-custom)
+
+    if choice=$(jq -r '.items[]' <<<"$step" | rofi "${args[@]}") && [ -n "$choice" ]; then
+        answer=$(elisp_string "$choice")
+    else
+        answer=nil
+    fi
+    step=$(ask_emacs "(noonker/es-rofi-step $answer)") || fail
+done
