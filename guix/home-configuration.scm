@@ -172,6 +172,8 @@
 
 					;; Emacs.  Ones Guix lacks are in (noonker packages emacs).
 					"aspell"
+					"aspell-dict-en"
+					"espeak-ng"
 					"emacs-pgtk"
 					"tree-sitter-lua"
 					"tree-sitter-rust"

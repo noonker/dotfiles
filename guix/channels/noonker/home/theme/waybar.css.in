@@ -23,7 +23,7 @@ tooltip label {
 
 #window, #mode, #mpd, #custom-weather, #custom-playerctl, #clock, #cpu, #memory,
 #temperature, #battery, #network, #pulseaudio, #backlight, #custom-idle-lock, #disk,
-#custom-disk-io, #custom-uptime, #custom-updates, #custom-quote, #idle_inhibitor, #tray {
+#custom-disk-io, #custom-uptime, #custom-quote, #idle_inhibitor, #tray {
     padding: 0 8px;
     color: %fg%;
 }

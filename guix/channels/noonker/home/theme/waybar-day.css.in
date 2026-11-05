@@ -14,8 +14,7 @@ window#waybar > box {
 
 /* Hand-ruled columns, like the caption box at the foot of a card. */
 #window, #custom-weather, #custom-quote, #clock, #pulseaudio, #brightness,
-#network, #cpu, #memory, #temperature, #battery, #disk, #custom-disk-io, #custom-uptime,
-#custom-updates {
+#network, #cpu, #memory, #temperature, #battery, #disk, #custom-disk-io, #custom-uptime {
     border-right: 2px solid %fg%;
 }
 
@@ -49,14 +48,14 @@ window#waybar > box {
 
 /* The stencil: a block of color behind each icon, cut a little off register. */
 #clock, #pulseaudio, #backlight, #network, #cpu, #memory, #temperature, #battery, #disk,
-#custom-disk-io, #custom-uptime, #custom-updates, #custom-quote, #custom-idle-lock {
+#custom-disk-io, #custom-uptime, #custom-quote, #custom-idle-lock {
     padding-left: 5px;
     background-size: 24px 100%;
     background-position: 1px 0;
     background-repeat: no-repeat;
 }
 
-#clock, #backlight, #memory, #battery, #pulseaudio, #custom-updates {
+#clock, #backlight, #memory, #battery, #pulseaudio {
     background-image: linear-gradient(%sun%, %sun%);
 }
 

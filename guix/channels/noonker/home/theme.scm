@@ -128,7 +128,6 @@
     (icon-brightness . ,(icon-list (ink "☉"))) ; the sun, gold
     (icon-battery . ,(icon-list (ink "🝆"))) ; oil, for the lamp
     (icon-charging . ,(ink "☇ "))    ; thunderbolt
-    (icon-updates . ,(ink "🝞"))      ; sublimation
     (icon-quote . ,(ink "⛤"))     ; the pentagram tells your fortune
     (icon-player . ,(ink "⚚"))        ; Hermes' staff
     (icon-lock . ,(ink "👁" "0"))     ; the eye that doesn't close
@@ -166,7 +165,6 @@
     (icon-battery . ,(icon-list (gold "\U0f0f64") (gold "\U0f0f67") (gold "\U0f0f61")
                                 (gold "\U0f0f68") (gold "\U0f0f62")))
     (icon-charging . ,(gold "\U0f1545"))       ; sparkling
-    (icon-updates . ,(gold "☄"))               ; a comet: it comes back
     (icon-quote . ,(gold "\U0f04cf"))          ; read it in the stars
     (icon-player . ,(gold "♆"))                ; Neptune
     (icon-lock . ,(gold "\U0f0f62"))           ; full moon: nobody sleeps

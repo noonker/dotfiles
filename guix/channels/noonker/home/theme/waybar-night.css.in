@@ -24,13 +24,13 @@ window#waybar * {
 }
 
 #clock, #pulseaudio, #backlight, #custom-idle-lock, #network, #cpu, #memory, #temperature,
-#battery, #disk, #custom-disk-io, #custom-uptime, #custom-updates, #custom-weather {
+#battery, #disk, #custom-disk-io, #custom-uptime, #custom-weather {
     transition: text-shadow 200ms ease;
 }
 
 #clock:hover, #pulseaudio:hover, #backlight:hover, #network:hover, #cpu:hover, #memory:hover,
 #temperature:hover, #battery:hover, #disk:hover, #custom-disk-io:hover, #custom-uptime:hover,
-#custom-updates:hover, #custom-weather:hover {
+#custom-weather:hover {
     text-shadow: 0 0 6px %accent%;
 }
 

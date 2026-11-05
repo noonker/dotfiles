@@ -26,8 +26,8 @@
                   home-shepherd-service-type
                   (list emacs-shepherd-service)))
 
-;; The init file, tangled from ORG-FILE at build time.  Its blocks say
-;; `:tangle ~/.emacs', so HOME decides where the result lands.
+;; The init file, tangled from ORG-FILE at build time.  It tangles to
+;; ~/.emacs, so HOME decides where the result lands.
 (define (emacs-init-file org-file)
   (computed-file
    "dot-emacs"
