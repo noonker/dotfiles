@@ -1726,9 +1726,9 @@ E.g. 68656c6c6f -> hello"
 #+end_src
 
 ** Elasticsearch Search
-=bin/es-search= (=Mod+Shift+B=) picks a cluster, then an index, then builds a query one filter at a time from the index's field list.  The result opens in the browser or is copied as a verb source block.
+=bin/es-search= (=Mod+Shift+B=) picks a cluster, then an index, then builds a query one filter at a time from the index's field list.  The result opens in the browser or is copied as a verb source block.  =M-x noonker/es-search= (=SPC s e=) does the same with =completing-read= inside Emacs.
 
-That script only draws rofi menus.  Everything else is here: each answer goes to =noonker/es-rofi-step=, which replies with the next menu as JSON.  A screen is a function returning a menu, =noonker/es--stack= holds the open screens, and Esc pops one.
+That script only draws rofi menus.  Everything else is here: each answer goes to =noonker/es-rofi-step=, which replies with the next menu as JSON.  A screen is a function returning a menu, =noonker/es--stack= holds the open screens, and Esc (=C-g= in Emacs) pops one.
 
 =es-test-cluster up= starts the "Local (podman)" cluster.
 
@@ -1763,14 +1763,15 @@ Emacs is blocked while it waits, so keep this short.")
   "Maps (CLUSTER-NAME . RESOURCE) to (TIME . VALUE).")
 
 (defvar noonker/es--stack nil "Open screens, innermost first.")
-(defvar noonker/es--menu nil "The menu rofi is showing.")
+(defvar noonker/es--menu nil "The menu being shown.")
 (defvar noonker/es--flash nil "An error to show on the next menu.")
-(defvar noonker/es--gui-env nil "Display variables from the es-search script.")
+(defvar noonker/es--gui-env nil "Display variables from the desktop session.")
 (defvar noonker/es--cluster nil "The chosen entry of `noonker/es-clusters'.")
 (defvar noonker/es--index nil "The chosen index, alias or data stream.")
 (defvar noonker/es--clauses nil "The query's filters, as plists, newest first.")
 (defvar noonker/es--sort nil "The sort, as (FIELD . ORDER), or nil.")
 (defvar noonker/es--size 20 "How many hits to ask for.")
+(defvar noonker/es--history nil "Values typed into `noonker/es-search'.")
 
 ;;; HTTP
 
@@ -2017,7 +2018,7 @@ Each one is a plist of :name, :type, :aggregatable and :nested."
      "\n" body "\n"
      "#+end_src\n")))
 
-;;; Leaving rofi
+;;; Finishing
 
 (defun noonker/es--gui-environment ()
   "Return `process-environment' with the desktop's display variables.
@@ -2227,7 +2228,7 @@ these are only suggestions."
      ((equal type "boolean") '(("true" . "true") ("false" . "false")))
      ;; A terms aggregation sees nothing in a nested field without a wrapper,
      ;; and text fields have no doc values to count.  Numbers are left out as
-     ;; rofi would fuzzy-match a typed 100 to a suggested 100.99.
+     ;; a menu would fuzzy-match a typed 100 to a suggested 100.99.
      ((and (plist-get field :aggregatable)
            (not (plist-get field :nested))
            (not (noonker/es--numeric-type-p type)))
@@ -2239,7 +2240,6 @@ OCCUR and OP say how the filter goes into the query."
   (let* ((name (plist-get field :name))
          (items (noonker/es--value-suggestions field)))
     (list :prompt (format "%s %s" name label)
-          :mesg (when items "Ctrl+Return uses exactly what you typed")
           :items items
           :custom t
           :select (lambda (value)
@@ -2313,8 +2313,19 @@ OCCUR and OP say how the filter goes into the query."
              (pcase char ("&" "&amp;") ("<" "&lt;") (">" "&gt;")))
    text t t))
 
-(defun noonker/es--render ()
-  "Return the JSON for the current screen.
+(defun noonker/es--start (wayland-display display)
+  "Begin a new search.
+WAYLAND-DISPLAY and DISPLAY come from the desktop session, or are empty."
+  (setq noonker/es--stack (list #'noonker/es--cluster-menu)
+        noonker/es--flash nil
+        noonker/es--gui-env
+        (append (unless (string-empty-p wayland-display)
+                  (list (concat "WAYLAND_DISPLAY=" wayland-display)))
+                (unless (string-empty-p display)
+                  (list (concat "DISPLAY=" display))))))
+
+(defun noonker/es--next-menu ()
+  "Set and return the current screen's menu, or nil if no screen is open.
 A screen that fails is closed, and its error shown on the one below."
   (setq noonker/es--menu nil)
   (while (and noonker/es--stack (not noonker/es--menu))
@@ -2323,36 +2334,25 @@ A screen that fails is closed, and its error shown on the one below."
       (error
        (setq noonker/es--flash (error-message-string err))
        (pop noonker/es--stack))))
-  (if (null noonker/es--menu)
-      (noonker/es--json '((done . t)))
-    (let ((mesg (string-join
-                 (delq nil (list (when noonker/es--flash
-                                   (format "⚠ %s" noonker/es--flash))
-                                 (plist-get noonker/es--menu :mesg)))
-                 "\n")))
-      (setq noonker/es--flash nil)
-      (noonker/es--json
-       `((done . :false)
-         (prompt . ,(plist-get noonker/es--menu :prompt))
-         (mesg . ,(noonker/es--escape-markup mesg))
-         (custom . ,(if (plist-get noonker/es--menu :custom) t :false))
-         (items . ,(vconcat (mapcar #'car (plist-get noonker/es--menu :items)))))))))
+  noonker/es--menu)
 
-(defun noonker/es-rofi-start (wayland-display display)
-  "Begin a new search and return the first menu as JSON.
-WAYLAND-DISPLAY and DISPLAY come from the desktop session."
-  (setq noonker/es--stack (list #'noonker/es--cluster-menu)
-        noonker/es--flash nil
-        noonker/es--gui-env
-        (append (unless (string-empty-p wayland-display)
-                  (list (concat "WAYLAND_DISPLAY=" wayland-display)))
-                (unless (string-empty-p display)
-                  (list (concat "DISPLAY=" display)))))
-  (noonker/es--render))
+(defun noonker/es--take-mesg (typed-hint)
+  "Return the text to show above the current menu, and clear any error.
+TYPED-HINT says how to answer with text that matches a suggestion."
+  (let ((menu noonker/es--menu))
+    (prog1 (string-join
+            (delq nil (list (when noonker/es--flash
+                              (format "⚠ %s" noonker/es--flash))
+                            (plist-get menu :mesg)
+                            (when (and (plist-get menu :custom)
+                                       (plist-get menu :items))
+                              typed-hint)))
+            "\n")
+      (setq noonker/es--flash nil))))
 
-(defun noonker/es-rofi-step (choice)
-  "Act on CHOICE from the current menu and return the next one as JSON.
-CHOICE is the selected or typed text, or nil if rofi was cancelled."
+(defun noonker/es--answer (choice)
+  "Act on CHOICE from the current menu.
+CHOICE is the selected or typed text, or nil to close the screen."
   (condition-case err
       (if (null choice)
           (pop noonker/es--stack)
@@ -2360,8 +2360,72 @@ CHOICE is the selected or typed text, or nil if rofi was cancelled."
               (select (plist-get noonker/es--menu :select)))
           (cond (item (funcall select (cdr item)))
                 ((plist-get noonker/es--menu :custom) (funcall select choice)))))
-    (error (setq noonker/es--flash (error-message-string err))))
+    (error (setq noonker/es--flash (error-message-string err)))))
+
+(defun noonker/es--render ()
+  "Return the JSON for the current screen."
+  (if (null (noonker/es--next-menu))
+      (noonker/es--json '((done . t)))
+    (noonker/es--json
+     `((done . :false)
+       (prompt . ,(plist-get noonker/es--menu :prompt))
+       (mesg . ,(noonker/es--escape-markup
+                 (noonker/es--take-mesg
+                  "Ctrl+Return uses exactly what you typed")))
+       (custom . ,(if (plist-get noonker/es--menu :custom) t :false))
+       (items . ,(vconcat (mapcar #'car (plist-get noonker/es--menu :items))))))))
+
+(defun noonker/es-rofi-start (wayland-display display)
+  "Begin a new search and return the first menu as JSON.
+WAYLAND-DISPLAY and DISPLAY come from the desktop session."
+  (noonker/es--start wayland-display display)
   (noonker/es--render))
+
+(defun noonker/es-rofi-step (choice)
+  "Act on CHOICE from the current menu and return the next one as JSON.
+CHOICE is the selected or typed text, or nil if rofi was cancelled."
+  (noonker/es--answer choice)
+  (noonker/es--render))
+
+;;; The same conversation in the minibuffer
+
+(defun noonker/es--frame-getenv (variable)
+  "Return the desktop session's VARIABLE, or an empty string.
+Only frames made by emacsclient know it, so try the others as well."
+  (or (seq-some (lambda (frame) (getenv variable frame))
+                (cons (selected-frame) (frame-list)))
+      ""))
+
+(defun noonker/es--read-menu ()
+  "Ask for an answer to the current menu.
+Return the selected or typed text, or nil if cancelled or left empty."
+  (let* ((menu noonker/es--menu)
+         (custom (plist-get menu :custom))
+         (items (plist-get menu :items))
+         (mesg (noonker/es--take-mesg "M-RET uses exactly what you typed"))
+         (table (lambda (string predicate action)
+                  (if (eq action 'metadata)
+                      '(metadata (display-sort-function . identity)
+                                 (cycle-sort-function . identity))
+                    (complete-with-action action items string predicate))))
+         (answer (condition-case nil
+                     (completing-read
+                      (format "%s%s: "
+                              (if (string-empty-p mesg) "" (concat mesg "\n"))
+                              (plist-get menu :prompt))
+                      table nil (not custom) nil
+                      (if custom 'noonker/es--history t))
+                   (quit nil))))
+    (unless (equal answer "") answer)))
+
+(defun noonker/es-search ()
+  "Build an Elasticsearch query with `completing-read'.
+These are the screens of bin/es-search.  \\[keyboard-quit] closes one."
+  (interactive)
+  (noonker/es--start (noonker/es--frame-getenv "WAYLAND_DISPLAY")
+                     (noonker/es--frame-getenv "DISPLAY"))
+  (while (noonker/es--next-menu)
+    (noonker/es--answer (noonker/es--read-menu))))
 #+end_src
 
 ** Query Param Search
@@ -3830,6 +3894,7 @@ If its buffer is already open, switch to that instead."
 
 (defvar-keymap noonker-search-map
   "s" #'isearch-forward
+  "e" #'noonker/es-search
   "r" #'query-replace)
 
 (defvar-keymap noonker-help-map
