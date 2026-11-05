@@ -409,7 +409,8 @@ Emacs can nearly transparently use .gpg encrypted files.  These settings enrich 
   :config
   (unless im-at-work
     (setq epa-file-encrypt-to "noonker@gmail.com"))
-  (setq epg-pinentry-mode 'loopback)) ; No UI popup.  Ask for the password in the minibuffer.
+  ;; (setq epg-pinentry-mode 'loopback)
+)
 #+end_src
 
 ** Passwords
@@ -1419,7 +1420,16 @@ INITIAL-INPUT can be given as the initial minibuffer input."
   )
 
 (use-package esh-autosuggest
-  :hook (eshell-mode . esh-autosuggest-mode))
+  :hook (eshell-mode . esh-autosuggest-mode)
+  :config
+  ;; Upstream uses the return value of `eshell-bol', which became an
+  ;; alias for `beginning-of-line' (returns nil) in Emacs 30.
+  (defun esh-autosuggest--prefix ()
+    "Get current eshell input."
+    (let ((prefix (string-trim-left
+                   (buffer-substring-no-properties
+                    eshell-last-output-end (line-end-position)))))
+      (if (string-empty-p prefix) 'stop prefix))))
 #+end_src
 
 ** Kubernetes
