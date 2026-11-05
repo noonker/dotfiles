@@ -1662,6 +1662,28 @@ _PORT is ignored."
                             )
                            )))
 
+(defun noonker/merge-bookmarks (a b)
+  "Merge bookmark object B into A, returning the merged result.
+Each is an alist of (CATEGORY (BOOKMARK...)) where BOOKMARK is
+\(NAME URL DESCRIPTION).  Every category and bookmark from both A and
+B ends up in the result; within each category, bookmarks are deduped
+by NAME with A winning on conflict.  A is mutated."
+  (dolist (entry b)
+    (let* ((category (car entry))
+           (bookmarks (cadr entry))
+           (existing (assoc category a)))
+      (if existing
+          (setcar (cdr existing)
+                  (cl-remove-duplicates
+                   (append (cadr existing) bookmarks)
+                   :key #'car :test #'equal :from-end t))
+        (setq a (append a
+                        (list (list category
+                                    (cl-remove-duplicates
+                                     bookmarks
+                                     :key #'car :test #'equal :from-end t))))))))
+  a)
+
 (defun noonker/flatten-category (category)
   "Return CATEGORY's bookmarks, each with the category's name in front."
   (mapcar (lambda (item) (cons (car category) item)) (cadr category)))
@@ -1678,6 +1700,10 @@ _PORT is ignored."
                           (noonker/flatten-bookmarks bookmarks))))
          (url (nth 2 (split-string choice "\t"))))
     (browse-url url)))
+
+(defun noonker/bookmarks ()
+  (interactive)
+  (noonker/bookmarks-complete noonker/bookmarks))
 
 (defun noonker/json-bookmarks ()
   "Return `noonker/bookmarks' as JSON.  The bookmark-search script calls this."
@@ -2441,12 +2467,12 @@ These are the screens of bin/es-search.  \\[keyboard-quit] closes one."
     ("Reddit" "r" "https://www.reddit.com/search/?q=%s")
     ("GitHub" "gh" "https://github.com/search?q=%s")
     ("Stack Overflow" "so" "https://stackoverflow.com/search?q=%s")
-    ("Hacker News" "hn" "https://hn.algolia.com/?q=%s")
     ("Arch Wiki" "aw" "https://wiki.archlinux.org/index.php?search=%s")
     ("Guix Packages" "gx" "https://packages.guix.gnu.org/search/?query=%s")
     ("Internet Archive" "ia" "https://archive.org/search?query=%s")
     ("Discogs" "dc" "https://www.discogs.com/search?q=%s")
     ("Bandcamp" "bc" "https://bandcamp.com/search?q=%s")))
+
 (defvar noonker/search-hist '())
 
 (defun noonker/search-url (term url)
