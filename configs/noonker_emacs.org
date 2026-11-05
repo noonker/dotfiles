@@ -64,7 +64,7 @@ The faces come from the desktop theme: see =guix/channels/noonker/home/theme/ema
 (use-package doom-modeline
   :init
   (column-number-mode 1)
-  (setq doom-modeline-height 28 ; The height of waybar, whose rule it echoes.
+  (setq doom-modeline-height 14
         doom-modeline-support-imenu t
         doom-modeline-hud t
         doom-modeline-window-width-limit 60
@@ -84,7 +84,7 @@ The faces come from the desktop theme: see =guix/channels/noonker/home/theme/ema
         doom-modeline-env-go-executable "go"
         doom-modeline-env-elixir-executable "iex"
         doom-modeline-env-rust-executable "rustc"
-        doom-modeline-env-load-string "...")
+				doom-modeline-env-load-string "...")
   :config
   (doom-modeline-mode 1))
 #+end_src
