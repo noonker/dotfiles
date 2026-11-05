@@ -1,0 +1,20 @@
+#!/usr/bin/env bash
+# rofi-search: search one of `noonker/searches' from rofi.  Emacs holds the
+# searches and the history: see "Query Param Search" in configs/noonker_emacs.org.
+# Depends: rofi, emacsclient, jq, xdg-open
+set -uo pipefail
+
+elisp_string() { jq -n --arg s "$1" '$s'; }
+ask_emacs() { emacsclient -a false -e "$1" | jq -er .; }
+fail() { rofi -e "rofi-search: Emacs did not answer. Is the daemon running?"; exit 1; }
+
+history=$(ask_emacs '(noonker/search-rofi-history)') || fail
+term=$(jq -r '.[]' <<<"$history" | rofi -dmenu -i -p "Search") || exit 0
+[ -n "$term" ] || exit 0
+
+engines=$(ask_emacs '(noonker/search-rofi-engines)') || fail
+engine=$(jq -r '.[]' <<<"$engines" | rofi -dmenu -i -no-custom -auto-select -p "$term in") || exit 0
+[ -n "$engine" ] || exit 0
+
+url=$(ask_emacs "(noonker/search-rofi-url $(elisp_string "$term") $(elisp_string "$engine"))") || fail
+xdg-open "$url"

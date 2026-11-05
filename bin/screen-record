@@ -1,0 +1,49 @@
+#!/usr/bin/env bash
+# screen-record: start a screen recording, or stop the one already running.
+#   screen-record         drag out a region with slurp
+#   screen-record screen  record the whole focused output
+# Saves to ~/Videos/Screencasts, without audio.
+# Depends: wf-recorder, slurp, niri, jq, gdbus
+set -uo pipefail
+
+dir="$HOME/Videos/Screencasts"
+
+notify() {
+    gdbus call --session --dest org.freedesktop.Notifications \
+        --object-path /org/freedesktop/Notifications \
+        --method org.freedesktop.Notifications.Notify \
+        screen-record 0 "" "$1" "$2" '[]' '{}' 3000 >/dev/null 2>&1 || true
+}
+
+if pkill -INT -x wf-recorder; then
+    exit 0
+fi
+
+case "${1:-region}" in
+    region)
+        geometry=$(slurp) || exit 0 # selection cancelled
+        target=(-g "$geometry")
+        ;;
+    screen)
+        # With several outputs and no -o, wf-recorder asks on stdin.
+        output=$(niri msg -j focused-output | jq -r .name)
+        target=(-o "$output")
+        ;;
+    *)
+        echo "usage: screen-record [region|screen]" >&2
+        exit 2
+        ;;
+esac
+
+mkdir -p "$dir"
+file="$dir/$(date +%F-%H%M%S).mp4"
+
+notify "Recording started" "Press the same key to stop"
+# --no-damage: otherwise wf-recorder waits for the screen to change before it
+# acts on SIGINT, so stopping over a still screen hangs.
+if wf-recorder --no-damage "${target[@]}" -f "$file" </dev/null >/dev/null 2>&1; then
+    notify "Recording saved" "$file"
+else
+    notify "Recording failed" "wf-recorder exited with an error"
+    exit 1
+fi

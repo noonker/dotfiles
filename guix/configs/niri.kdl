@@ -115,12 +115,6 @@ window-rule {
     open-floating true
 }
 
-// Block out focused windows from screen capture
-window-rule {
-    match is-active=true
-    block-out-from "screen-capture"
-}
-
 // Key bindings
 binds {
     // Basics
@@ -144,6 +138,9 @@ binds {
     // Bookmarks
     Mod+B { spawn "sh" "-c" "~/bin/bookmark-search"; }
     Mod+Shift+B { spawn "sh" "-c" "~/bin/es-search"; }
+
+    // Web search
+    Mod+G { spawn "sh" "-c" "~/bin/rofi-search"; }
 
     // Org capture
     Mod+C { spawn "sh" "-c" "~/bin/org-today-capture"; }
@@ -228,6 +225,10 @@ binds {
     Print { screenshot; }
     Shift+Print { screenshot-screen; }
     Mod+Print { screenshot; }
+
+    // Screen recording: either key stops a running recording
+    Mod+R { spawn "sh" "-c" "~/bin/screen-record"; }
+    Mod+Shift+R { spawn "sh" "-c" "~/bin/screen-record screen"; }
 
     // Media keys
     XF86AudioRaiseVolume allow-when-locked=true { spawn "wpctl" "set-volume" "@DEFAULT_AUDIO_SINK@" "5%+"; }

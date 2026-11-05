@@ -2367,8 +2367,28 @@ CHOICE is the selected or typed text, or nil if rofi was cancelled."
 ** Query Param Search
 
 #+begin_src emacs-lisp
-(defvar noonker/searches '(("Google" "g" "https://www.google.com/search?q=%s")))
+(defvar noonker/searches
+  '(("Google" "g" "https://www.google.com/search?q=%s")
+    ("DuckDuckGo" "d" "https://duckduckgo.com/?q=%s")
+    ("Wikipedia" "w" "https://en.wikipedia.org/wiki/Special:Search?search=%s")
+    ("YouTube" "y" "https://www.youtube.com/results?search_query=%s")
+    ("Google Maps" "m" "https://www.google.com/maps/search/%s")
+    ("Amazon" "a" "https://www.amazon.com/s?k=%s")
+    ("Reddit" "r" "https://www.reddit.com/search/?q=%s")
+    ("GitHub" "gh" "https://github.com/search?q=%s")
+    ("Stack Overflow" "so" "https://stackoverflow.com/search?q=%s")
+    ("Hacker News" "hn" "https://hn.algolia.com/?q=%s")
+    ("Arch Wiki" "aw" "https://wiki.archlinux.org/index.php?search=%s")
+    ("Guix Packages" "gx" "https://packages.guix.gnu.org/search/?query=%s")
+    ("Internet Archive" "ia" "https://archive.org/search?query=%s")
+    ("Discogs" "dc" "https://www.discogs.com/search?q=%s")
+    ("Bandcamp" "bc" "https://bandcamp.com/search?q=%s")))
 (defvar noonker/search-hist '())
+
+(defun noonker/search-url (term url)
+  "Return URL with TERM filled in, and remember TERM for next time."
+  (add-to-list 'noonker/search-hist term)
+  (string-replace "%s" (url-hexify-string term) url))
 
 (defun noonker/search-complete ()
 	"Search noonker/searches with query term."
@@ -2379,9 +2399,20 @@ CHOICE is the selected or typed text, or nil if rofi was cancelled."
 		  "Searches: "
 		  (mapcar (lambda (item) (string-join item "	")) noonker/searches)))
 	 (url (nth 2 (split-string choice "	"))))
-    (add-to-list 'noonker/search-hist term)
-    ;; (message (format url term))
-    (browse-url (string-replace "%s" (url-hexify-string term) url))))
+    (browse-url (noonker/search-url term url))))
+
+;; For the rofi-search script.
+(defun noonker/search-rofi-history ()
+  "Return `noonker/search-hist' as JSON."
+  (noonker/es--json (vconcat noonker/search-hist)))
+
+(defun noonker/search-rofi-engines ()
+  "Return the names in `noonker/searches' as JSON."
+  (noonker/es--json (vconcat (mapcar #'car noonker/searches))))
+
+(defun noonker/search-rofi-url (term name)
+  "Return the URL for searching TERM with the search called NAME."
+  (noonker/search-url term (nth 2 (assoc name noonker/searches))))
 #+end_src
 
 * Communication

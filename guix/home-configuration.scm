@@ -120,6 +120,7 @@
 					"swaylock"
 					"udiskie"
 					"waybar"
+					"wf-recorder"
 					"wl-clipboard"
 					"wlsunset"
 					"wtype"
