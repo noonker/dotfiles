@@ -1,88 +1,25 @@
 #+title: Noonker's Config
 
 
-Below is my configuration for Emacs. It is a literate config that can be installed by running =org-babel-tangle= or by using the hotkey =C-c C-v C-t=.
+Below is my configuration for Emacs. It is a literate config: =make home= tangles it into =~/.emacs= at build time (see =guix/channels/noonker/home/emacs.scm=).
 It is broken up into several sections:
- - Bootstrap - Code that instantiates the package manager
+ - Packages - Where the packages come from
  - Behavior - Packages & tweaks to the behavior of emacs
  - Tools - Any packages which modify the behavior of emacs
  - Programming - Packages & tweaks to programming modes
  - Text - Any packages which are used primarily for writing of text (mostly org-mode)
  - Custom Functions - Any simple functions I've added to enrich my emacs life
-* Mobile
-#+begin_src emacs-lisp :tangle ~/.emacs
-(when (string-equal system-type "android")
-  ;; Add Termux binaries to PATH environment
-  (let ((termuxpath "/data/data/com.termux/files/usr/bin")
-	(userpath "/data/data/org.gnu.emacs/files/bin")
-	(clojurepath "/data/data/org.gnu.emacs/files/bin/bin/"))
-    (setenv "PATH" (concat (getenv "PATH") ":" termuxpath))
-    (setenv "PATH" (concat (getenv "PATH") ":" userpath))
-    (setenv "PATH" (concat (getenv "PATH") ":" clojurepath))
-    (setq exec-path (append exec-path (list termuxpath clojurepath userpath)))
-    (getenv "PATH")
+* Packages
 
-    ;; LaTeX
-
-    (let ((texpath "/data/data/com.termux/files/usr/bin/texlive")
-	  (texmfroot "/data/data/com.termux/files/usr/share/texlive/2025")
-	  (texmflocal "/data/data/com.termux/files/usr/share/texlive/texmf-local")
-	  (texfontdir "/data/data/com.termux/files/usr/share/fonts/TTF")
-	  (textrfont "/data/data/com.termux/files/usr/share/groff/{current/font,site-font}/devps"))
-
-      (setenv "PATH" (concat (getenv "PATH") ":" texpath))
-      (setq exec-path (append exec-path (list texpath)))
-      (setenv "TEXMFROOT" texmfroot)
-      (setenv "TEXMFLOCAL" texmflocal)
-      (setenv "OSFONTDIR" texfontdir)
-      (setenv "TRFONTS" textrfont)
-      )
-
-    ;; Enable Emojis on Android 😀
-    (set-fontset-font t 'emoji '("Noto Emoji" . "iso10646-1") nil 'prepend)
-
-    ;; (push "/data/data/com.termux/files/usr/bin" exec-path)
-
-    ;; Not ideal workaround
-
-    ;; (shell-command-to-string "gpgconf --kill gpg-agent")
-
-    (add-hook 'after-change-major-mode-hook (lambda () (set-text-conversion-style nil)))
-
-    (setenv "JAVA_CMD" "/data/data/com.termux/files/usr/bin/java")))
-#+end_src
-
-* Bootstrap Straight.el
-
-This section sets up [[https://github.com/radian-software/straight.el][straight.el]] with [[https://github.com/jwiegley/use-package][use-package]] to simplify setup of emacs. These packages allow me to control how the packages are installed, when they are loaded, and which configurations should be run with them.
+Packages come from Guix: see =guix/channels/noonker/packages/emacs.scm= and the Emacs section of =guix/home-configuration.scm=. =use-package= here only controls when they load and how they're configured.
 
 #+begin_src emacs-lisp :tangle ~/.emacs
 ;; -*- lexical-binding: t -*-
-(defvar bootstrap-version)
+(require 'use-package)
 
-(let ((bootstrap-file
-       (expand-file-name "straight/repos/straight.el/bootstrap.el" user-emacs-directory))
-      (bootstrap-version 5))
-  (unless (file-exists-p bootstrap-file)
-    (with-current-buffer
-	(url-retrieve-synchronously
-	 "https://raw.githubusercontent.com/raxod502/straight.el/develop/install.el"
-	 'silent 'inhibit-cookies)
-      (goto-char (point-max))
-      (eval-print-last-sexp)))
-  (load bootstrap-file nil 'nomessage))
-
-;; Tell use-package to use straight to install applications
-(straight-use-package 'use-package)
-
-;; Update builtins too
-(setq package-install-upgrade-built-in t)
-
-(use-package straight
-  :custom
-  ;; add project and flymake to the pseudo-packages variable so straight.el doesn't download a separate version than what eglot downloads.
-  (straight-built-in-pseudo-packages '(xref emacs nadvice python image-mode project flymake))
-  (straight-use-package-by-default t))
+;; ~/.emacs is in the store, so Customize has to save elsewhere.
+(setq custom-file (locate-user-emacs-file "custom.el"))
+(load custom-file t t)
 #+end_src
 
 * Behavior
@@ -91,7 +28,6 @@ This section sets up [[https://github.com/radian-software/straight.el][straight.
 ;; Enable vertico
 
 (use-package vertico
-  :ensure t
   :bind (:map vertico-map
               :map minibuffer-local-map
               ("M-h" . backward-kill-word))
@@ -137,12 +73,10 @@ This section sets up [[https://github.com/radian-software/straight.el][straight.
         completion-category-overrides '((file (styles partial-completion)))))
 
 (use-package marginalia
-  :ensure t
   :config
   (marginalia-mode))
 
 (use-package embark
-  :ensure t
 
   :bind
   (("C-." . embark-act)         ;; pick some comfortable binding
@@ -202,7 +136,7 @@ This section sets up [[https://github.com/radian-software/straight.el][straight.
   (global-corfu-mode))
 
 (use-package corfu-popupinfo
-  :straight nil ;; ships inside the corfu package under extensions/
+  ;; ships inside the corfu package under extensions/
   :after corfu
   :hook (corfu-mode . corfu-popupinfo-mode)
   :custom
@@ -251,20 +185,8 @@ This section sets up [[https://github.com/radian-software/straight.el][straight.
 
 ** Platform Check
 #+begin_src emacs-lisp :tangle ~/.emacs
-(defun current-platform ()
-  (interactive)
-  (cond
-   ((string-equal "Android\n" (shell-command-to-string "uname -o")) "android")
-   ((string-equal system-type "windows-nt") "windows")
-   ((string-equal system-type "darwin") "mac")
-   ((string-equal system-type "gnu/linux") "linux"))
-  )
-(defcustom im-at-work nil
+(defcustom im-at-work (not (string= (system-name) "blep"))
   "im-at-work can be used to conditionally disable code which may not be suitable for work environments. ChatGPT, copilot, etc"
-  :type '(boolean))
-
-(defcustom is-mobile (if (string= system-type "android") t nil)
-  "is-mobile can be used to conditionally disable code which may not be suitable for mobile environments."
   :type '(boolean))
 
 (defcustom is-gui nil
@@ -275,9 +197,6 @@ This section sets up [[https://github.com/radian-software/straight.el][straight.
   "is-guix can be used to conditionally disable code which may not be suitable for guix environments"
   :type '(boolean))
 
-(if (string= "mac" (current-platform))
-    (setq im-at-work t))
-
 (if (display-graphic-p)
     (setq is-gui t))
 
@@ -287,8 +206,7 @@ This section sets up [[https://github.com/radian-software/straight.el][straight.
 (use-package exec-path-from-shell
   :init (exec-path-from-shell-initialize))
 
-(use-package inheritenv
-  :straight (:type git :host github :repo "purcell/inheritenv"))
+(use-package inheritenv)
 #+end_src
 
 ** Theme
@@ -415,7 +333,7 @@ Emacs can nearly transparently use .gpg encrypted files in emacs. These settings
 (setf epg-pinentry-mode 'loopback) ;; No UI popup. Ask for password in modeline
 #+end_src
 
-** Mac Scroll
+** Smooth Scroll
 #+begin_src emacs-lisp :tangle ~/.emacs
 (use-package ultra-scroll
   :init
@@ -450,7 +368,6 @@ Lispy mode makes lisp-mode editing significantly more efficent
 
 #+begin_src emacs-lisp :tangle ~/.emacs
 (use-package evil
-  :ensure t
   :init
   (setq evil-want-integration t) ;; This is optional since it's already set to t by default.
   (setq evil-want-keybinding nil)
@@ -463,7 +380,6 @@ Lispy mode makes lisp-mode editing significantly more efficent
 
 (use-package evil-collection
   :after evil
-  :ensure t
   :config
   (evil-collection-init))
 
@@ -473,7 +389,6 @@ Lispy mode makes lisp-mode editing significantly more efficent
               (keymap-lookup transient-base-map "RET")))
 
 (use-package evil-surround
-  :ensure t
   :config
   (global-evil-surround-mode 1))
 
@@ -499,8 +414,6 @@ Lispy mode makes lisp-mode editing significantly more efficent
 ** Eglot
 #+begin_src emacs-lisp :tangle ~/.emacs
 (use-package eglot
-  :straight (:host github :repo "joaotavora/eglot" )
-  :ensure t
   :defer t
   :hook ((python-mode . eglot-ensure)
          (go-mode . eglot-ensure))
@@ -545,9 +458,7 @@ Lispy mode makes lisp-mode editing significantly more efficent
   (setq-default flycheck-disabled-checker '(emacs-lisp-checkdoc)))
 #+end_src
 
-*** C/C++ / Platformio-DCMAKE_PREFIX_PATH=/usr/local/opt/llvm
-
-On MacOS you need to add =-DCMAKE_PREFIX_PATH=/usr/local/opt/llvm= after =cmake= to run =install-irony-server= per [[https://github.com/Sarcasm/irony-mode/issues/167][this]] git issue.
+*** C/C++ / Platformio
 
 #+begin_src emacs-lisp :tangle ~/.emacs
 (add-hook 'c-mode-hook 'eglot-ensure)
@@ -664,9 +575,7 @@ Looks for .venv directory in project root and activates the Python interpreter."
   (let* ((project-root (project-root (project-current t)))
          (venv-path (expand-file-name ".venv" project-root))
          (python-path (expand-file-name
-                       (if (eq system-type 'windows-nt)
-                           "Scripts/python.exe"
-                         "bin/python")
+                       "bin/python"
                        venv-path)))
     (if (file-exists-p python-path)
         (progn
@@ -773,7 +682,6 @@ Typescript
 (use-package typescript-mode)
 
 (use-package tide
-  :ensure t
   :after (typescript-mode flycheck)
   :hook ((typescript-mode . tide-setup)
 	 (typescript-mode . tide-hl-identifier-mode)
@@ -788,10 +696,9 @@ Clojure
 #+begin_src emacs-lisp :tangle ~/.emacs
 (use-package clj-refactor)
 
-(if (not is-mobile)
-  (add-hook 'clojure-mode-hook 'eglot-ensure)
-  (add-hook 'clojurescript-mode-hook 'eglot-ensure)
-  (add-hook 'clojurec-mode-hook 'eglot-ensure))
+(add-hook 'clojure-mode-hook 'eglot-ensure)
+(add-hook 'clojurescript-mode-hook 'eglot-ensure)
+(add-hook 'clojurec-mode-hook 'eglot-ensure)
 
 (setq gc-cons-threshold (* 100 1024 1024)
       read-process-output-max (* 1024 1024)
@@ -799,13 +706,11 @@ Clojure
       )
 
 (use-package clojure-mode
-  :ensure t
   :mode (("\\.clj\\'" . clojure-mode)
 	 ("\\.edn\\'" . clojure-mode)
 	 ))
 
 (use-package cider
-  :ensure t
   :defer t
   :init (add-hook 'cider-mode-hook #'clj-refactor-mode)
   :diminish subword-mode
@@ -1000,7 +905,6 @@ INITIAL-INPUT can be given as the initial minibuffer input."
   ;; If you have use-package-hook-name-suffix set to nil, uncomment and use the
   ;; line below instead:
   ;; :hook (eshell-mode-hook . esh-autosuggest-mode)
-  :ensure t
   )
 #+end_src
 
@@ -1115,7 +1019,6 @@ IRC for Emacs
 	      ("f" . elfeed-firefox-open)
 	      ("o" . elfeed-org-open)
 	      ("d" . elfeed-youtube-dl)
-	      ("a" . elfeed-termux-open)
 	      )
 
   :config
@@ -1192,7 +1095,6 @@ IRC for Emacs
 
 #+begin_src emacs-lisp :tangle ~/.emacs
 (use-package elfeed-tube
-  :ensure t ;; or :straight t
   :after elfeed
   :demand t
   :config
@@ -1208,7 +1110,6 @@ IRC for Emacs
          ([remap save-buffer] . elfeed-tube-save)))
 
 (use-package elfeed-tube-mpv
-  :ensure t ;; or :straight t
   :bind (:map elfeed-show-mode-map
               ("C-c C-f" . elfeed-tube-mpv-follow-mode)
               ("C-c C-w" . elfeed-tube-mpv-where)))
@@ -1553,28 +1454,6 @@ Functions and mobile gadgets
     "Copy App: "
     (split-string (shell-command-to-string "adb shell pm list packages -3 | sed \"s/package://g\"")))))
 
-(defun start-simulator ()
-  (interactive)
-  (let ((udid nil)
-	(sim-option (completing-read
-		     "Start Simulator: "
-		     (split-string (shell-command-to-string "xcrun simctl list | grep Shutdown") "\n"))))
-    (and (string-match "\\([0-9a-fA-F]\\{8\\}-[0-9a-fA-F]\\{4\\}-[0-9a-fA-F]\\{4\\}-[0-9a-fA-F]\\{4\\}-[0-9a-fA-F]\\{12\\}\\)" sim-option)
-	 (setq udid (match-string 1 sim-option)))
-    (if udid
-	(shell-command (format "open -a Simulator --args -CurrentDeviceUDID %s" udid)))))
-
-(defun android-start-emulator ()
-  (interactive)
-  
-  (let ((avd (completing-read
-	      "Emulator: "
-	      (split-string
-	       (shell-command-to-string "$HOME/Library/Android/sdk/emulator/emulator -list-avds") "\n"))))
-    (if avd
-	(shell-command (format "$HOME/Library/Android/sdk/emulator/emulator -avd %s -netdelay none -netspeed full -no-snapshot-load&" avd)))
-    ))
-
 (defun get-android-view ()
   (interactive)
   (let ((buffer-name "*ui-dump*"))
@@ -1649,38 +1528,31 @@ Look for things like, but not limited to, syntax errors, logic errors, severe in
 (use-package kubel
   ;; Fork with argo/cilium/virtctl/talos/helm porcelains:
   ;; M-x kubel-argo, kubel-cilium, kubel-virtctl, kubel-talos, kubel-helm
-  :straight (:host github :repo "noonker/kubel"))
+  )
 (setq kubel-list-wide t)
 #+end_src
 
 * PDF
 ** PDF Tools
 #+begin_src emacs-lisp :tangle ~/.emacs
-(if (not is-mobile)
-    (progn
-      (use-package pdf-tools
-	:straight t
-	:config
-	(pdf-tools-install))
-      (add-hook 'pdf-view-mode-hook (lambda () (progn (display-line-numbers-mode -1))))
-      ))
+(use-package pdf-tools
+  :config
+  (pdf-tools-install))
+(add-hook 'pdf-view-mode-hook (lambda () (progn (display-line-numbers-mode -1))))
 #+end_src
 
 ** \LaTeX
 #+begin_src emacs-lisp :tangle ~/.emacs
-(use-package tex
-  :straight auctex)
+(use-package tex)
 
 ;; CDLatex settings
 (use-package cdlatex
-  :ensure t
   :hook (LaTeX-mode . turn-on-cdlatex)
   :bind (:map cdlatex-mode-map 
               ("<tab>" . cdlatex-tab)))
 
 ;; Yasnippet settings
 (use-package yasnippet
-  :ensure t
   :hook ((LaTeX-mode . yas-minor-mode)
          (post-self-insert . my/yas-try-expanding-auto-snippets))
   :config
@@ -1761,8 +1633,7 @@ Look for things like, but not limited to, syntax errors, logic errors, severe in
   (ox-extras-activate '(ignore-headlines)))
 
 ;; For desktop, a 2.0 scaling is appropriate
-(if (not is-mobile)
-    (setq org-format-latex-options (plist-put org-format-latex-options :scale 2.0)))
+(setq org-format-latex-options (plist-put org-format-latex-options :scale 2.0))
 
 (evil-define-key 'normal org-mode-map "gjl" 'org-latex-preview)
 #+end_src
@@ -1848,15 +1719,13 @@ Look for things like, but not limited to, syntax errors, logic errors, severe in
 (use-package ob-markdown)
 (use-package mermaid-mode)
 (use-package ob-mermaid)
-(setq ob-mermaid-cli-path "/opt/homebrew/bin/mmdc")
+(setq ob-mermaid-cli-path (executable-find "mmdc"))
 (use-package ob-d2)
 (use-package d2-mode)
 (use-package ob-sclang)
-(straight-use-package
- '(ob-gptel :type git :host github :repo "jwiegley/ob-gptel"))
+(use-package ob-gptel)
 
 (use-package ob-agent-shell
-  :ensure t
   :after (agent-shell org)
   :config
   (add-to-list 'org-babel-load-languages '(agent-shell . t))
@@ -2103,7 +1972,6 @@ Supports: t (Today→Tasks), n (Now + clock-in), b (Backlog→Backlog)."
   ;;         a hookable mode anymore, you're advised to pick something yourself
   ;;         if you don't care about startup time, use
   ;;  :hook (after-init . org-roam-ui-mode)
-  :straight (:host github :repo "noonker/org-roam-ui")
   :config
   (setq org-roam-ui-sync-theme t
 	org-roam-ui-follow t
@@ -2111,7 +1979,14 @@ Supports: t (Today→Tasks), n (Now + clock-in), b (Backlog→Backlog)."
 	org-roam-ui-open-on-start t
 	)
 
- (org-roam-db-autosync-mode) ;; Automatically update the org roam database 
+ ;; Syncing can decrypt .org.gpg files and ask for a passphrase.  A daemon with
+ ;; no frame has nowhere to ask and dies, so wait for the first real frame.
+ (defun noonker/start-roam-autosync ()
+   (remove-hook 'server-after-make-frame-hook #'noonker/start-roam-autosync)
+   (org-roam-db-autosync-mode))
+ (if (daemonp)
+     (add-hook 'server-after-make-frame-hook #'noonker/start-roam-autosync)
+   (org-roam-db-autosync-mode))
   )
 #+end_src
 
@@ -2217,15 +2092,13 @@ Blogging with hugo
 
 *** Json-to-org-table
 #+begin_src emacs-lisp :tangle ~/.emacs
-(use-package json-to-org-table
-  :straight (:host github :repo "noonker/json-to-org-table"))
+(use-package json-to-org-table)
 #+end_src
 
 ** Easydraw
 
 #+begin_src emacs-lisp :tangle ~/.emacs
 (use-package edraw-org
-  :straight (:host github :repo "misohena/el-easydraw" :files ("dist" "*.el"))
   :config (with-eval-after-load 'org
 	    (require 'edraw-org)
 	    (edraw-org-setup-default)
@@ -2260,21 +2133,6 @@ Blogging with hugo
 #+end_src
 
 * Custom Functions
-** Mac Open
-
-Replace spotlight with emacs
-
-#+begin_src emacs-lisp :tangle ~/.emacs
-(defun mac-open ()
-  "Open a mac application... In Emacs.... why not"
-  (interactive)
-  (call-process-shell-command
-   (format " open /Applications/%s"
-	   (completing-read
-	    "Mac Open: "
-	    (directory-files "/Applications")))))
-#+end_src
-
 ** Youtube Download
 
 Download vidoes with youtube-dl
@@ -2556,10 +2414,8 @@ E.g. 68656c6c6f -> hello"
 * AI
 ** Gptel
 #+begin_src emacs-lisp :tangle ~/.emacs
-(use-package gptel
-  :straight (:host github :repo "karthink/gptel"))
-(use-package gptel-quick
-  :straight (:host github :repo "karthink/gptel-quick" :files ("gptel-quick.el")))
+(use-package gptel)
+(use-package gptel-quick)
 ;; Popup question
 (defvar gptel-lookup--history nil)
 
@@ -2927,7 +2783,6 @@ E.g. 68656c6c6f -> hello"
    :category "filesystem"))
 
 (use-package mcp
-  :ensure t
   :after gptel
   :config (require 'mcp-hub)
   :hook (after-init . mcp-hub-start-all-server))
@@ -2935,9 +2790,7 @@ E.g. 68656c6c6f -> hello"
 (require 'gptel-integrations)
 
 (use-package llm-tool-collection
-  :ensure t
   :config (require 'llm-tool-collection)
-  :straight (:host github :repo "skissue/llm-tool-collection")
   :config (mapcar (apply-partially #'apply #'gptel-make-tool)
 		  (llm-tool-collection-get-all)))
 
@@ -2958,74 +2811,7 @@ E.g. 68656c6c6f -> hello"
 
 ** Whisper
 #+begin_src emacs-lisp :tangle ~/.emacs
-(use-package whisper
-  :straight (:host github :repo "natrys/whisper.el"))
-
-(defun rk/get-ffmpeg-device ()
-  "Gets the list of devices available to ffmpeg.
-The output of the ffmpeg command is pretty messy, e.g.
-  [AVFoundation indev @ 0x7f867f004580] AVFoundation video devices:
-  [AVFoundation indev @ 0x7f867f004580] [0] FaceTime HD Camera (Built-in)
-  [AVFoundation indev @ 0x7f867f004580] AVFoundation audio devices:
-  [AVFoundation indev @ 0x7f867f004580] [0] Cam Link 4K
-  [AVFoundation indev @ 0x7f867f004580] [1] MacBook Pro Microphone
-so we need to parse it to get the list of devices.
-The return value contains two lists, one for video devices and one for audio devices.
-Each list contains a list of cons cells, where the car is the device number and the cdr is the device name."
-  (unless (string-equal system-type "darwin")
-    (error "This function is currently only supported on macOS"))
-
-  (let ((lines (string-split (shell-command-to-string "ffmpeg -list_devices true -f avfoundation -i dummy || true") "\n")))
-    (cl-loop with at-video-devices = nil
-             with at-audio-devices = nil
-             with video-devices = nil
-             with audio-devices = nil
-             for line in lines
-             when (string-match "AVFoundation video devices:" line)
-             do (setq at-video-devices t
-                      at-audio-devices nil)
-             when (string-match "AVFoundation audio devices:" line)
-             do (setq at-audio-devices t
-                      at-video-devices nil)
-             when (and at-video-devices
-                       (string-match "\\[\\([0-9]+\\)\\] \\(.+\\)" line))
-             do (push (cons (string-to-number (match-string 1 line)) (match-string 2 line)) video-devices)
-             when (and at-audio-devices
-                       (string-match "\\[\\([0-9]+\\)\\] \\(.+\\)" line))
-             do (push (cons (string-to-number (match-string 1 line)) (match-string 2 line)) audio-devices)
-             finally return (list (nreverse video-devices) (nreverse audio-devices)))))
-
-(defun rk/find-device-matching (string type)
-  "Get the devices from `rk/get-ffmpeg-device' and look for a device
-matching `STRING'. `TYPE' can be :video or :audio."
-  (let* ((devices (rk/get-ffmpeg-device))
-         (device-list (if (eq type :video)
-                          (car devices)
-                        (cadr devices))))
-    (cl-loop for device in device-list
-             when (string-match-p string (cdr device))
-             return (car device))))
-
-(defcustom rk/default-audio-device nil
-  "The default audio device to use for whisper.el and outher audio processes."
-  :type 'string)
-
-(defun rk/select-default-audio-device (&optional device-name)
-  "Interactively select an audio device to use for whisper.el and other audio processes.
-If `DEVICE-NAME' is provided, it will be used instead of prompting the user."
-  (interactive)
-  (let* ((audio-devices (cadr (rk/get-ffmpeg-device)))
-         (indexes (mapcar #'car audio-devices))
-         (names (mapcar #'cdr audio-devices))
-         (name (or device-name (completing-read "Select audio device: " names nil t))))
-    (setq rk/default-audio-device (rk/find-device-matching name :audio))
-    (when (boundp 'whisper--ffmpeg-input-device)
-      (setq whisper--ffmpeg-input-device (format ":%s" rk/default-audio-device)))))
-
-(defun noonker/set-audio-device ()
-  (interactive)
-  (setq whisper--ffmpeg-input-device (rk/select-default-audio-device))
-  )
+(use-package whisper)
 
 (setq whisper-model "small")
 
@@ -3034,25 +2820,15 @@ If `DEVICE-NAME' is provided, it will be used instead of prompting the user."
 ** Agent-Shell
 #+begin_src emacs-lisp :tangle ~/.emacs 
 (use-package agent-shell
-    :ensure t
     :ensure-system-package
     ;; Add agent installation configs here
-    ((claude . "brew install claude-code")
-     (claude-agent-acp . "npm install -g @agentclientprotocol/claude-agent-acp")))
-
-(if im-at-work
-    (setenv "CLAUDE_CODE_EXECUTABLE" "/opt/homebrew/bin/claude")
-  )
+    ((claude-agent-acp . "npm install -g @agentclientprotocol/claude-agent-acp")))
 
 (setq agent-shell-preferred-agent-config (agent-shell-anthropic-make-claude-code-config))
 
-(use-package agent-shell-monome
-  :straight (:host github
-	     :repo "noonker/agent-shell-monome"
-	     :files ("*.el")))
+(use-package agent-shell-monome)
 
 (use-package agent-shell-org-loops
-  :straight (:type git :host github :repo "noonker/agent-shell-org-loops")
   :after agent-shell
   :config
   (require 'agent-shell-anthropic)
@@ -3129,7 +2905,6 @@ If `DEVICE-NAME' is provided, it will be used instead of prompting the user."
 #+begin_src emacs-lisp :tangle ~/.emacs
 (if (not im-at-work)
     (use-package emacs-playlist
-      :straight (:host github :repo "noonker/emacs-playlist")
       :commands (emacs-playlist-search
                  emacs-playlist-toggle-source
                  emacs-playlist-show-playlist)
@@ -3221,8 +2996,7 @@ If `DEVICE-NAME' is provided, it will be used instead of prompting the user."
 (require 'deferred)
 
 (use-package hunting-mode
-  :straight (:local-repo "~/git/hunting-mode"
-			 :files ("lisp/*.el"))
+  :load-path "~/git/hunting-mode/lisp"
   :config
   (add-to-list 'hunting-glyph-hooks
 	       `(,hunting-md5-regex-wrapped hunting-project-hash-contains-p "✅" "❌")
@@ -3853,7 +3627,11 @@ Its faces come from the desktop theme: see guix/channels/noonker/home/theme/emac
 	   "Agent"
 	   	   )) ;gptel tools or tool names
 
-(gptel noonker/voice-ai-buffer)
+(require 'warnings)
+;; The backend isn't chosen until `noonker/init-ai', which needs secrets.
+(let ((warning-suppress-types (cons '(gptel) warning-suppress-types))
+      (warning-suppress-log-types (cons '(gptel) warning-suppress-log-types)))
+  (gptel noonker/voice-ai-buffer))
 
 (defun noonker/ai-record ()
   (interactive)
@@ -3914,7 +3692,6 @@ Its faces come from the desktop theme: see guix/channels/noonker/home/theme/emac
 
 ;; Trying out leader
 (use-package which-key
-  :ensure t
   :config
   (which-key-mode))
 
@@ -4064,10 +3841,9 @@ Its faces come from the desktop theme: see guix/channels/noonker/home/theme/emac
 
 * Work Config
 #+begin_src emacs-lisp :tangle ~/.emacs
-(if im-at-work
-    (progn
-      (org-babel-lob-ingest "~/org/config.org")
-      (org-sbe work-config)))
+(when (and im-at-work (file-exists-p "~/org/config.org"))
+  (org-babel-lob-ingest "~/org/config.org")
+  (org-sbe work-config))
 #+end_src
 * Start Server
 #+begin_src emacs-lisp :tangle ~/.emacs

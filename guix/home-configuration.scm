@@ -25,6 +25,7 @@
              (noonker packages sc3-plugins)
              (noonker packages sclang-lsp-proxy)
              (noonker packages deck-notify)
+             (noonker packages emacs)
              (noonker packages saleae-logic)
              (gnu packages)
              (gnu services)
@@ -98,6 +99,7 @@
  (packages
   (append
    (list serialosc renoise tidalcycles sclang-lsp-proxy saleae-logic deck-notify)
+   %my-emacs-packages
    (specifications->packages (list
 					;; Niri / Wayland
 					"blueman"
@@ -166,12 +168,96 @@
 					"openjdk:jdk"
 
 					;; Guile
-					"emacs-geiser"
-					"emacs-geiser-guile"
 					"guile"
 
-					;; Emacs
+					;; Emacs.  Ones Guix lacks are in (noonker packages emacs).
+					"aspell"
 					"emacs-pgtk"
+					"tree-sitter-lua"
+					"tree-sitter-rust"
+					"emacs-ag"
+					"emacs-agent-shell"
+					"emacs-auctex"
+					"emacs-autothemer"
+					"emacs-cdlatex"
+					"emacs-cider"
+					"emacs-clj-refactor"
+					"emacs-clojure-mode"
+					"emacs-consult"
+					"emacs-consult-dir"
+					"emacs-consult-org-roam"
+					"emacs-corfu"
+					"emacs-counsel"
+					"emacs-counsel-jq"
+					"emacs-cyberpunk-theme"
+					"emacs-deferred"
+					"emacs-dired-preview"
+					"emacs-docker"
+					"emacs-doom-modeline"
+					"emacs-eldoc-box"
+					"emacs-elfeed"
+					"emacs-elfeed-tube"
+					"emacs-embark"
+					"emacs-envrc"
+					"emacs-erc"
+					"emacs-esh-autosuggest"
+					"emacs-eshell-git-prompt"
+					"emacs-evil"
+					"emacs-evil-collection"
+					"emacs-evil-paredit"
+					"emacs-evil-surround"
+					"emacs-exec-path-from-shell"
+					"emacs-expand-region"
+					"emacs-flycheck"
+					"emacs-geiser"
+					"emacs-geiser-guile"
+					"emacs-ggtags"
+					"emacs-go-mode"
+					"emacs-goto-chg"
+					"emacs-gptel"
+					"emacs-gptel-agent"
+					"emacs-gptel-quick"
+					"emacs-guix"
+					"emacs-haskell-mode"
+					"emacs-hl-todo"
+					"emacs-inheritenv"
+					"emacs-irony-mode"
+					"emacs-json-mode"
+					"emacs-latex-preview-pane"
+					"emacs-llm-tool-collection"
+					"emacs-magit"
+					"emacs-marginalia"
+					"emacs-markdown-mode"
+					"emacs-mcp"
+					"emacs-ob-gptel"
+					"emacs-ob-sclang"
+					"emacs-orderless"
+					"emacs-org-contrib"
+					"emacs-org-download"
+					"emacs-org-msg"
+					"emacs-org-transclusion"
+					"emacs-org-web-tools"
+					"emacs-ov"
+					"emacs-paredit"
+					"emacs-pass"
+					"emacs-password-store-otp"
+					"emacs-pcre2el"
+					"emacs-pdf-tools"
+					"emacs-platformio-mode"
+					"emacs-posframe"
+					"emacs-projectile"
+					"emacs-request"
+					"emacs-rjsx-mode"
+					"emacs-rmsbolt"
+					"emacs-tide"
+					"emacs-typescript-mode"
+					"emacs-ultra-scroll"
+					"emacs-vertico"
+					"emacs-websocket"
+					"emacs-whisper-el"
+					"emacs-yaml"
+					"emacs-yasnippet"
+					"emacs-yasnippet-snippets"
 
 					;; Radio / SDR
 					"gnuradio"
@@ -327,6 +413,9 @@
                    (list
                     `(".tmux.conf"  ,(local-file (dotfile "guix/configs/tmux.conf")))
                     `(".npmrc"      ,(local-file (dotfile "guix/configs/npmrc")))
+                    `(".emacs.d/early-init.el" ,(local-file (dotfile "guix/configs/early-init.el")))
+                    `(".emacs"      ,(emacs-init-file
+                                      (local-file (dotfile "configs/noonker_emacs.org"))))
                     ))
    (service home-git-repos-service-type
          (home-git-repos-configuration
