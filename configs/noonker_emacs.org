@@ -876,6 +876,43 @@ These are useful enough in scratch buffers that I always load them.
   (add-to-list 'org-src-lang-modes '("agent-shell" . text)))
 #+end_src
 
+** LOB
+
+#+name:tablify-cleaned
+#+begin_src emacs-lisp :var json-string="{\"aggregations\":\"b\"}" :results raw :tangle no
+(json-to-org-table-parse-json (alist-get 'buckets
+				(alist-get 'top
+			          (alist-get 'aggregations
+				    (json-read-from-string json-string)))))
+#+end_src
+
+#+name:tablify
+#+begin_src emacs-lisp :var json-string="{\"aggregations\":[]}" :results raw :tangle no
+(json-to-org-table-parse-json-string json-string)
+(org-table-recalculate-buffer-ables)
+#+end_src
+
+#+name: clean-table
+#+begin_src elisp :var tbl="" :tangle no
+(mapcar (lambda (row)
+          (mapcar (lambda (cell)
+                    (replace-regexp-in-string
+                     "|" "∣"
+                     (replace-regexp-in-string "\n" " " (format "%s" cell))))
+                  row))
+        tbl)
+#+end_src
+
+#+name: json-table
+#+begin_src emacs-lisp :var data="" :tangle no
+(json-to-org-table-parse-json-string data)
+#+end_src
+
+# Ingest the above blocks
+#+begin_src emacs-lisp
+(org-babel-lob-ingest "~/git/dotfiles/configs/noonker_emacs.org")
+#+end_src
+
 ** Agenda
 #+begin_src emacs-lisp
 (use-package org-agenda
@@ -2325,6 +2362,26 @@ CHOICE is the selected or typed text, or nil if rofi was cancelled."
                 ((plist-get noonker/es--menu :custom) (funcall select choice)))))
     (error (setq noonker/es--flash (error-message-string err))))
   (noonker/es--render))
+#+end_src
+
+** Query Param Search
+
+#+begin_src emacs-lisp
+(defvar noonker/searches '(("Google" "g" "https://www.google.com/search?q=%s")))
+(defvar noonker/search-hist '())
+
+(defun noonker/search-complete ()
+	"Search noonker/searches with query term."
+  (interactive)
+  (let* ((thing (thing-at-point 'symbol))
+	 (term (completing-read "Search Term: " noonker/searches nil nil thing))
+	 (choice (completing-read
+		  "Searches: "
+		  (mapcar (lambda (item) (string-join item "	")) noonker/searches)))
+	 (url (nth 2 (split-string choice "	"))))
+    (add-to-list 'noonker/search-hist term)
+    ;; (message (format url term))
+    (browse-url (string-replace "%s" (url-hexify-string term) url))))
 #+end_src
 
 * Communication
