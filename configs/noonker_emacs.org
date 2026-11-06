@@ -658,7 +658,7 @@ export PYTHONPATH=%s
 
 (use-package python
   :bind ("C-c C-c" . python-shell-send-region)
-  :hook ((python-mode . electric-pair-mode)
+  :hook ((python-mode . electric-pair-local-mode)
          (python-mode . noonker/maybe-create-python-venv)
          (python-mode . noonker/python-format-on-save)))
 #+end_src

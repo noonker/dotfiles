@@ -12,7 +12,7 @@ fail() { rofi -e "es-search: Emacs did not answer. Is the daemon running?"; exit
 step=$(ask_emacs "(noonker/es-rofi-start $(elisp_string "${WAYLAND_DISPLAY:-}") $(elisp_string "${DISPLAY:-}"))") || fail
 
 while [ "$(jq -r .done <<<"$step")" != true ]; do
-    args=(-dmenu -i -matching fuzzy -sort -sorting-method fzf
+    args=(-dmenu -i -matching normal -sort -sorting-method fzf
           -p "$(jq -r .prompt <<<"$step")")
     mesg=$(jq -r .mesg <<<"$step")
     [ -n "$mesg" ] && args+=(-mesg "$mesg")
