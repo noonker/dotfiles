@@ -2,9 +2,7 @@
 # ~/.local/bin/bookmark-search
 
 bookmarks=$(emacsclient -e '(noonker/json-bookmarks)' | jq -r . | jq -r '
-  to_entries[] | .key as $cat |
-  .value[] | to_entries[] |
-  "\($cat) / \(.key) - \(.value[1]) | \(.value[0])"
+  .[] | "\(.[0]) / \(.[1]) - \(.[3]) | \(.[2])"
 ')
 
 selected=$(echo "$bookmarks" | rofi -dmenu -i -p "🔖 Bookmarks" -matching normal -sort -sorting-method fzf)

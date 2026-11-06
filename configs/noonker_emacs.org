@@ -1672,12 +1672,16 @@ _PORT is ignored."
                             )
                            )))
 
+(defun noonker/bookmark-key (bookmark)
+  "Return what makes BOOKMARK distinct: its NAME and URL."
+  (list (car bookmark) (cadr bookmark)))
+
 (defun noonker/merge-bookmarks (a b)
   "Merge bookmark object B into A, returning the merged result.
 Each is an alist of (CATEGORY (BOOKMARK...)) where BOOKMARK is
 \(NAME URL DESCRIPTION).  Every category and bookmark from both A and
-B ends up in the result; within each category, bookmarks are deduped
-by NAME with A winning on conflict.  A is mutated."
+B ends up in the result; within each category, bookmarks with the same
+NAME and URL are deduped, with A winning on conflict.  A is mutated."
   (dolist (entry b)
     (let* ((category (car entry))
            (bookmarks (cadr entry))
@@ -1686,12 +1690,12 @@ by NAME with A winning on conflict.  A is mutated."
           (setcar (cdr existing)
                   (cl-remove-duplicates
                    (append (cadr existing) bookmarks)
-                   :key #'car :test #'equal :from-end t))
+                   :key #'noonker/bookmark-key :test #'equal :from-end t))
         (setq a (append a
                         (list (list category
                                     (cl-remove-duplicates
                                      bookmarks
-                                     :key #'car :test #'equal :from-end t))))))))
+                                     :key #'noonker/bookmark-key :test #'equal :from-end t))))))))
   a)
 
 (defun noonker/flatten-category (category)
@@ -1716,9 +1720,11 @@ by NAME with A winning on conflict.  A is mutated."
   (noonker/bookmarks-complete noonker/bookmarks))
 
 (defun noonker/json-bookmarks ()
-  "Return `noonker/bookmarks' as JSON.  The bookmark-search script calls this."
+  "Return `noonker/bookmarks' as a JSON array of [CATEGORY NAME URL DESCRIPTION].
+The bookmark-search script calls this.  An array, not an object keyed by
+name, so bookmarks that share a name all survive."
   (interactive)
-  (json-encode noonker/bookmarks))
+  (json-encode (mapcar #'vconcat (noonker/flatten-bookmarks noonker/bookmarks))))
 
 (defun noonker/copy-file-path ()
   "Copy the full path of the current buffer's file."
