@@ -1,2 +1,2 @@
 #!/usr/bin/env bash
-~/.local/bin/claude
+exec ~/.local/bin/claude "$@"

@@ -34,7 +34,7 @@
       (license license:gpl3+))))
 
 (define-public emacs-agent-shell-org-loops
-  (let ((commit "22c72be57f9072c72b6e689e08ad81ff71663882")
+  (let ((commit "892d6a6d1f86694039a3735be99045ffe1f85e92")
         (revision "0"))
     (package
       (name "emacs-agent-shell-org-loops")
@@ -47,8 +47,13 @@
                (commit commit)))
          (file-name (git-file-name name version))
          (sha256
-          (base32 "12llbl9fq8f67a07minhidipa6gczjqq8kj6n81kdy6vaqc0sdzs"))))
+          (base32 "0rb11npparqihsgpmmn7r9c46flnks4mmqlcw0j07jnl1vpvlp6p"))))
       (build-system emacs-build-system)
+      (arguments
+       (list #:test-command
+             #~(list "emacs" "-Q" "--batch" "-L" "." "-L" "test"
+                     "-l" "test/agent-shell-org-loops-test.el"
+                     "-f" "ert-run-tests-batch-and-exit")))
       (propagated-inputs
        (list emacs-agent-shell))
       (home-page "https://github.com/noonker/agent-shell-org-loops")

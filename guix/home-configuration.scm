@@ -27,6 +27,7 @@
              (noonker packages deck-notify)
              (noonker packages emacs)
              (noonker packages saleae-logic)
+             (noonker packages bliss)
              (gnu packages)
              (gnu services)
              (gnu home services)
@@ -98,7 +99,9 @@
  ;; Home profile, under ~/.guix-home/profile.
  (packages
   (append
-   (list serialosc renoise tidalcycles sclang-lsp-proxy saleae-logic deck-notify)
+   (list serialosc renoise tidalcycles sclang-lsp-proxy saleae-logic deck-notify
+         ;; github.com/noonker/bliss and emacs-bliss, pinned in (noonker packages bliss).
+         bliss emacs-bliss)
    %my-emacs-packages
    (specifications->packages (list
 					;; Niri / Wayland

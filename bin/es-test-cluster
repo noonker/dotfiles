@@ -1,0 +1,104 @@
+#!/usr/bin/env bash
+# es-test-cluster: a throwaway single-node Elasticsearch in podman, seeded with
+# sample data for trying out es-search.  Listens on 127.0.0.1:9200 with security
+# off, so it is for local testing only.
+#
+#   es-test-cluster up     start it (if needed) and load the sample data
+#   es-test-cluster down   remove it and its data
+set -euo pipefail
+
+name=es-search-test
+image=docker.elastic.co/elasticsearch/elasticsearch:8.17.0
+url=http://127.0.0.1:9200
+
+put() {
+    curl -sS --fail-with-body -o /dev/null -X PUT "$url/$1" \
+         -H 'Content-Type: application/json' -d "$2"
+}
+
+seed() {
+    put orders '{
+      "mappings": { "properties": {
+        "customer":   { "type": "text", "fields": { "keyword": { "type": "keyword" } } },
+        "status":     { "type": "keyword" },
+        "country":    { "type": "keyword" },
+        "total":      { "type": "double" },
+        "paid":       { "type": "boolean" },
+        "created_at": { "type": "date" },
+        "client_ip":  { "type": "ip" },
+        "notes":      { "type": "text" },
+        "shipping":   { "properties": { "carrier": { "type": "keyword" }, "weight_kg": { "type": "float" } } },
+        "items":      { "type": "nested", "properties": { "sku": { "type": "keyword" }, "qty": { "type": "integer" } } }
+      } } }'
+    put logs-app '{
+      "mappings": { "properties": {
+        "@timestamp": { "type": "date" },
+        "level":      { "type": "keyword" },
+        "service":    { "type": "keyword" },
+        "message":    { "type": "text" },
+        "latency_ms": { "type": "long" }
+      } } }'
+    put metrics-cpu '{ "mappings": { "properties": {
+        "@timestamp": { "type": "date" }, "host": { "type": "keyword" }, "percent": { "type": "float" } } } }'
+    curl -sS --fail-with-body -o /dev/null -X POST "$url/_aliases" \
+         -H 'Content-Type: application/json' \
+         -d '{ "actions": [ { "add": { "index": "orders", "alias": "shop" } } ] }'
+
+    # Dates are relative to today so that "now-7d" style filters find something.
+    jq -nc --argjson now "$(date +%s)" '
+      ["Ada Lovelace","Grace Hopper","Søren Kierkegaard","Alan Turing","Katherine Johnson"] as $people |
+      ["pending","paid","shipped","refunded"] as $statuses |
+      ["US","DE","DK","JP","BR"] as $countries |
+      ["ups","dhl","fedex"] as $carriers |
+      range(0;300) | . as $i |
+      {index:{_index:"orders"}},
+      {customer:$people[$i%5], status:$statuses[$i%4], country:$countries[$i%5],
+       total:(($i*37%500)+0.99), paid:($i%4!=0),
+       created_at:(($now-$i*7200)|todate), client_ip:"10.0.\($i%4).\($i%200+1)",
+       notes:(if $i%3==0 then "gift wrap requested" else "leave at the front door" end),
+       shipping:{carrier:$carriers[$i%3], weight_kg:(($i%20)+0.5)},
+       items:[{sku:"SKU-\($i%7)",qty:($i%3+1)},{sku:"SKU-\($i%5+10)",qty:1}]},
+      {index:{_index:"logs-app"}},
+      {"@timestamp":(($now-$i*600)|todate), level:(["info","info","warn","error"][$i%4]),
+       service:(["api","worker","billing"][$i%3]),
+       message:(["request completed","cache miss for session","payment gateway timeout"][$i%3]),
+       latency_ms:($i*13%900)},
+      {index:{_index:"metrics-cpu"}},
+      {"@timestamp":(($now-$i*60)|todate), host:"node-\($i%3)", percent:(($i*7%100)+0.5)}
+    ' | curl -sS --fail-with-body -o /dev/null -X POST "$url/_bulk?refresh=true" \
+             -H 'Content-Type: application/x-ndjson' --data-binary @-
+}
+
+case "${1:-}" in
+    up)
+        if ! podman container exists "$name"; then
+            podman run -d --name "$name" -p 127.0.0.1:9200:9200 \
+                   -e discovery.type=single-node \
+                   -e xpack.security.enabled=false \
+                   -e cluster.routing.allocation.disk.threshold_enabled=false \
+                   -e ES_JAVA_OPTS='-Xms512m -Xmx512m' \
+                   "$image" >/dev/null
+        else
+            podman start "$name" >/dev/null
+        fi
+        echo "Waiting for $url ..."
+        for _ in $(seq 90); do
+            curl -sf -o /dev/null "$url" && break
+            sleep 1
+        done
+        curl -sf -o /dev/null "$url" || { echo "It never came up; see: podman logs $name" >&2; exit 1; }
+        if curl -sf -o /dev/null "$url/orders"; then
+            echo "Already seeded."
+        else
+            seed
+            echo "Seeded orders, logs-app, metrics-cpu and the alias shop."
+        fi
+        ;;
+    down)
+        podman rm -f "$name" >/dev/null
+        ;;
+    *)
+        echo "usage: es-test-cluster up|down" >&2
+        exit 2
+        ;;
+esac

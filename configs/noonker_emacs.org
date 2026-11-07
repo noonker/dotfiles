@@ -1016,8 +1016,15 @@ The old contents go on the kill ring."
            "\n** TODO %?\n SCHEDULED: %t")
           ("n" "Now" entry (file+headline (lambda () (format "%s/today.org" org-agenda-basedir)) ,(if im-at-work "Today" "Tasks"))
            "\n** TODO %?\n SCHEDULED: %t" :clock-in t :clock-keep t)
+          ;; C-c C-q in the capture buffer offers the loops quick tags
+          ;; (project, approach, where to run), set under Agent-Shell.
           ("i" "Immediate" entry (file+headline (lambda () (format "%s/today.org" org-agenda-basedir)) ,(if im-at-work "Today" "Tasks"))
-           "\n** READY %?\n SCHEDULED: %t" :clock-in t :clock-keep t)
+           "\n** READY %?\n SCHEDULED: %t" :clock-in t :clock-keep t
+           ;; Guarded so this template keeps working on a build of
+           ;; agent-shell-org-loops that predates the quick tags.
+           :hook (lambda ()
+                   (when (fboundp 'agent-shell-org-loops-capture-setup)
+                     (agent-shell-org-loops-capture-setup))))
           ("x" "Interrupt" entry (file+headline (lambda () (format "%s/today.org" org-agenda-basedir)) ,(if im-at-work "Today" "Tasks"))
            "\n** TODO %?\n SCHEDULED: %t" :clock-in t :clock-resume t)
           ("c" "Cookbook" entry (file "~/org/cookbook.org")
@@ -3621,10 +3628,37 @@ The original goes on the kill ring."
 
 (use-package agent-shell-monome)
 
+;; bliss: run this directory elsewhere.  Also opens the bliss: links that
+;; agent-shell-org-loops writes for headings run through bliss.
+(use-package bliss
+  :commands (bliss bliss-dispatch bliss-attach bliss-logs)
+  :bind ("C-c b" . bliss-dispatch))
+
 (use-package agent-shell-org-loops
   :after agent-shell
   :config
   (require 'agent-shell-anthropic)
+  ;; Quick tags for the "Immediate" capture (C-c C-q there).  One of each:
+  ;; where the work is, how to go about it, and where it runs.
+  (setq agent-shell-org-loops-projects
+        '(("dotfiles" :key ?d :directory "~/git/dotfiles"
+           :related ("~/git/guix"))
+          ("bliss" :key ?b :directory "~/git/bliss"
+           :related ("~/git/emacs-bliss"))
+          ("loops" :key ?o :directory "~/git/agent-shell-org-loops"
+           :related ("~/git/agent-shell"))))
+  (setq agent-shell-org-loops-approaches
+        '(("research" :key ?r
+           :instructions "Research only. Read code and docs, report what you find with file:line references, and change nothing.")
+          ("fix" :key ?f :edits t
+           :instructions "Find the cause, make the smallest fix that solves it, and run whatever tests exist. Say what you changed and how you checked it.")
+          ("propose" :key ?p
+           :instructions "Propose an approach without changing files: options, trade-offs and a recommendation. Spawn loops-task blocks for the follow-up work.")))
+  (setq agent-shell-org-loops-runners
+        '(("local" :key ?l)                    ; agent-shell in Emacs (the default)
+          ("tmux" :key ?t :bliss "here")))     ; bliss ai here, on its own tmux server
+          ;; Once ~/.config/bliss/config.toml has targets, e.g.:
+          ;; ("pod" :key ?P :bliss "local" :unattended t)
   (global-agent-shell-org-loops-mode 1))
 #+end_src
 
