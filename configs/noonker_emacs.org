@@ -1065,12 +1065,14 @@ ENTRY goes at the end of the file if HEADING isn't there."
 
 (defun noonker/rofi-capture (text template)
   "Non-interactively capture TEXT using org TEMPLATE key.
-Supports: t (Today→Tasks), n (Now + clock-in), b (Backlog→Backlog)."
+Supports: t (Today), n (Now + clock-in), b (Backlog→Backlog).
+Today and Now go under the same heading as the capture templates."
   (let* ((ts (format-time-string "<%Y-%m-%d %a>"))
+         (today (if im-at-work "Today" "Tasks"))
          (entry (concat "\n** TODO " text "\n   SCHEDULED: " ts "\n")))
     (pcase template
-      ("t" (noonker/rofi--insert-entry "today.org" "Tasks" entry))
-      ("n" (with-current-buffer (noonker/rofi--insert-entry "today.org" "Tasks" entry)
+      ("t" (noonker/rofi--insert-entry "today.org" today entry))
+      ("n" (with-current-buffer (noonker/rofi--insert-entry "today.org" today entry)
              (org-with-wide-buffer
               (goto-char (point-max))
               (when (re-search-backward (regexp-quote (concat "** TODO " text)) nil t)

@@ -13,7 +13,7 @@
   #:export (bliss emacs-bliss))
 
 (define bliss
-  (let ((commit "c92c4437e449c7038ba2bfbca6329fe2d8e9079d")
+  (let ((commit "90991fb2ee6ddcab484d3efd2fbb4784d89b47dc")
         (revision "0"))
     (package
       (name "bliss")
@@ -26,7 +26,7 @@
                (commit commit)))
          (file-name (git-file-name name version))
          (sha256
-          (base32 "1yymx66jjz2ws6s8mhj71jgzmmp4n65cyyiv2lhiavwzxdpa100k"))))
+          (base32 "17ih7mlsl19yz4vpslhyvwa524nwgb8rnrb2wwgbc6jhidik76q1"))))
       (build-system pyproject-build-system)
       (arguments
        (list #:test-flags #~(list "-m" "unittest" "discover" "tests")
