@@ -1045,40 +1045,234 @@ The old contents go on the kill ring."
 #+end_src
 
 *** Rofi Capture
-Non-interactive capture called by the =org-today-capture= script through emacsclient.  It inserts directly into the target file without opening a capture buffer.
+Non-interactive capture called by the =org-today-capture= script through emacsclient.  It inserts directly into the target file without opening a capture buffer.  The Immediate entry then shows one screen for the agent-shell-org-loops quick tags (below), and sets the heading to READY so the agent starts.
 
 #+begin_src emacs-lisp
 (defun noonker/rofi--insert-entry (file heading entry)
-  "Append ENTRY under HEADING in FILE and save it, returning FILE's buffer.
-ENTRY goes at the end of the file if HEADING isn't there."
+  "Append ENTRY under HEADING in FILE and save it.
+ENTRY starts with a newline, then the new heading.  It goes at the end
+of the file if HEADING isn't there.  Return a marker at the new heading."
   (with-current-buffer (find-file-noselect (expand-file-name file org-agenda-basedir))
-    (org-with-wide-buffer
-     (goto-char (point-min))
-     (if (re-search-forward (concat "^\\* " heading) nil t)
-         (progn (org-end-of-subtree t)
-                (unless (bolp) (insert "\n"))
-                (insert entry))
-       (goto-char (point-max))
-       (insert entry)))
-    (save-buffer)
-    (current-buffer)))
+    (prog1
+        (org-with-wide-buffer
+         (goto-char (point-min))
+         (if (re-search-forward (concat "^\\* " heading) nil t)
+             (progn (org-end-of-subtree t)
+                    (unless (bolp) (insert "\n")))
+           (goto-char (point-max)))
+         (let ((start (point)))
+           (insert entry)
+           (copy-marker (1+ start))))
+      (save-buffer))))
 
-(defun noonker/rofi-capture (text template)
+(defun noonker/rofi--quick-tag-kinds ()
+  "Return the agent-shell-org-loops quick tags as (KIND . ALIST) pairs."
+  `(("project" . ,(bound-and-true-p agent-shell-org-loops-projects))
+    ("approach" . ,(bound-and-true-p agent-shell-org-loops-approaches))
+    ("runner" . ,(bound-and-true-p agent-shell-org-loops-runners))))
+
+(defun noonker/rofi-capture-edits-warning (tags)
+  "Return a warning when TAGS pair an editing approach with a bliss runner
+that can't approve edits, else nil.  agent-shell-org-loops asks about that
+pair with `y-or-n-p', which a frameless emacsclient call can't answer, so
+the Immediate screen asks instead."
+  (let ((pick (lambda (alist)
+                (seq-some (lambda (tag) (assoc-default tag alist)) tags))))
+    (let ((approach (funcall pick (bound-and-true-p agent-shell-org-loops-approaches)))
+          (runner (funcall pick (bound-and-true-p agent-shell-org-loops-runners))))
+      (and (plist-get approach :edits)
+           (plist-get runner :bliss)
+           (not (plist-get runner :unattended))
+           (format "This edits files, and bliss on %s can't approve that."
+                   (plist-get runner :bliss))))))
+
+(defun noonker/rofi-capture (text template &optional tags run-anyway)
   "Non-interactively capture TEXT using org TEMPLATE key.
-Supports: t (Today), n (Now + clock-in), b (Backlog→Backlog).
-Today and Now go under the same heading as the capture templates."
+Supports: t (Today), n (Now + clock-in), b (Backlog→Backlog) and
+i (Immediate: READY + clock-in, which agent-shell-org-loops runs).
+TAGS is a list of quick tags for i.  RUN-ANYWAY answers the question
+`noonker/rofi-capture-edits-warning' covers; without it such a heading
+is left as TODO.  Today, Now and Immediate go under the same heading as
+the capture templates."
   (let* ((ts (format-time-string "<%Y-%m-%d %a>"))
          (today (if im-at-work "Today" "Tasks"))
          (entry (concat "\n** TODO " text "\n   SCHEDULED: " ts "\n")))
     (pcase template
       ("t" (noonker/rofi--insert-entry "today.org" today entry))
-      ("n" (with-current-buffer (noonker/rofi--insert-entry "today.org" today entry)
-             (org-with-wide-buffer
-              (goto-char (point-max))
-              (when (re-search-backward (regexp-quote (concat "** TODO " text)) nil t)
-                (org-clock-in)))))
+      ("n" (let ((mk (noonker/rofi--insert-entry "today.org" today entry)))
+             (with-current-buffer (marker-buffer mk)
+               (org-with-wide-buffer (goto-char mk) (org-clock-in)))))
+      ("i" (let ((mk (noonker/rofi--insert-entry "today.org" today entry)))
+             (with-current-buffer (marker-buffer mk)
+               (org-with-wide-buffer
+                (goto-char mk)
+                (when tags (org-set-tags tags))
+                (org-clock-in)
+                (save-buffer)
+                ;; The move to READY is what starts the agent (the loops
+                ;; hook on `org-after-todo-state-change-hook').
+                (cl-letf (((symbol-function 'y-or-n-p)
+                           (lambda (&rest _) run-anyway)))
+                  (org-todo "READY"))
+                (save-buffer)))))
       ("b" (noonker/rofi--insert-entry "backlog.org" "Backlog" entry))
       (_ (error "noonker/rofi-capture: unknown template key: %s" template)))))
+#+end_src
+
+**** Immediate screen
+After the note is typed, an Immediate capture shows one rofi screen, like the query screen of =es-search=: the heading so far in the message box, Capture on top, then every quick tag as a row.  Picking a tag turns it on or off (one per kind) and redraws the same screen.  The script only draws; the state is here.
+
+#+begin_src emacs-lisp
+(defvar noonker/rofi-immediate nil
+  "The Immediate capture being built in rofi, as a plist.
+:text is the note, :tags an alist of (KIND . TAG), :screen `hub' or
+`edit', :focus the row picked last, :flash an error to show and :done
+the notification once it's captured.")
+
+(defun noonker/rofi-immediate--tags ()
+  "Return the chosen quick tags, project first, then approach and runner."
+  (let ((chosen (plist-get noonker/rofi-immediate :tags)))
+    (delq nil (mapcar (lambda (kind) (cdr (assoc (car kind) chosen)))
+                      (noonker/rofi--quick-tag-kinds)))))
+
+(defun noonker/rofi-immediate--heading ()
+  "Return the heading as it will be filed, tags included."
+  (let ((tags (noonker/rofi-immediate--tags)))
+    (format "READY %s%s" (plist-get noonker/rofi-immediate :text)
+            (if tags (format "  :%s:" (string-join tags ":")) ""))))
+
+(defun noonker/rofi-immediate--toggle (kind tag)
+  "Turn TAG of KIND on, replacing that kind's other tag, or off again."
+  (let ((chosen (plist-get noonker/rofi-immediate :tags)))
+    (setf (plist-get noonker/rofi-immediate :tags)
+          (if (equal (cdr (assoc kind chosen)) tag)
+              (assoc-delete-all kind chosen)
+            (cons (cons kind tag) (assoc-delete-all kind chosen))))))
+
+(defun noonker/rofi-immediate--capture (run-anyway)
+  "File the heading and finish.  RUN-ANYWAY as in `noonker/rofi-capture'.
+A failure finishes too, with the error as the notification, since the
+heading may already be in the file."
+  (let ((heading (noonker/rofi-immediate--heading)))
+    (setf (plist-get noonker/rofi-immediate :done)
+          (condition-case err
+              (progn (noonker/rofi-capture (plist-get noonker/rofi-immediate :text)
+                                           "i" (noonker/rofi-immediate--tags)
+                                           run-anyway)
+                     (list :title " Captured" :body heading))
+            (error (list :title " Org capture failed"
+                         :body (error-message-string err) :urgent t))))))
+
+(defun noonker/rofi-immediate--hub ()
+  "Screen: the heading so far, Capture, and a row per quick tag."
+  (let* ((tags (noonker/rofi-immediate--tags))
+         (chosen (plist-get noonker/rofi-immediate :tags))
+         (warning (noonker/rofi-capture-edits-warning tags))
+         (kinds (noonker/rofi--quick-tag-kinds))
+         (width (apply #'max 1 (mapcar (lambda (entry) (length (car entry)))
+                                       (apply #'append (mapcar #'cdr kinds))))))
+    (list
+     :prompt " Immediate"
+     :mesg (string-join
+            (delq nil (list (noonker/rofi-immediate--heading)
+                            (when warning (format "⚠ %s" warning))))
+            "\n")
+     :items
+     (append
+      (if warning
+          `(("✓ Capture as TODO (don't run it)"
+             . ,(lambda () (noonker/rofi-immediate--capture nil)))
+            ("▶ Capture and run anyway"
+             . ,(lambda () (noonker/rofi-immediate--capture t))))
+        `(("✓ Capture and run" . ,(lambda () (noonker/rofi-immediate--capture nil)))))
+      `(("✎ Edit the note"
+         . ,(lambda () (setf (plist-get noonker/rofi-immediate :screen) 'edit))))
+      (mapcan
+       (pcase-lambda (`(,kind . ,alist))
+         (mapcar (lambda (entry)
+                   (let ((tag (car entry)))
+                     (cons (format "%s %s  %s"
+                                   (if (equal (cdr (assoc kind chosen)) tag) "●" "○")
+                                   (string-pad tag width) kind)
+                           (lambda () (noonker/rofi-immediate--toggle kind tag)))))
+                 alist))
+       kinds)))))
+
+(defun noonker/rofi-immediate--edit ()
+  "Screen: retype the note, starting from what's there."
+  (list :prompt " Note"
+        :filter (plist-get noonker/rofi-immediate :text)
+        :custom t))
+
+(defun noonker/rofi-immediate--menu ()
+  "Return the current screen."
+  (if (eq (plist-get noonker/rofi-immediate :screen) 'edit)
+      (noonker/rofi-immediate--edit)
+    (noonker/rofi-immediate--hub)))
+
+(defun noonker/rofi-immediate--row (items)
+  "Return the index in ITEMS of the row picked last, or 0.
+Rows are matched without their first two characters, the ○/● mark,
+since rows move when the warning adds a second Capture row."
+  (let ((focus (plist-get noonker/rofi-immediate :focus)))
+    (or (and focus
+             (seq-position items focus
+                           (lambda (item focus)
+                             (equal (substring (car item) 2) focus))))
+        0)))
+
+(defun noonker/rofi-immediate--render ()
+  "Return the JSON for the current screen, or for the finished capture."
+  (let ((done (plist-get noonker/rofi-immediate :done)))
+    (noonker/es--json
+     (if done
+         `((done . t)
+           (title . ,(or (plist-get done :title) ""))
+           (body . ,(plist-get done :body))
+           (urgent . ,(if (plist-get done :urgent) t :false)))
+       (let ((menu (noonker/rofi-immediate--menu))
+             (flash (plist-get noonker/rofi-immediate :flash)))
+         (setf (plist-get noonker/rofi-immediate :flash) nil)
+         `((done . :false)
+           (prompt . ,(plist-get menu :prompt))
+           (mesg . ,(noonker/es--escape-markup
+                     (string-join (delq nil (list (and flash (format "⚠ %s" flash))
+                                                  (plist-get menu :mesg)))
+                                  "\n")))
+           (filter . ,(or (plist-get menu :filter) ""))
+           (custom . ,(if (plist-get menu :custom) t :false))
+           (row . ,(noonker/rofi-immediate--row (plist-get menu :items)))
+           (items . ,(vconcat (mapcar #'car (plist-get menu :items))))))))))
+
+(defun noonker/rofi-immediate-start (text)
+  "Begin an Immediate capture of TEXT and return its screen as JSON."
+  (setq noonker/rofi-immediate (list :text (string-trim text) :tags nil
+                                     :screen 'hub))
+  (noonker/rofi-immediate--render))
+
+(defun noonker/rofi-immediate-step (choice)
+  "Act on CHOICE, the picked or typed text, and return the next screen.
+A nil CHOICE (Escape) leaves the edit screen, or cancels the capture."
+  (let ((st noonker/rofi-immediate))
+    (condition-case err
+        (cond
+         ((eq (plist-get st :screen) 'edit)
+          (unless (or (null choice) (string-blank-p choice))
+            (setf (plist-get noonker/rofi-immediate :text) (string-trim choice)))
+          (setf (plist-get noonker/rofi-immediate :screen) 'hub))
+         ((null choice)
+          ;; Done with no title: the script exits without a notification.
+          (setf (plist-get noonker/rofi-immediate :done) (list :body "")))
+         (t
+          (let* ((items (plist-get (noonker/rofi-immediate--hub) :items))
+                 (item (assoc choice items)))
+            (when item
+              (setf (plist-get noonker/rofi-immediate :focus)
+                    (substring choice 2))
+              (funcall (cdr item))))))
+      (error (setf (plist-get noonker/rofi-immediate :flash)
+                   (error-message-string err)))))
+  (noonker/rofi-immediate--render))
 #+end_src
 
 ** Roam

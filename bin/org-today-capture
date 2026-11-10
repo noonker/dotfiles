@@ -1,14 +1,19 @@
 #!/usr/bin/env bash
-# org-today-capture: Quick org-capture to org files from anywhere in Sway
+# org-today-capture: Quick org-capture to org files from anywhere
 # Uses rofi for input, emacsclient to insert via noonker/rofi-capture.
-# Depends: rofi, emacsclient, notify-send (mako)
+# Immediate captures then get one screen for the agent-shell-org-loops
+# quick tags (project, approach, runner), drawn from the running Emacs.
+# Depends: rofi, emacsclient, jq, notify-send (mako)
 set -euo pipefail
 
+tmpdir=$(mktemp -d /tmp/org-capture-XXXXXX)
+trap 'rm -rf "$tmpdir"' EXIT
+
 # ── Template selection ─────────────────────────────────────────────────────
-template=$(printf 't  Today\nn  Now (clock-in)\nb  Backlog' | \
+template=$(printf 't  Today\nn  Now (clock-in)\ni  Immediate (agent)\nb  Backlog' | \
     rofi -dmenu \
          -p " Capture" \
-         -lines 3 | \
+         -l 4 | \
     awk '{print $1}')
 
 [ -z "$template" ] && exit 0
@@ -17,6 +22,7 @@ template=$(printf 't  Today\nn  Now (clock-in)\nb  Backlog' | \
 case "$template" in
     t) prompt=" Today" ;;
     n) prompt=" Now" ;;
+    i) prompt=" Immediate" ;;
     b) prompt=" Backlog" ;;
     *) exit 1 ;;
 esac
@@ -24,21 +30,63 @@ esac
 # ── Capture text ─────────────────────────────────────────────────────────
 text=$(printf '' | rofi -dmenu \
     -p "$prompt" \
-    -lines 0)
+    -l 0)
 
 [ -z "$text" ] && exit 0
 
+# ── Immediate: one screen for the quick tags ────────────────────────────
+# Like the query screen of es-search: Emacs (noonker/rofi-immediate-*)
+# keeps the state and says what to draw; picking a tag row toggles it and
+# the same screen comes back.  Escape cancels.
+if [ "$template" = i ]; then
+    elisp_string() { jq -n --arg s "$1" '$s'; }
+    ask_emacs() { emacsclient -a false -e "$1" | jq -er .; }
+    fail() { notify-send -t 4000 -u critical " Org capture failed" \
+                 "Is the Emacs daemon running?"; exit 1; }
+
+    step=$(ask_emacs "(noonker/rofi-immediate-start $(elisp_string "$text"))") || fail
+    while [ "$(jq -r .done <<<"$step")" != true ]; do
+        args=(-dmenu -i -matching normal -format s
+              -p "$(jq -r .prompt <<<"$step")"
+              -selected-row "$(jq -r .row <<<"$step")")
+        mesg=$(jq -r .mesg <<<"$step")
+        [ -n "$mesg" ] && args+=(-mesg "$mesg")
+        filter=$(jq -r .filter <<<"$step")
+        [ -n "$filter" ] && args+=(-filter "$filter")
+        if [ "$(jq -r .custom <<<"$step")" = true ]; then
+            args+=(-l 0)
+        else
+            args+=(-no-custom -l "$(jq '.items | length' <<<"$step")")
+        fi
+
+        if choice=$(jq -r '.items[]' <<<"$step" | rofi "${args[@]}") && [ -n "$choice" ]; then
+            answer=$(elisp_string "$choice")
+        else
+            answer=nil
+        fi
+        step=$(ask_emacs "(noonker/rofi-immediate-step $answer)") || fail
+    done
+
+    title=$(jq -r .title <<<"$step")
+    [ -z "$title" ] && exit 0
+    if [ "$(jq -r .urgent <<<"$step")" = true ]; then
+        notify-send -t 4000 -u critical "$title" "$(jq -r .body <<<"$step")"
+    else
+        notify-send -t 2000 "$title" "$(jq -r .body <<<"$step")"
+    fi
+    exit 0
+fi
+
 # ── Pass text via tmpfile to avoid elisp quoting issues ─────────────────
-tmpfile=$(mktemp /tmp/org-capture-XXXXXX)
+tmpfile="$tmpdir/text"
 printf '%s' "$text" > "$tmpfile"
-trap 'rm -f "$tmpfile"' EXIT
 
 # ── Send to running Emacs via emacsclient ────────────────────────────────
-if emacsclient --eval \
+if err=$(emacsclient --eval \
     "(let ((text (with-temp-buffer (insert-file-contents \"$tmpfile\") (string-trim (buffer-string))))) (noonker/rofi-capture text \"$template\"))" \
-    > /dev/null 2>&1; then
+    2>&1 > /dev/null); then
     notify-send -t 2000 " Captured" "$text"
 else
     notify-send -t 4000 -u critical " Org capture failed" \
-        "Is the Emacs daemon running?"
+        "${err:-Is the Emacs daemon running?}"
 fi
