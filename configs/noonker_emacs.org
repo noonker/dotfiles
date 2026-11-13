@@ -3820,7 +3820,14 @@ The original goes on the kill ring."
   ;; Add agent installation configs here
   ((claude-agent-acp . "npm install -g @agentclientprotocol/claude-agent-acp"))
   :config
-  (setq agent-shell-preferred-agent-config (agent-shell-anthropic-make-claude-code-config)))
+  (setq agent-shell-preferred-agent-config (agent-shell-anthropic-make-claude-code-config))
+  ;; evil-collection binds normal-state RET in `shell-maker-mode-map' straight
+  ;; to `shell-maker-submit', which skips agent-shell's busy check.  Submitting
+  ;; mid-turn that way commits the input as read-only text and never prints a
+  ;; new prompt, so the buffer can't be typed in and the message is dropped.
+  ;; Send it through `agent-shell-submit', which queues while the agent works.
+  (keymap-set agent-shell-mode-map "<remap> <shell-maker-submit>"
+              #'agent-shell-submit))
 
 (use-package agent-shell-monome)
 
