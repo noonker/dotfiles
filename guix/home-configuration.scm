@@ -18,6 +18,8 @@
              (noonker home theme)
              (noonker home pw-autoconnect)
              (noonker home git-repos)
+             ;; ~/git/norns-guix (on the load path via the Makefile)
+             (norns-guix home services norns)
              (noonker packages wine)
              (noonker packages serialosc)
              (noonker packages renoise)
@@ -160,9 +162,11 @@
 
 					;; Programming
 					"git"
+					"go"             ;norns-desktop: builds dust2dust
 					"node"
 					"perl"
 					"python"
+					"python-pytest"  ;4deck tests
 					"python-wrapper"
 
 					;; Clojure
@@ -282,6 +286,8 @@
 					"liblo"          ;oscsend, oscdump
 					"pd"             ;Pure Data
 					"qpwgraph"
+					"sox"            ;4deck tests
+					"aubio"          ;aubioonset, for 4deck's BPM analysis
 					"supercollider"
 					"winetricks"
 					"wine64"
@@ -400,6 +406,10 @@
    pw-autoconnect-renoise-daemon-service
    pw-autoconnect-m8-daemon-service
    pw-autoconnect-m8-crone-daemon-service
+   ;; norns without Docker: herd start norns / herd stop norns.
+   (service home-norns-service-type
+            (home-norns-configuration
+             (sc-extensions (list sc3-plugins))))
    (simple-service 'my-font-packages
                    home-profile-service-type
                    (list my-comic-code-font
